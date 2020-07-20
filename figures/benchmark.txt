@@ -1,0 +1,41 @@
+SIR_Proj
+
+Plotting projection for dimension s done -- Time Spent: 1589771013.2946272
+Plotting projection for dimension i done -- Time Spent: 1589771013.41091
+Plotting projection for dimension r done -- Time Spent: 1589771013.529463
+Average Bundle Transformation Duration: 0.49308821133204866
+Average Bernstein Computation Duration: 0.09048161795645049
+Average Phase Computation Duration: 0.2715909481048584
+
+LV Phase: 100 steps
+  Plotting phase for dimensions x, y done -- Time Spent: 0.31922006607055664
+
+SIR Phase SR: 100 steps
+Plotting phase for dimensions s, r done -- Time Spent: 0.2976839542388916
+
+SIR Phase SI: 100 steps
+Plotting phase for dimensions s, i done -- Time Spent: 0.3622100353240967
+
+Rossler_Proj
+
+Average Bundle Transformation Duration: 0.13580493330955506
+Average Bernstein Computation Duration: 0.008317003051439922
+Average Phase Computation Duration: 0.392946720123291
+
+1 Template / 5 directions
+
+Total Duration: 69.30552315711975
+
+Quad_Proj on h, w, H_i
+
+1 template / 17 dir
+
+Plotting projection for dimension h done -- Time Spent: 1589782879.812075
+Plotting projection for dimension w done -- Time Spent: 1589782880.3628411
+Plotting projection for dimension hI done -- Time Spent: 1589782880.918553
+
+Phosphorelay on X_1,X_2,X_3
+2 templates / 10 dir
+
+Average Bundle Transformation Duration: 0.34883660634358726
+Average Bernstein Computation Duration: 0.017441041526340302
