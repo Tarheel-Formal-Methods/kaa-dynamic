@@ -4,7 +4,7 @@ import sympy as sp
 from operator import add
 from functools import reduce
 
-from kaa.bernstein import BernsteinBaseConverter
+from kaa.pykodiak.pykodiak_interface import Kodiak
 from kaa.parallelotope import Parallelotope
 from kaa.lputil import minLinProg, maxLinProg
 
@@ -129,16 +129,27 @@ class BundleTransformer:
                 bound_polyu = reduce(add, bound_polyu)
 
                 'Calculate min/max Bernstein coefficients.'
-                Timer.start('Bernstein Computation')
-                base_convertu = BernsteinBaseConverter(bound_polyu, bund.vars)
-                max_bern_coeffu, min_bern_coeffu = base_convertu.computeBernCoeff()
-                Timer.stop('Bernstein Computation')
+                Timer.start('Kodiak Computation')
+                ub, lb = self.kodiak_bounds(bound_polyu, bund)
+                Timer.stop('Kodiak Computation')
 
-                new_offu[column] = min(max_bern_coeffu, new_offu[column])
-                new_offl[column] = min(-1 * min_bern_coeffu, new_offl[column])
+                new_offu[column] = min(ub, new_offu[column])
+                new_offl[column] = min(-1 * lb, new_offl[column])
 
         #print("New Offu: {}   NewOffl: {}".format(new_offu,new_offl))
-
+        
         trans_bund = Bundle(bund.T, bund.L, new_offu, new_offl, bund.vars)
         canon_bund = trans_bund.canonize()
         return canon_bund
+
+    def kodiak_bounds(self, sym_poly, bund):
+        
+        kodiak_poly = Kodiak.sympy_to_kodiak(sym_poly)
+
+        'Unit box bounds'
+        bounds = [[0,1] for _ in range(bund.sys_dim)]
+        jac_mat = np.zeros((bund.sys_dim,bund.sys_dim))
+
+        lb, ub, _, _ = Kodiak.minmax_diff(kodiak_poly, jac_mat, 0, bounds)
+
+        return ub, lb

@@ -10,8 +10,8 @@ class Basic(Model):
 
         x,y = sp.Symbol('x'), sp.Symbol('y')
 
-        dx = x + 0.1
-        dy = y + 0.1
+        dx = x + 1
+        dy = y + 1
 
         dyns  = [dx, dy]
         vars = [x, y]

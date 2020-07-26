@@ -57,14 +57,18 @@ class Parallelotope:
     """
     def _computeGenerators(self, base_vertex):
 
-        p = mp.Pool(processes=5)
-
         u_b = self.b[:self.dim]
         coeff_mat = self._convertMatFormat(self.A)
 
-        vertices = p.starmap(self.gen_worker, [ (i, u_b, coeff_mat) for i in range(self.dim) ])
-        p.close()
-        p.join()
+        vertices = []
+        for i in range(self.dim):
+            negated_bi = np.copy(u_b)
+            negated_bi[i] = -self.b[i + self.dim]
+            negated_bi = self._convertMatFormat(negated_bi)
+
+            sol_set_i = linsolve((coeff_mat, negated_bi), self.vars)
+            vertex_i = self._convertSolSetToList(sol_set_i)
+            vertices.append(vertex_i)
 
         return [ [ x-y for x,y in zip(vertices[i], base_vertex) ] for i in range(self.dim) ]
 
