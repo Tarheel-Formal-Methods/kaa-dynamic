@@ -1,22 +1,22 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
-
 from scipy.spatial import HalfspaceIntersection
 
-import kaa.log as Log
-from kaa.log import Debug
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
+from kaa.settings import PlotSettings
 
 """
 Object encapsulating flowpipe data.
 """
 class FlowPipe:
 
-    def __init__(self, flowpipe, vars):
+    def __init__(self, flowpipe, model):
 
         self.flowpipe = flowpipe
-        self.vars = vars
+        self.name = model.name
+        self.vars = model.vars
 
     def __len__(self):
         return len(self.flowpipe)
@@ -78,7 +78,13 @@ class FlowPipePlotter:
             plot_time = Timer.stop('Proj')
             print("Plotting projection for dimension {} done -- Time Spent: {}".format(curr_var, plot_time))
 
-        fig.show()
+        if PlotSettings.save_fig:
+            var_str = ''.join([str(self.vars[var]).upper() for var in vars_tup])
+            figure_name = "Kaa{}Proj{}.png".format(self.flowpipe.name, var_str)
+
+            fig.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
+        else:
+            fig.show()
 
     """
     Plots phase between two variables of dynamical system.
@@ -133,7 +139,13 @@ class FlowPipePlotter:
             ax.set_ylabel('{}'.format(y_var))
             ax.fill(inter_x, inter_y, 'b')
 
-        fig.show()
+            if PlotSettings.save_fig:
+                var_str = ''.join([str(self.vars[var]).upper() for var in [x,y]])
+                figure_name = "Kaa{}Phase{}.png".format(self.flowpipe.name, var_str)
+
+                fig.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
+            else:
+                fig.show()
 
         phase_time = Timer.stop('Phase')
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))

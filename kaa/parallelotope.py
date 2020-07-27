@@ -4,6 +4,7 @@ import multiprocessing as mp
 
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
+from kaa.settings import KaaSettings
 
 """
 Object encapsulating routines calculating properties of parallelotopes.
@@ -60,17 +61,18 @@ class Parallelotope:
         u_b = self.b[:self.dim]
         coeff_mat = self._convertMatFormat(self.A)
 
-        vertices = []
-        for i in range(self.dim):
-            negated_bi = np.copy(u_b)
-            negated_bi[i] = -self.b[i + self.dim]
-            negated_bi = self._convertMatFormat(negated_bi)
+        'Hacky way to togglee parallelism for experiments'
+        if KaaSettings.use_parallel:
+            p = mp.Pool(processes=4)
+            vertices = p.starmap(self._gen_worker, [ (i, u_b, coeff_mat) for i in range(self.dim) ])
+            p.close()
+            p.join()
+        else:
+            vertices = []
+            for i in range(self.dim):
+               vertices.append(self._gen_worker(i, u_b, coeff_mat))
 
-            sol_set_i = linsolve((coeff_mat, negated_bi), self.vars)
-            vertex_i = self._convertSolSetToList(sol_set_i)
-            vertices.append(vertex_i)
-
-        return [ [ x-y for x,y in zip(vertices[i], base_vertex) ] for i in range(self.dim) ]
+        return [ [x-y for x,y in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
 
     """
     Worker process for calculating vertices of higher-dimensional parallelotopes.
@@ -79,7 +81,7 @@ class Parallelotope:
             u_b, coef_mat - shared reference to upper offsets and directions matrix.
     @returns coordinates of vertex
     """
-    def gen_worker(self, i, u_b, coeff_mat):
+    def _gen_worker(self, i, u_b, coeff_mat):
 
         negated_bi = np.copy(u_b)
         negated_bi[i] = -self.b[i + self.dim]
