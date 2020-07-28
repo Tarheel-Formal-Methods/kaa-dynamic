@@ -6,6 +6,6 @@ def test_VDP():
 
     model = VanDerPol()
     mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(200)
+    mod_flow = mod_reach.computeReachSet(100)
 
     FlowPipePlotter(mod_flow).plot2DPhase(0,1)

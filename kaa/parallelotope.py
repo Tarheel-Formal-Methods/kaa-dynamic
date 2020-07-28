@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import Matrix, linsolve, EmptySet
+from sympy import Matrix, solve, EmptySet
 import multiprocessing as mp
 
 from kaa.lputil import minLinProg, maxLinProg
@@ -59,9 +59,9 @@ class Parallelotope:
     def _computeGenerators(self, base_vertex):
 
         u_b = self.b[:self.dim]
-        coeff_mat = self._convertMatFormat(self.A)
+        coeff_mat = self.A
 
-        'Hacky way to togglee parallelism for experiments'
+        'Hacky way to toggle parallelism for experiments'
         if KaaSettings.use_parallel:
             p = mp.Pool(processes=4)
             vertices = p.starmap(self._gen_worker, [ (i, u_b, coeff_mat) for i in range(self.dim) ])
@@ -85,12 +85,9 @@ class Parallelotope:
 
         negated_bi = np.copy(u_b)
         negated_bi[i] = -self.b[i + self.dim]
-        negated_bi = self._convertMatFormat(negated_bi)
+        sol_set_i = np.linalg.solve(self.A, negated_bi)
 
-        sol_set_i = linsolve((coeff_mat, negated_bi), self.vars)
-        vertex_i = self._convertSolSetToList(sol_set_i)
-
-        return vertex_i
+        return sol_set_i
 
 
     """
@@ -107,29 +104,5 @@ class Parallelotope:
 
         u_b = self.b[:self.dim]
 
-        coeff_mat = self._convertMatFormat(self.A)
-        offset_mat = self._convertMatFormat(u_b)
-
-        sol_set = linsolve((coeff_mat, offset_mat), self.vars)
-        return self._convertSolSetToList(sol_set)
-
-    """
-    Convert numpy matrix into sympy matrix
-
-    @params mat: numpy matrix
-    @returns sympy matrix counterpart
-    """
-    def _convertMatFormat(self, mat):
-        return Matrix(mat.tolist())
-    
-    """
-    Takes solution set returned by sympy and converts into list
-
-    @params fin_set: FiniteSet
-    @returns list of sympy solution set
-    """
-    def _convertSolSetToList(self, fin_set):
-
-        assert fin_set is not EmptySet
-
-        return list(fin_set.args[0])
+        sol_set = np.linalg.solve(self.A, u_b)
+        return list(sol_set)
