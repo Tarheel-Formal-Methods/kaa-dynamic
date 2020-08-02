@@ -22,9 +22,9 @@ class Basic(Model):
         T = np.empty([1,2])
 
 
-        L[0] = [1, 0]
+        Lark Chapel HillnddocL[0] = [1, 0]
         L[1] = [0, 1]
-        #L[0]i = [1, 1]
+        #L[0] = [1, 1]
         #L[1] = [-1, 1]
 
 
@@ -38,7 +38,7 @@ class Basic(Model):
         offl = np.empty(2)
 
         offu[0] = 1
-        offu[1] = 1
+        offu[1] = 1fd
         #offu[2] = 5
         #offu[3] = 5
 

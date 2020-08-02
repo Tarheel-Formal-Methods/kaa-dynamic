@@ -8,7 +8,7 @@ from kaa.timer import Timer
 from kaa.settings import PlotSettings
 
 """
-Object encapsulating flowpipe data.
+Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of bundles.i
 """
 class FlowPipe:
 
@@ -17,22 +17,8 @@ class FlowPipe:
         self.flowpipe = flowpipe
         self.name = model.name
         self.vars = model.vars
+        self.dim = len(self.vars)
 
-    def __len__(self):
-        return len(self.flowpipe)
-
-    def __iter__(self):
-        return iter(self.flowpipe)
-
-"""
-Plotting object handling all matplotlib manipulations and plot-formatting.
-"""
-class FlowPipePlotter:
-
-    def __init__(self, flowpipe):
-        self.flowpipe = flowpipe
-        self.dim_sys = len(flowpipe.vars)
-        self.vars = self.flowpipe.vars
 
     """
     Plots projection of reachable set against time t.
@@ -80,11 +66,12 @@ class FlowPipePlotter:
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.vars[var]).upper() for var in vars_tup])
-            figure_name = "Kaa{}Proj{}.png".format(self.flowpipe.name, var_str)
+            figure_name = "Kaa{}Proj{}.png".format(self.name, var_str)
 
             fig.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
         else:
             fig.show()
+
 
     """
     Plots phase between two variables of dynamical system.
@@ -92,7 +79,6 @@ class FlowPipePlotter:
             y: index of variable to be plotted as y-axis of desired phase
     """
     def plot2DPhase(self, x, y):
-
 
         Timer.start('Phase')
 
@@ -141,7 +127,7 @@ class FlowPipePlotter:
 
             if PlotSettings.save_fig:
                 var_str = ''.join([str(self.vars[var]).upper() for var in [x,y]])
-                figure_name = "Kaa{}Phase{}.png".format(self.flowpipe.name, var_str)
+                figure_name = "Kaa{}Proj{}.png".format(self.name, var_str)
 
                 fig.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
             else:
@@ -149,3 +135,9 @@ class FlowPipePlotter:
 
         phase_time = Timer.stop('Phase')
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
+
+    def __len__(self):
+        return len(self.flowpipe)
+
+    def __iter__(self):
+        return iter(self.flowpipe)

@@ -1,5 +1,4 @@
 import numpy as np
-from sympy import Matrix, solve, EmptySet
 import multiprocessing as mp
 
 from kaa.lputil import minLinProg, maxLinProg
@@ -89,7 +88,6 @@ class Parallelotope:
 
         return sol_set_i
 
-
     """
     Calculate the base vertex of the parallelotope (variable q)
     We calculate the vertices by solving a linear system of the following form:
@@ -103,6 +101,5 @@ class Parallelotope:
     def _computeBaseVertex(self):
 
         u_b = self.b[:self.dim]
-
         sol_set = np.linalg.solve(self.A, u_b)
         return list(sol_set)
