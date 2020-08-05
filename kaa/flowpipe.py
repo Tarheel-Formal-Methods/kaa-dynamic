@@ -6,6 +6,7 @@ from scipy.spatial import HalfspaceIntersection
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
+from kaa.plotutil import Plot
 
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of bundles.i
@@ -15,62 +16,52 @@ class FlowPipe:
     def __init__(self, flowpipe, model):
 
         self.flowpipe = flowpipe
-        self.name = model.name
+        self.model = model
         self.vars = model.vars
         self.dim = len(self.vars)
 
 
     """
-    Plots projection of reachable set against time t.
+    A wrapper over Kaa.plotutil.plot for plotting in simple cases where we just need the flowpipe plot.
+    @params: var_ind: index of projecting variable
+    """
+    def plot2DProj(self, var_ind):
+
+        flowpipe_proj = Plot(self, self.model, self.vars[var_ind])
+        flowpipe_proj.add_flow_pipe(self)
+        flowpipe_proj.plot()
+
+    """
+    Calculates the flowpipe projection of reachable set against time t.
     @params (vars_tup): tuple containing indices of variables to be plotted.
 
     Only plots to an on-screen figure in its current state.
     """
 
-    def plot2DProj(self, *vars_tup):
-        num_var = len(vars_tup)
+    def get2DProj(self, var):
         pipe_len = len(self.flowpipe)
 
-        fig, ax = plt.subplots(1, num_var)
-        ax = [ax] if num_var == 1 else ax
+        Timer.start('Proj')
+        curr_var = self.vars[var_ind]
 
-        'Time step vector for plotting'
-        t = np.arange(0, pipe_len, 1)
+        'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
+        y_min, y_max = np.empty(pipe_len), np.empty(pipe_len)
 
-        for ax_ind, var_ind in enumerate(vars_tup):
+        'Initialize objective function'
+        y_obj = [0 for _ in self.vars]
+        y_obj[var_ind] = 1
 
-            Timer.start('Proj')
-            curr_var = self.vars[var_ind]
+        'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'
+        for bund_ind, bund in enumerate(self.flowpipe):
 
-            'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
-            y_min, y_max = np.empty(pipe_len), np.empty(pipe_len)
+            bund_A, bund_b = bund.getIntersect()
 
-            'Initialize objective function'
-            y_obj = [0 for _ in self.vars]
-            y_obj[var_ind] = 1
+            y_min[bund_ind] = minLinProg(y_obj, bund_A, bund_b).fun
+            y_max[bund_ind] = maxLinProg(y_obj, bund_A, bund_b).fun
 
-            'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'
-            for bund_ind, bund in enumerate(self.flowpipe):
+        Timer.end("Proj")
 
-                bund_A, bund_b = bund.getIntersect()
-
-                y_min[bund_ind] = minLinProg(y_obj, bund_A, bund_b).fun
-                y_max[bund_ind] = maxLinProg(y_obj, bund_A, bund_b).fun
-
-            ax[ax_ind].fill_between(t, y_min, y_max)
-            ax[ax_ind].set_xlabel("t: time steps")
-            ax[ax_ind].set_ylabel("Reachable Set for {}".format(curr_var))
-
-            plot_time = Timer.stop('Proj')
-            print("Plotting projection for dimension {} done -- Time Spent: {}".format(curr_var, plot_time))
-
-        if PlotSettings.save_fig:
-            var_str = ''.join([str(self.vars[var]).upper() for var in vars_tup])
-            figure_name = "Kaa{}Proj{}.png".format(self.name, var_str)
-
-            fig.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
-        else:
-            fig.show()
+        return y_min, y_max
 
 
     """

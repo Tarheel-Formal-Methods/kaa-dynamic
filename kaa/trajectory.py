@@ -1,10 +1,9 @@
 import matplotlib as plt
 
-
 # Create plot namespace with plotting capabilites for flowpipe/traj
 # For input (flowpipes, traj) - plot2D function which takes flwopipe projections and traj and plots all of them
 
-class 2DTrajectory:
+class Traj:
 
     def __init__(self, vars):
 
@@ -16,6 +15,3 @@ class 2DTrajectory:
 
     def add_traj(self, var, traj):
         traj_set[var].add(traj)
-
-
-    def plotTraj(self):

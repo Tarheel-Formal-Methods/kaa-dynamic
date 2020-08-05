@@ -14,3 +14,6 @@ class PlotSettings:
 
     'Path to save figures'
     fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
+
+    'Figure dimensions'
+    fig_size = (10,10)
