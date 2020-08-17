@@ -1,4 +1,3 @@
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import HalfspaceIntersection
@@ -6,7 +5,6 @@ from scipy.spatial import HalfspaceIntersection
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
-from kaa.plotutil import Plot
 
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of bundles.i
@@ -20,25 +18,13 @@ class FlowPipe:
         self.vars = model.vars
         self.dim = len(self.vars)
 
-
-    """
-    A wrapper over Kaa.plotutil.plot for plotting in simple cases where we just need the flowpipe plot.
-    @params: var_ind: index of projecting variable
-    """
-    def plot2DProj(self, var_ind):
-
-        flowpipe_proj = Plot(self, self.model, self.vars[var_ind])
-        flowpipe_proj.add_flow_pipe(self)
-        flowpipe_proj.plot()
-
     """
     Calculates the flowpipe projection of reachable set against time t.
-    @params (vars_tup): tuple containing indices of variables to be plotted.
-
-    Only plots to an on-screen figure in its current state.
+    
+    @params var: The variable for the reachable set to be projected onto.
+    @returns list of minimum and maximum points of projected set at each time step.
     """
-
-    def get2DProj(self, var):
+    def get2DProj(self, var_ind):
         pipe_len = len(self.flowpipe)
 
         Timer.start('Proj')
@@ -59,13 +45,14 @@ class FlowPipe:
             y_min[bund_ind] = minLinProg(y_obj, bund_A, bund_b).fun
             y_max[bund_ind] = maxLinProg(y_obj, bund_A, bund_b).fun
 
-        Timer.end("Proj")
+        Timer.stop("Proj")
 
         return y_min, y_max
 
 
     """
     Plots phase between two variables of dynamical system.
+    
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """

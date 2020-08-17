@@ -1,5 +1,6 @@
 import matplotlib as plt
 import numpy as np
+import os
 
 from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
@@ -11,42 +12,55 @@ Object containing matplotlib figure and relevant settings and data along one axi
 
 class Plot:
 
-    def __init__(self, model, var):
+    def __init__(self):
 
-        self.figure = plt.Figure(figsize = PlotSettings.fig_size)
+        self.figure = plt.figure.Figure(figsize = PlotSettings.fig_size)
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_xlabel("t: time steps")
-        self.ax.set_ylabel(("Reachable Set for {}".format(var)))
-        self.ax.set_title("Projection of Reachable Set for {} Variable: {}".format(model.name, var))
-        
-        self.num_flowpipes = 0
-        self.num_traj = 0
+        self.flowpipes = []
+        self.trajs = []
+        self.model = None
 
     def add_traj(self, traj_data):
 
-        assert isinstance(traj_data, Traj)
+        assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
+        if self.model is not None:
+            assert isinstance(self.model, traj_data.model), "Trajectories and Plot must describe the same system."
 
-        traj_list = traj_data[var]
-
-        for traj in traj_list:
-            x = np.arange(len(traj))
-            self.ax.plot(x, traj, color="C{}".format(self.num_traj))
-            self.num_traj += 1
-
+        self.trajs.append(traj_data)
+        self.model = traj_data.model if self.model is None else self.model
 
     def add_flowpipe(self, flowpipe):
 
-        assert isinstance(flowpipe, FlowPipe)
+        assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.add_flowpipe"
+        if self.model is not None:
+              assert isinstance(self.model, flowpipe.model), "FlowPipe and Plot must describe the same system."
+        
+        self.flowpipes.append(flowpipe)
+        self.model = flowpipe.model if self.model is None else self.model
 
-        flow_min, flow_max = flowpipe.get2DProj()
-        ax.fill_between(flow_min, flow_max, color="C{}".format(self.num_flowpipes))
-        self.num_flowpipes += 1
+    def plot(self, var_ind):
 
-    def plot(self):
+        assert self.model is not None, "No data has been added to Plot."
+
+        var = self.model.vars[var_ind]
+        name = self.model.name
+
+        for traj in self.trajs:
+            x = np.arange(len(traj))
+            y = traj.get_traj_proj(var)
+            self.ax.plot(x, y, color="C{}".format(len(self.trajs)-1))
+
+        for flowpipe in self.flowpipes:
+            flow_min, flow_max = flowpipe.get2DProj(var_ind)
+            self.ax.fill_between(flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
+
+        self.ax.set_xlabel("t: time steps")
+        self.ax.set_ylabel(("Reachable Set for {}".format(var)))
+        self.ax.set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
 
         if PlotSettings.save_fig:
-            var_str = ''.join([str(self.vars[var]).upper() for var in vars_tup])
-            figure_name = "Kaa{}Proj{}.png".format(self.name, var_str)
+            var_str = ''.join([str(var).upper()])
+            figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
 
             self.figure.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
         else:
