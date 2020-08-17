@@ -17,7 +17,3 @@ class Model:
 
         'Intevals reprsenting initial set in the order of self.vars above.'
         self.initial_set = initial_set
-
-        'Ensuring Kodiak works as it should for us.'
-        for var in vars:
-            Kodiak.add_variable(str(var))

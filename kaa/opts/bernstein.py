@@ -4,13 +4,14 @@ from functools import reduce
 from math import factorial
 from operator import mul,add
 from itertools import product
+from kaa.opts.optprod import OptimizationProd
 
-class BernsteinBaseConverter:
+class BernsteinProd(OptimizationProd):
 
-    def __init__(self, poly, vars):
-        self.poly = sp.Poly(poly, vars)
-        self.vars = vars
-        self.var_num = len(vars)
+    def __init__(self, poly, bund):
+        super().__init__(poly, bund)
+        self.poly = sp.Poly(poly, self.vars)
+        self.var_num = len(self.vars)
         self.degree = self._getDegree()
 
         # List of all relevant monomials required to calculate the Bernstein coefficients.
@@ -19,7 +20,7 @@ class BernsteinBaseConverter:
     """
     Computes and returns the maximum and minimum Bernstein coefficients for self.poly.
     """
-    def computeBernCoeff(self):
+    def getBounds(self):
 
         bern_coeff = []
 

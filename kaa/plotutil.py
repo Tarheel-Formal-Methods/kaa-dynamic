@@ -20,18 +20,26 @@ class Plot:
         self.trajs = []
         self.model = None
 
-    def add_traj(self, traj_data):
 
-        assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
+    def add(self, plottable):
+
+        if isinstance(plottable, Traj):
+            self.__add_traj(plottable)
+        elif isinstance(plottable, FlowPipe):
+            self.__add_flowpipe(plottable)
+
+    def __add_traj(self, traj_data):
+
+        #assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
         if self.model is not None:
             assert isinstance(self.model, traj_data.model), "Trajectories and Plot must describe the same system."
 
         self.trajs.append(traj_data)
         self.model = traj_data.model if self.model is None else self.model
 
-    def add_flowpipe(self, flowpipe):
+    def __add_flowpipe(self, flowpipe):
 
-        assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.add_flowpipe"
+        #assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.add_flowpipe"
         if self.model is not None:
               assert isinstance(self.model, flowpipe.model), "FlowPipe and Plot must describe the same system."
         
