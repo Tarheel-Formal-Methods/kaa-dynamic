@@ -16,10 +16,11 @@ class Plot:
 
         self.figure = plt.figure.Figure(figsize = PlotSettings.fig_size)
         self.ax = self.figure.add_subplot(111)
+        
         self.flowpipes = []
         self.trajs = []
         self.model = None
-
+        self.num_steps = 0
 
     def add(self, plottable):
 
@@ -36,6 +37,7 @@ class Plot:
 
         self.trajs.append(traj_data)
         self.model = traj_data.model if self.model is None else self.model
+        self.num_steps = max(self.num_steps, len(traj_data))
 
     def __add_flowpipe(self, flowpipe):
 
@@ -45,6 +47,7 @@ class Plot:
         
         self.flowpipes.append(flowpipe)
         self.model = flowpipe.model if self.model is None else self.model
+        self.num_steps = max(self.num_steps, len(flowpipe))
 
     def plot(self, var_ind):
 
@@ -52,6 +55,7 @@ class Plot:
 
         var = self.model.vars[var_ind]
         name = self.model.name
+        t = np.arange(0, self.num_steps, 1)
 
         for traj in self.trajs:
             x = np.arange(len(traj))
@@ -60,7 +64,7 @@ class Plot:
 
         for flowpipe in self.flowpipes:
             flow_min, flow_max = flowpipe.get2DProj(var_ind)
-            self.ax.fill_between(flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
+            self.ax.fill_between(t, flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
 
         self.ax.set_xlabel("t: time steps")
         self.ax.set_ylabel(("Reachable Set for {}".format(var)))

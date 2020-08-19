@@ -138,7 +138,7 @@ class BundleTransformer:
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])
 
-        print("New Offu: {}   NewOffl: {}".format(new_offu,new_offl))
+        #print("New Offu: {}   NewOffl: {}".format(new_offu,new_offl))
         
         trans_bund = Bundle(bund.T, bund.L, new_offu, new_offl, bund.vars)
         canon_bund = trans_bund.canonize()

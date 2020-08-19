@@ -12,7 +12,7 @@ class Traj:
 
         self.vars = model.vars
         self.traj_set = {}
-        self.num_traj = 0
+        self.num_points = 0
 
         for var in vars:
             self.traj_set[var] = []
@@ -23,7 +23,7 @@ class Traj:
         
         for var_ind, var in self.vars:
             traj_set[var].add(traj_point[var_ind])
-        self.num_traj += 1
+        self.num_points += 1
 
     def get_traj_proj(self, var):
         return traj_set[var]
@@ -32,4 +32,4 @@ class Traj:
         return [ (traj_set[var])[index] for var in self.vars ]
 
     def __len__(self):
-        return self.num_traj
+        return self.num_points
