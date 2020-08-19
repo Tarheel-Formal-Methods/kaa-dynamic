@@ -46,5 +46,6 @@ class SIR(Model):
       offu[2] = 0.001
       offl[2] = -0.00099
 
+      initial_set = [[0.79, 0.8], [0.19,0.2], [0,0]]
       b = Bundle(T, L, offu, offl, vars)
-      super().__init__(b, dyns, vars)
+      super().__init__(b, dyns, vars, "SIR", initial_set)
