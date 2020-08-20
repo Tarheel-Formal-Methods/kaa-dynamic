@@ -55,4 +55,4 @@ class LotkaVolterra(Model):
 
         b = Bundle(T,L,offu,offl,vars)
 
-        super().__init__(b, dyns, vars)
+        super().__init__(b, dyns, vars, name="LV")

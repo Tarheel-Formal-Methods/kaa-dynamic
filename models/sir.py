@@ -18,8 +18,8 @@ class SIR(Model):
       vars = [s, i, r] #In predetermined order
       sys_dim = len(vars)
 
-      num_direct = 3
-      num_temps = 1
+      num_direct = 5
+      num_temps = 3
 
       L = np.zeros([num_direct, sys_dim])
       T = np.zeros([num_temps, sys_dim])
@@ -28,11 +28,14 @@ class SIR(Model):
       L[0][0] = 1  #[1 0 0 ]^T
       L[1][1] = 1  #[0 1 0 ]^T
       L[2][2] = 1  #[0 0 1 ]^T
-
+      L[3][0] = 1; L[3][1] = 0.5;
+      L[4][0] = 0.5; L[4][2] = 0.5;
       #Template matrix
       T[0][0] = 0
       T[0][1] = 1
       T[0][2] = 2
+      T[1][0] = 1; T[1][1] = 2; T[1][2] = 3;
+      T[2][0] = 2; T[2][1] = 3; T[2][2] = 4;
 
       offu = np.zeros(num_direct)
       offl = np.zeros(num_direct)
@@ -45,6 +48,9 @@ class SIR(Model):
 
       offu[2] = 0.001
       offl[2] = -0.00099
+
+      offu[3] = 1; offl[3] = 0;
+      offu[4] = 1; offl[4] = 0;
 
       b = Bundle(T, L, offu, offl, vars)
       super().__init__(b, dyns, vars, "SIR")

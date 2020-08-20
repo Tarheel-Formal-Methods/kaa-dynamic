@@ -90,4 +90,4 @@ class Quadcopter(Model):
            offu[17] = 100; offl[17] = 100;
 
            b = Bundle(T, L, offu, offl, vars)
-           super().__init__(b, dyns, vars)
+           super().__init__(b, dyns, vars, name="Quad")
