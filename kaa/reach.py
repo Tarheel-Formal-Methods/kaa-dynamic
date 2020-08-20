@@ -3,7 +3,7 @@ from kaa.bundle import Bundle, BundleTransformer
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 
-TempStrat = KaaSettings.TempStrat
+DefaultStrat = KaaSettings.TempStrat
 
 """
 Object handling all reachable flowpipe computations.
@@ -16,9 +16,10 @@ class ReachSet:
     """
     Compute reachable set for the alloted number of time steps.
     @params time_steps: number of time steps to carry out the reachable set computation.
+            TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object with computed flowpipe
     """
-    def computeReachSet(self, time_steps):
+    def computeReachSet(self, time_steps, TempStrat=DefaultStrat):
 
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model.f)

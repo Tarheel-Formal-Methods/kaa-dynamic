@@ -15,7 +15,10 @@ class Traj:
 
         for var in self.vars:
             self.traj_set[var] = []
-
+    """
+    Add a point from the system to the trajectory.
+    @params traj_point: point to add to the trajectory.
+    """
     def add_traj_point(self, traj_point):
 
         assert len(traj_point) == len(self.vars), "Trajectory dimensions should match system dimensions."
@@ -24,6 +27,11 @@ class Traj:
             self.traj_set[var].append(traj_point[var_ind])
         self.num_points += 1
 
+    """
+    Returns the projection of the trajectory onto an variable axis
+    @params var: var to project onto.
+    @returns projection onto axis determined by var.
+    """
     def get_traj_proj(self, var):
         return self.traj_set[var]
 

@@ -3,15 +3,10 @@ import numpy as np
 from kaa.pykodiak.pykodiak_interface import Kodiak
 from kaa.opts.optprod import OptimizationProd
 
-class KodiakOpt(OptimizationProd):
+class KodiakProd(OptimizationProd):
 
     def __init__(self, poly, bund):
         super().__init__(poly, bund)
-
-        'Ensuring Kodiak works as it should for us.'
-        for var in self.vars:
-            Kodiak.add_variable(str(var))
-
         self.kodiak_poly = Kodiak.sympy_to_kodiak(self.poly)
     
     def getBounds(self):

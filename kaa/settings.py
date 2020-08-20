@@ -1,5 +1,5 @@
-from kaa.opts.kodiak import KodiakOpt
-from kaa.opts.bernstein import BernsteinProd\
+from kaa.opts.kodiak import KodiakProd
+from kaa.opts.bernstein import BernsteinProd
 
 from kaa.templates import *
 
@@ -11,10 +11,10 @@ class KaaSettings:
     use_parallel = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
-    OptProd = BernsteinProd
+    OptProd = KodiakProd
 
     'The template loading/unloading strategy to use during reachable set computations'
-    TempStrat = StaticStrat
+    DefaultStrat = StaticStrat
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

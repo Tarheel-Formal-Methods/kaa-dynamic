@@ -6,10 +6,11 @@ from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
 from kaa.flowpipe import FlowPipe
 
+plt.rcParams.update({'font.size': PlotSettings.plot_font})
+
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
-
 class Plot:
 
     def __init__(self):
@@ -28,6 +29,8 @@ class Plot:
             self.__add_traj(plottable)
         elif isinstance(plottable, FlowPipe):
             self.__add_flowpipe(plottable)
+        else:
+            raise RuntimeError("Object is not of a plottable type.")
 
     def __add_traj(self, traj_data):
 
