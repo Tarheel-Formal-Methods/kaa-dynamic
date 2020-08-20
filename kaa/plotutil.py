@@ -69,13 +69,13 @@ class Plot:
                 y = traj.get_traj_proj(var)
                 ax[ax_idx].plot(x, y, color="C{}".format(traj_idx))
 
-                for flowpipe in self.flowpipes:
-                    flow_min, flow_max = flowpipe.get2DProj(var_ind)
-                    ax[ax_idx].fill_between(t, flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
+            for flowpipe in self.flowpipes:
+                flow_min, flow_max = flowpipe.get2DProj(var_ind)
+                ax[ax_idx].fill_between(t, flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
 
-                    ax[ax_idx].set_xlabel("t: time steps")
-                    ax[ax_idx].set_ylabel(("Reachable Set for {}".format(var)))
-                    ax[ax_idx].set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
+                ax[ax_idx].set_xlabel("t: time steps")
+                ax[ax_idx].set_ylabel(("Reachable Set for {}".format(var)))
+                ax[ax_idx].set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(var).upper()])

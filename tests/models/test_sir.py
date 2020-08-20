@@ -18,8 +18,8 @@ def test_SIR():
     'Generaste the trajectories and add them to the plot.'
     for traj in trajs:
         sir_plot.add(traj)
-
     sir_plot.add(mod_flow)
+
     sir_plot.plot(0,1,2)
     
     Timer.generate_stats()
