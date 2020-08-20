@@ -49,7 +49,7 @@ class Plot:
         self.model = flowpipe.model if self.model is None else self.model
         self.num_steps = max(self.num_steps, len(flowpipe))
 
-    def plot(self, *var_tup):
+    def plot(self, *var_tup, path=PlotSettings.default_fig_path):
 
         assert self.model is not None, "No data has been added to Plot."
         num_var = len(var_tup)
@@ -81,6 +81,6 @@ class Plot:
             var_str = ''.join([str(var).upper()])
             figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
 
-            figure.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
+            figure.savefig(os.path.join(path, figure_name), format='png')
         else:
             figure.show()

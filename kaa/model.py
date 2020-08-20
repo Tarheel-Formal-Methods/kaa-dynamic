@@ -22,3 +22,6 @@ class Model:
         if isinstance(KaaSettings.OptProd, KodiakProd):
             for var in self.vars:
                 Kodiak.add_variable(str(var))
+
+    def __str__(self):
+        return self.name

@@ -13,7 +13,7 @@ class KaaSettings:
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
     OptProd = BernsteinProd
 
-    'The template loading/unloading strategy to use during reachable set computations'
+    'The default template loading/unloading strategy to use during reachable set computations'
     DefaultStrat = StaticStrat
 
 class PlotSettings:
@@ -24,7 +24,7 @@ class PlotSettings:
     save_fig = True
 
     'Path to save figures'
-    fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
+    default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
 
     'Figure dimensions'
     fig_size = (25,10)
