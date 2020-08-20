@@ -3,7 +3,7 @@ from kaa.bundle import Bundle, BundleTransformer
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 
-DefaultStrat = KaaSettings.TempStrat
+DefaultStrat = KaaSettings.DefaultStrat
 
 """
 Object handling all reachable flowpipe computations.

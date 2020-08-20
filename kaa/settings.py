@@ -11,7 +11,7 @@ class KaaSettings:
     use_parallel = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
-    OptProd = KodiakProd
+    OptProd = BernsteinProd
 
     'The template loading/unloading strategy to use during reachable set computations'
     DefaultStrat = StaticStrat
@@ -27,4 +27,4 @@ class PlotSettings:
     fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
 
     'Figure dimensions'
-    fig_size = (10,10)
+    fig_size = (25,10)

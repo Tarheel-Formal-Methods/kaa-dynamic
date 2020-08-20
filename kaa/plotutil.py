@@ -15,9 +15,6 @@ class Plot:
 
     def __init__(self):
 
-        self.figure = plt.figure.Figure(figsize = PlotSettings.fig_size)
-        self.ax = self.figure.add_subplot(111)
-        
         self.flowpipes = []
         self.trajs = []
         self.model = None
@@ -52,31 +49,38 @@ class Plot:
         self.model = flowpipe.model if self.model is None else self.model
         self.num_steps = max(self.num_steps, len(flowpipe))
 
-    def plot(self, var_ind):
+    def plot(self, *var_tup):
 
         assert self.model is not None, "No data has been added to Plot."
+        num_var = len(var_tup)
+        figure = plt.figure.Figure(figsize = PlotSettings.fig_size)
 
-        var = self.model.vars[var_ind]
-        name = self.model.name
-        t = np.arange(0, self.num_steps, 1)
+        'Hackish way of adding subplots to Figure objects.'
+        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ]
 
-        for traj in self.trajs:
-            x = np.arange(len(traj))
-            y = traj.get_traj_proj(var)
-            self.ax.plot(x, y, color="C{}".format(len(self.trajs)-1))
+        for ax_idx, var_ind in enumerate(var_tup):
 
-        for flowpipe in self.flowpipes:
-            flow_min, flow_max = flowpipe.get2DProj(var_ind)
-            self.ax.fill_between(t, flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
+            var = self.model.vars[var_ind]
+            name = self.model.name
+            t = np.arange(0, self.num_steps, 1)
 
-        self.ax.set_xlabel("t: time steps")
-        self.ax.set_ylabel(("Reachable Set for {}".format(var)))
-        self.ax.set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
+            for traj_idx, traj in enumerate(self.trajs):
+                x = np.arange(len(traj))
+                y = traj.get_traj_proj(var)
+                ax[ax_idx].plot(x, y, color="C{}".format(traj_idx))
+
+                for flowpipe in self.flowpipes:
+                    flow_min, flow_max = flowpipe.get2DProj(var_ind)
+                    ax[ax_idx].fill_between(t, flow_min, flow_max, color="C{}".format(len(self.flowpipes)-1))
+
+                    ax[ax_idx].set_xlabel("t: time steps")
+                    ax[ax_idx].set_ylabel(("Reachable Set for {}".format(var)))
+                    ax[ax_idx].set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(var).upper()])
             figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
 
-            self.figure.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
+            figure.savefig(os.path.join(PlotSettings.fig_path, figure_name), format='png')
         else:
-            self.figure.show()
+            figure.show()

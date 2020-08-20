@@ -20,6 +20,6 @@ def test_SIR():
         sir_plot.add(traj)
 
     sir_plot.add(mod_flow)
-    sir_plot.plot(0)
+    sir_plot.plot(0,1,2)
     
     Timer.generate_stats()
