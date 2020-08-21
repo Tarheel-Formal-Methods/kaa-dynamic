@@ -53,7 +53,7 @@ class Plot:
 
         assert self.model is not None, "No data has been added to Plot."
         num_var = len(var_tup)
-        figure = plt.figure.Figure(figsize = PlotSettings.fig_size)
+        figure = plt.figure.Figure(figsize=PlotSettings.fig_size)
 
         'Hackish way of adding subplots to Figure objects.'
         ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ]

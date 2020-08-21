@@ -6,9 +6,9 @@ Object wrapping over template matrix to ease dynamic template loading and unload
 """
 class Template:
 
-    def __init__(self, T):
+    def __init__(self, bund):
 
-        self.T = T
+        self.T = bund.T
 
     def add_temp(self, temp_row):
 
