@@ -14,14 +14,14 @@ OptProd = KaaSettings.OptProd
 
 class Bundle:
 
-    def __init__(self, T, L, offu, offl, vars):
+    def __init__(self, model, T, L, offu, offl):
 
         if np.size(L,0) != np.size(offu,0):
-            print("Directions matrix L and upper offsets must have matching dimensions")
+            print("Directions matrix L and upper offsets must have matching dimensions: {} {}".format(np.size(L,0), np.size(offu,0)))
             exit()
 
         if np.size(L,0) != np.size(offl,0):
-            print("Directions matrix L and lower offsets must have matching dimensions")
+            print("Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0)))
             exit()
 
         if np.size(T,1) != np.size(L,1):
@@ -32,19 +32,20 @@ class Bundle:
         self.L = L
         self.offu = offu
         self.offl = offl
-        self.vars = vars
-
-        self.sys_dim = len(vars)
+        self.model = model
+        self.vars = model.vars
+        self.sys_dim = len(model.vars)
         self.num_direct = len(self.L)
+
 
     """
     Returns linear constraints representing the polytope defined by bundle.
-
     @returns linear constraints and their offsets.
     """
     def getIntersect(self):
-        A = np.empty([2*self.num_direct,self.sys_dim])
-        b = np.empty(2*self.num_direct) #row vector
+        print(self.L)
+        A = np.empty([2*self.num_direct, self.sys_dim])
+        b = np.empty(2*self.num_direct) 
 
         for ind in range(self.num_direct):
             A[ind] = self.L[ind]
@@ -60,9 +61,7 @@ class Bundle:
     @returns canonized Bundle object
     """
     def canonize(self):
-
         A, b = self.getIntersect()
-
         canon_offu = np.empty(self.num_direct)
         canon_offl = np.empty(self.num_direct)
 
@@ -71,7 +70,7 @@ class Bundle:
             canon_offu[row_ind] = (maxLinProg(row, A, b)).fun
             canon_offl[row_ind] = (maxLinProg(np.negative(row), A, b)).fun
 
-        return Bundle(self.T, self.L, canon_offu, canon_offl, self.vars)
+        return Bundle(self.model, self.T, self.L, canon_offu, canon_offl)
 
     """
     Returns the Parallelotope object defined by a row in the template matrix.
@@ -94,8 +93,8 @@ class Bundle:
     
 class BundleTransformer:
 
-    def __init__(self, f):
-        self.f = f
+    def __init__(self, model):
+        self.f = model.f
 
     """
     Transforms the bundle according to the dynamics governing the system. (dictated by self.f)
@@ -104,7 +103,6 @@ class BundleTransformer:
     @returns canonized transformed bundle.
     """
     def transform(self, bund):
-
         new_offu = np.full(bund.num_direct, np.inf)
         new_offl = np.full(bund.num_direct, np.inf)
 
@@ -140,6 +138,6 @@ class BundleTransformer:
 
         #print("New Offu: {}   NewOffl: {}".format(new_offu,new_offl))
         
-        trans_bund = Bundle(bund.T, bund.L, new_offu, new_offl, bund.vars)
+        trans_bund = Bundle(bund.model, bund.T, bund.L, new_offu, new_offl)
         canon_bund = trans_bund.canonize()
         return canon_bund

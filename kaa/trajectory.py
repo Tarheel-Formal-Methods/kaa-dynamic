@@ -1,3 +1,5 @@
+import numpy as np
+
 # Create plot namespace with plotting capabilites for flowpipe/traj
 # For input (flowpipes, traj) - plot2D function which takes flwopipe projections and traj and plots all of them
 
@@ -34,6 +36,13 @@ class Traj:
     """
     def get_traj_proj(self, var):
         return self.traj_set[var]
+
+    def get_traj_matrix(self):
+        dim = len(self.vars)
+        mat = np.empty((self.num_points, dim))
+
+        for i in range(self.num_points):
+            mat[i] = [ self.traj_set[var][i] for var in self.vars  ]
 
     def __getitem__(self, index):
         return [ (self.traj_set[var])[index] for var in self.vars ]

@@ -31,7 +31,7 @@ class Plot:
 
     def __add_traj(self, traj_data):
 
-        #assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
+        assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
         if self.model is not None:
             assert self.model.name == traj_data.model.name, "Trajectories and Plot must describe the same system."
 

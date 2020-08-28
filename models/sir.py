@@ -52,5 +52,4 @@ class SIR(Model):
       offu[3] = 1; offl[3] = 0;
       offu[4] = 1; offl[4] = 0;
 
-      b = Bundle(T, L, offu, offl, vars)
-      super().__init__(b, dyns, vars, "SIR")
+      super().__init__(dyns, vars, T, L, offu, offl, name="SIR")

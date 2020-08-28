@@ -18,13 +18,13 @@ class SimpleStrat(TempStrategy):
     def open_strat(self, bund):
         T = Template(bund)
         if self.toggle:
-            T.remove_temp(-1)
-            T.remove_temp(-1)
+            T.remove(-1)
+            T.remove(-1)
         else:
-            T.add_temp(self.last_temp)
+            T.add(self.last_temp)
 
         self.toggle = not self.toggle
-        return Bundle(np.copy(T.T), bund.L, bund.offu, bund.offl, bund.vars)
+        return Bundle(T.M, bund.L, bund.offu, bund.offl, bund.vars)
         
     def close_strat(self, bund):
         return bund

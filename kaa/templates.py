@@ -7,17 +7,20 @@ Object wrapping over template matrix to ease dynamic template loading and unload
 class Template:
 
     def __init__(self, bund):
+        self.bund = bund
 
-        self.T = bund.T
+    def add(self, temp_row):
+        self.bund.T = np.append(self.bund.T, temp_row, axis=0)
+        return len(self.M) - 1
 
-    def add_temp(self, temp_row):
+    def remove(self, index):
+        self.M = np.delete(self.M, index, axis=0)
 
-        self.T = np.append(self.T, temp_row, axis=0)
-        return len(self.T) - 1
+class Direction(Matrix):
 
-    def remove_temp(self, index):
+    def __init__(self, bund):
+        super().__init__(bund.L)
 
-        self.T = np.delete(self.T, index, axis=0)
 
 """
 Object containing routines to dynamically change the template matrix of a bundle based off a pre-determined

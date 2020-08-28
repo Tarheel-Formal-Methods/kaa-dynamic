@@ -22,7 +22,7 @@ class ReachSet:
     def computeReachSet(self, time_steps, TempStrat=DefaultStrat):
 
         initial_set = self.model.bund
-        transformer = BundleTransformer(self.model.f)
+        transformer = BundleTransformer(self.model)
         strat = TempStrat(self.model)
         flowpipe = [initial_set]
 
