@@ -30,14 +30,22 @@ class ReachSet:
         for ind in range(time_steps):
             
             Timer.start('Reachable Set Computation')
-            starting_bund = flowpipe[ind]
-            opening_bund = strat.open_strat(starting_bund)
 
-            trans_bund = transformer.transform(opening_bund)
-            final_bund = strat.close_strat(trans_bund)
+            starting_bund = flowpipe[ind]
+
+            #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
+            #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
+
+            strat.open_strat(starting_bund)
+            trans_bund = transformer.transform(starting_bund)
+            strat.close_strat(trans_bund)
+
+            #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
+            #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
+
             reach_time = Timer.stop('Reachable Set Computation')
 
-            print("Computed Step {0} -- Time Elapsed: {1} sec".format(ind, reach_time))
-            flowpipe.append(final_bund)
+            print("Computed Step {} -- Time Elapsed: {} sec".format(ind, reach_time))
+            flowpipe.append(trans_bund)
 
         return FlowPipe(flowpipe, self.model)

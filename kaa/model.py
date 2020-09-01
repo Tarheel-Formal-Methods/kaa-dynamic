@@ -17,6 +17,7 @@ class Model:
         'Name of system.'
         self.name = name
 
+        'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
 
         if KaaSettings.OptProd is KodiakProd:

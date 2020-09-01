@@ -2,27 +2,6 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 """
-Object wrapping over template matrix to ease dynamic template loading and unloading.
-"""
-class Template:
-
-    def __init__(self, bund):
-        self.bund = bund
-
-    def add(self, temp_row):
-        self.bund.T = np.append(self.bund.T, temp_row, axis=0)
-        return len(self.M) - 1
-
-    def remove(self, index):
-        self.M = np.delete(self.M, index, axis=0)
-
-class Direction(Matrix):
-
-    def __init__(self, bund):
-        super().__init__(bund.L)
-
-
-"""
 Object containing routines to dynamically change the template matrix of a bundle based off a pre-determined
 strategy
 """

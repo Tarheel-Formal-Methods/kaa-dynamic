@@ -43,7 +43,6 @@ class Bundle:
     @returns linear constraints and their offsets.
     """
     def getIntersect(self):
-        print(self.L)
         A = np.empty([2*self.num_direct, self.sys_dim])
         b = np.empty(2*self.num_direct) 
 
@@ -90,6 +89,31 @@ class Bundle:
             b[fac_ind + self.sys_dim] = self.offl[facet]
 
         return Parallelotope(A, b, self.vars)
+
+
+    def add_temp(self, temp_row_mat):
+        self.T = np.append(self.T, temp_row_mat, axis=0)
+
+    def remove_temp(self, temp_idx):
+        self.T = np.delete(self.T, temp_idx, axis=0)
+
+    def add_dir(self, dir_row_mat):
+        A, b = self.getIntersect()
+
+        self.L = np.append(self.L, dir_row_mat, axis=0)
+        new_uoffsets = [[ (maxLinProg(row, A, b)).fun for row in dir_row_mat ]]
+        new_loffsets = [[ (maxLinProg(np.negative(row), A, b)).fun for row in dir_row_mat ]]
+        
+        self.offu = np.append(self.offu, new_uoffsets)
+        self.offl = np.append(self.offl, new_loffsets)
+        self.num_direct = len(self.L)
+
+    def remove_dir(self, dir_idx):
+        self.L = np.delete(self.L, dir_idx, axis=0)
+        self.num_direct = len(self.L)
+
+        self.offu = np.delete(self.offu, dir_idx, axis=0)
+        self.offl = np.delete(self.offl, dir_idx, axis=0)
     
 class BundleTransformer:
 

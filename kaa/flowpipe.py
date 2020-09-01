@@ -114,6 +114,10 @@ class FlowPipe:
         phase_time = Timer.stop('Phase')
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
 
+    @property
+    def model_name(self):
+        return self.model.name
+
     def __len__(self):
         return len(self.flowpipe)
 

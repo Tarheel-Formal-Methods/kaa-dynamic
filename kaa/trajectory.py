@@ -49,3 +49,7 @@ class Traj:
 
     def __len__(self):
         return self.num_points
+
+    @property
+    def model_name(self):
+        return self.model.name

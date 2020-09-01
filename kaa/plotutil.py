@@ -33,7 +33,7 @@ class Plot:
 
         assert isinstance(traj_data, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
         if self.model is not None:
-            assert self.model.name == traj_data.model.name, "Trajectories and Plot must describe the same system."
+            assert self.model.name == traj_data.model_name, "Trajectories and Plot must describe the same system."
 
         self.trajs.append(traj_data)
         self.model = traj_data.model if self.model is None else self.model
@@ -43,8 +43,8 @@ class Plot:
 
         #assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.add_flowpipe"
         if self.model is not None:
-              assert self.model.name == flowpipe.model.name, "FlowPipe and Plot must describe the same system."
-        
+              assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
+
         self.flowpipes.append(flowpipe)
         self.model = flowpipe.model if self.model is None else self.model
         self.num_steps = max(self.num_steps, len(flowpipe))
@@ -78,7 +78,7 @@ class Plot:
                 ax[ax_idx].set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
 
         if PlotSettings.save_fig:
-            var_str = ''.join([str(var).upper()])
+            var_str = ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_tup])
             figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
 
             figure.savefig(os.path.join(path, figure_name), format='png')
