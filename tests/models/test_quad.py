@@ -1,5 +1,5 @@
 from kaa.reach import ReachSet
-from kaa.plotutils import Plot
+from kaa.plotutil import Plot
 from models.quadcopter import Quadcopter
 
 from kaa.timer import Timer

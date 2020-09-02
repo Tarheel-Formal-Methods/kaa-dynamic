@@ -1,22 +1,17 @@
 from kaa.reach import ReachSet
-from kaa.flowpipe import FlowPipePlotter
+from kaa.plotutil import Plot
 from models.phos import Phosphorelay
 
-import kaa.benchmark as Benchmark
-from kaa.benchmark import Label
+import kaa.benchmark as Timer
 
 def test_Phos():
 
     model = Phosphorelay()
     mod_reach = ReachSet(model)
-    timer = Benchmark.assign_timer(Label.TOTAL)
-    timer.start()
-
     mod_flow = mod_reach.computeReachSet(200)
 
-    timer.end()
+    phos_plot = Plot()
+    phos_plot.add(mod_flow)
+    phos_plot.plot(0,1,2)
 
-    FlowPipePlotter(mod_flow).plot2DProj(0)
-    FlowPipePlotter(mod_flow).plot2DProj(1)
-    FlowPipePlotter(mod_flow).plot2DProj(2)
-    Benchmark.generate_stats()
+    Timer.generate_stats()
