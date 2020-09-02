@@ -46,7 +46,5 @@ class Basic(Model):
         offl[1] = 1
         #offl[2] = 5
         #offl[3] = 5
-
-        b = Bundle(T, L, offu, offl, vars)
-
-        super().__init__(b, dyns, vars)
+        #
+        super().__init__(dyns, vars, T, L, offu, offl, name="Basic")

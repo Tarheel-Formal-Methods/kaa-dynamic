@@ -63,5 +63,4 @@ class LL(Model):
         offu[7] = 2.87; offl[7] = -2.81;
         offu[8] = 2.66; offl[8] = -2.58;
 
-        b = Bundle(T, L,  offu, offl, vars)
-        super().__init__(b, dyns, vars)
+        super().__init__(dyns, vars, T, L, offu, offl, name="LL")

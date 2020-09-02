@@ -55,8 +55,6 @@ class SIR(Model):
 
       super().__init__(dyns, vars, T, L, offu, offl, name="SIR")
 
-
-
 class SIR_PCA(Model):
 
   def __init__(self):
