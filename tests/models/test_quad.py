@@ -1,4 +1,5 @@
 from kaa.reach import ReachSet
+from kaa.plotutils import Plot
 from models.quadcopter import Quadcopter
 
 from kaa.timer import Timer
@@ -9,8 +10,8 @@ def test_Quad():
     mod_reach = ReachSet(model)
     mod_flow = mod_reach.computeReachSet(10)
 
-    mod_flow.plot2DProj(2)
-    mod_flow.plot2DProj(5)
-    mod_flow.plot2DProj(13)
+    quad_plot = Plot()
+    quad_plot(mod_flow)
+    quad_plot.plot(2,5,13)
 
     Timer.generate_stats()
