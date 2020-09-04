@@ -38,13 +38,11 @@ extern "C"
     }
 
     // create a new variable, with a bigger index than before
-    void addVariable(const char* name)
+    int addVariable(const char* name)
     {
         if (varToRealIndex.find(name) != varToRealIndex.end())
         {
-            string msg = "variable added twice: ";
-            msg += name;
-            throw runtime_error(msg);
+            return 0;
         }
 
         reals.push_back(var(name));
@@ -55,6 +53,8 @@ extern "C"
             throw runtime_error("addVariable() called after other Kodiak expressions were created. "
                                 "All addVariable() calls MUST happen first.");
         }
+
+        return 1;
     }
 
     // lookup a variable expression index by name (should have been prevoisly inserted with addVariable)

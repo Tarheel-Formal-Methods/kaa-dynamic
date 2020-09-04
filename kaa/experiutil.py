@@ -17,7 +17,6 @@ Generate random trajectories from initial set (initial bundle) of model.
 def generate_init_traj(model, num, time_steps):
 
     bund = model.bund
-
     return generate_traj(bund, num, time_steps)
 
 """

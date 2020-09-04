@@ -1,8 +1,5 @@
 import numpy as np
 
-# Create plot namespace with plotting capabilites for flowpipe/traj
-# For input (flowpipes, traj) - plot2D function which takes flwopipe projections and traj and plots all of them
-
 """
 Wrapper around list for representing arbitrary trajectories of a system.
 """
@@ -37,6 +34,10 @@ class Traj:
     def get_proj(self, var):
         return self.traj_set[var]
 
+    """
+    Returns numpy matrix with rows containing trajectory points.
+    @returns matrix containing trajectory points.
+    """
     def get_mat(self):
         dim = len(self.vars)
         mat = np.empty((self.num_points, dim))
