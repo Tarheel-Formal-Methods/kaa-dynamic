@@ -50,7 +50,7 @@ class Rossler(Model):
 
         super().__init__(dyns, vars, T, L, offu, offl, name="Rossler")
 
-class Rossler_PCA(Model):
+class Rossler_UnitBox(Model):
 
     def __init__(self):
 

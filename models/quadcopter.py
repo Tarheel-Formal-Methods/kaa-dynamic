@@ -91,7 +91,7 @@ class Quadcopter(Model):
 
            super().__init__(dyns, vars, T, L, offu, offl, name="Quad")
 
-class Quadcopter_PCA(Model):
+class Quadcopter_UnitBox(Model):
 
     def __init__(self):
 

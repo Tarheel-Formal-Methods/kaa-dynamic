@@ -16,17 +16,9 @@ class Bundle:
 
     def __init__(self, model, T, L, offu, offl):
 
-        if np.size(L,0) != np.size(offu,0):
-            print("Directions matrix L and upper offsets must have matching dimensions: {} {}".format(np.size(L,0), np.size(offu,0)))
-            exit()
-
-        if np.size(L,0) != np.size(offl,0):
-            print("Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0)))
-            exit()
-
-        if np.size(T,1) != np.size(L,1):
-            print("Template matrix T must have the same dimensions as Directions matrix L")
-            exit()
+        assert np.size(L,0) == np.size(offu,0), "Directions matrix L and upper offsets must have matching dimensions: {} {}".format(np.size(L,0), np.size(offu,0))
+        assert np.size(L,0) == np.size(offl,0), "Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0))
+        assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
 
         self.T = T 
         self.L = L
@@ -61,15 +53,11 @@ class Bundle:
     """
     def canonize(self):
         A, b = self.getIntersect()
-        canon_offu = np.empty(self.num_direct)
-        canon_offl = np.empty(self.num_direct)
 
         for row_ind, row in enumerate(self.L):
 
-            canon_offu[row_ind] = (maxLinProg(row, A, b)).fun
-            canon_offl[row_ind] = (maxLinProg(np.negative(row), A, b)).fun
-
-        return Bundle(self.model, self.T, self.L, canon_offu, canon_offl)
+            self.offu[row_ind] = (maxLinProg(row, A, b)).fun
+            self.offl[row_ind] = (maxLinProg(np.negative(row), A, b)).fun
 
     """
     Returns the Parallelotope object defined by a row in the template matrix.
@@ -90,13 +78,25 @@ class Bundle:
 
         return Parallelotope(A, b, self.vars)
 
-
+    """
+    Add a matrix of templates to the end of templates matrix.
+    @params temp_row_mat: Matrix of new template entries.
+    """
     def add_temp(self, temp_row_mat):
         self.T = np.append(self.T, temp_row_mat, axis=0)
 
+    """
+    Remove specified template entries from templates matrix.
+    @params temp_idx: list of indices specifying row indices in template matrix
+    """
     def remove_temp(self, temp_idx):
         self.T = np.delete(self.T, temp_idx, axis=0)
 
+    """
+    Add matrix of direction to end of directions matrix.
+    Appends new row elemets into the offset matrices as well.
+    @params dir_row_mat: Matrix of new direction entries
+    """
     def add_dir(self, dir_row_mat):
         A, b = self.getIntersect()
 
@@ -107,14 +107,33 @@ class Bundle:
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
         self.num_direct = len(self.L)
-
+        
+    """
+    Remove specified direction entries from directions matrix.
+    @params temp_idx: list of indices specifying row indices in directions matrix
+    """
     def remove_dir(self, dir_idx):
         self.L = np.delete(self.L, dir_idx, axis=0)
         self.num_direct = len(self.L)
 
         self.offu = np.delete(self.offu, dir_idx, axis=0)
         self.offl = np.delete(self.offl, dir_idx, axis=0)
-    
+
+    """
+    Copies bundle information into a new Bundle object
+    @returns new Bundle object copy.
+    """
+    def copy(self):
+        new_T = np.copy(self.T)
+        new_L = np.copy(self.L)
+        new_offu = np.copy(self.offu)
+        new_offl = np.copy(self.offl)
+        
+        return Bundle(self.model, new_T, new_L, new_offu, new_offl)
+
+"""
+Object responsible for transforming Bundle objects according to input model's dynamics.
+"""
 class BundleTransformer:
 
     def __init__(self, model):
@@ -160,8 +179,8 @@ class BundleTransformer:
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])
 
-        #print("New Offu: {}   NewOffl: {}".format(new_offu,new_offl))
-        
-        trans_bund = Bundle(bund.model, bund.T, bund.L, new_offu, new_offl)
-        canon_bund = trans_bund.canonize()
-        return canon_bund
+        bund.offu = new_offu
+        bund.offl = new_offl
+        bund.canonize()
+
+        return bund

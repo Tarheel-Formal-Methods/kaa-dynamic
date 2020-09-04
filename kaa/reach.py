@@ -31,7 +31,7 @@ class ReachSet:
             
             Timer.start('Reachable Set Computation')
 
-            starting_bund = flowpipe[ind]
+            starting_bund = flowpipe[ind].copy()
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))

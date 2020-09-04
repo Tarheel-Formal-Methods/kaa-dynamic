@@ -62,7 +62,7 @@ class Phosphorelay(Model):
 
         super().__init__(dyns, vars, T, L, offu, offl, name="Quad")
 
-class Phosphorelay_PCA(Model):
+class Phosphorelay_UnitBox(Model):
 
     def __init__(self):
 

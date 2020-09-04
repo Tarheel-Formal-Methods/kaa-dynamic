@@ -56,7 +56,7 @@ class LotkaVolterra(Model):
         super().__init__(dyns, vars, T, L, offu, offl, name="LV")
 
 
-class LotkaVolterra_PCA(Model):
+class LotkaVolterra_UnitBox(Model):
 
     def __init__(self):
         dim_sys = 5

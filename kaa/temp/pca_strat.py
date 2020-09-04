@@ -4,9 +4,10 @@ from sklearn.decomposition import PCA
 from kaa.templates import TempStrategy
 from kaa.bundle import Bundle
 from kaa.experiutil import generate_traj
+from kaa.timer import Timer
 
 iter_steps = 10
-num_traj = 30
+num_traj = 100
 traj_steps = 10
 
 """
