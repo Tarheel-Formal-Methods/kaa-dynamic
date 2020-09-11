@@ -6,7 +6,7 @@ from kaa.bundle import Bundle
 from kaa.experiutil import generate_traj
 from kaa.timer import Timer
 
-iter_steps = 10
+iter_steps = 5
 num_traj = 100
 traj_steps = 10
 

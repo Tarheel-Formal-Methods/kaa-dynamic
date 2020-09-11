@@ -14,7 +14,7 @@ class Parallelotope:
         self.vars = vars
         self.dim = len(vars)
 
-        self.A = A[:self.dim]
+        self.A = A
         self.b = b
 
     """
@@ -29,9 +29,9 @@ class Parallelotope:
 
         'Create list representing the linear transformation q + \sum_{j} a_j* g_j'
         expr_list = base_vertex
-        for var_ind, var in enumerate(self.vars):
-            for i in range(self.dim):
-                expr_list[i] += gen_list[var_ind][i] * var
+        for j in range(self.dim):
+            for var_ind, var in enumerate(self.vars):
+                expr_list[j] += gen_list[var_ind][j] * var
         Timer.stop('Generator Procedure')
 
         return expr_list
@@ -58,7 +58,7 @@ class Parallelotope:
     def _computeGenerators(self, base_vertex):
 
         u_b = self.b[:self.dim]
-        coeff_mat = self.A
+        coeff_mat = self.A[:self.dim]
 
         'Hacky way to toggle parallelism for experiments'
         if KaaSettings.use_parallel:
@@ -71,7 +71,10 @@ class Parallelotope:
             for i in range(self.dim):
                vertices.append(self._gen_worker(i, u_b, coeff_mat))
 
-        return [ [x-y for x,y in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
+        vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
+        print("Vertex List For Paratope: {} \n".format(vertices))
+        print("Vector List For Paratope: {} \n".format(vertex_list))
+        return vertex_list
 
     """
     Worker process for calculating vertices of higher-dimensional parallelotopes.
@@ -81,10 +84,10 @@ class Parallelotope:
     @returns coordinates of vertex
     """
     def _gen_worker(self, i, u_b, coeff_mat):
-
+        #print(coeff_mat, u_b)
         negated_bi = np.copy(u_b)
         negated_bi[i] = -self.b[i + self.dim]
-        sol_set_i = np.linalg.solve(self.A, negated_bi)
+        sol_set_i = np.linalg.solve(coeff_mat, negated_bi)
 
         return sol_set_i
 
@@ -101,5 +104,7 @@ class Parallelotope:
     def _computeBaseVertex(self):
 
         u_b = self.b[:self.dim]
-        sol_set = np.linalg.solve(self.A, u_b)
+        u_A = self.A[:self.dim]
+        sol_set = np.linalg.solve(u_A, u_b)
+        print(" \n Base Vertex for Current Paratope: {} \n".format(list(sol_set)))
         return list(sol_set)

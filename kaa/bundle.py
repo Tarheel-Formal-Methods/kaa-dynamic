@@ -160,21 +160,26 @@ class BundleTransformer:
             for var_ind, var in enumerate(bund.vars):
                 var_sub.append((var, genFun[var_ind]))
 
+            Timer.start('Functional Composition')
+            fog = [ f.subs(var_sub) for f in self.f ]
+            Timer.stop('Functional Composition')
+            
+            print("GenFun for Paratope: {}".format(genFun))
+
             for column in row.astype(int):
                 curr_L = bund.L[column]
 
                 'Perform functional composition with exact transformation from unitbox to parallelotope.'
-                Timer.start('Functional Composition')
-                fog = [ f.subs(var_sub) for f in self.f ]
-                Timer.stop('Functional Composition')
-
                 bound_polyu = [ curr_L[func_ind] * func for func_ind, func in enumerate(fog) ]
                 bound_polyu = reduce(add, bound_polyu)
+                print("Polynomial for Column {}: {}".format(column, bound_polyu))
 
                 'Calculate min/max Bernstein coefficients.'
                 Timer.start('Kodiak Computation')
                 ub, lb = OptProd(bound_polyu, bund).getBounds()
                 Timer.stop('Kodiak Computation')
+
+                print("Column {}: {} \n".format(column, (ub,-1*lb)))
 
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])

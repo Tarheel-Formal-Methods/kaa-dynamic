@@ -42,10 +42,10 @@ class SIR(Model):
       offl = np.zeros(num_direct)
 
       offu[0] = 0.8
-      offl[0] = -0.79
+      offl[0] = -0.75
 
       offu[1] = 0.2
-      offl[1] = -0.19
+      offl[1] = -0.15
 
       offu[2] = 0.001
       offl[2] = -0.00099

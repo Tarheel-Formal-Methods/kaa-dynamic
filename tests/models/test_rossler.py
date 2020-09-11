@@ -1,6 +1,6 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
-from models.rossler import Rossler
+from models.rossler import Rossler, Rossler_UnitBox
 
 from kaa.timer import Timer
 

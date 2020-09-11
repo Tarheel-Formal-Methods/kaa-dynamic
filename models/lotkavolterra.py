@@ -16,7 +16,6 @@ class LotkaVolterra(Model):
         beta = 0.5
         delta = 0.01
 
-
         dx1 = x1 + ( x1*(1 - (x1 + alpha*x2 + beta*x5)) )*delta
         dx2 = x2 + (x2*(1 - (x2 + alpha*x3 + beta*x1)) )*delta
         dx3 = x3 + (x3*(1 - (x3 + alpha*x4 + beta*x2)) )*delta

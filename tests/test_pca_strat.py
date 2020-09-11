@@ -22,7 +22,7 @@ def test_pca_strat():
     sir_plot = Plot()
 
     sir_plot.add(sir_flow)
-    sir_plot.add(sir_flow_pca, ``"SIR_PCA")
+    sir_plot.add(sir_flow_pca, "SIR_PCA")
     sir_plot.plot(0,1,2)
 
     Timer.generate_stats()

@@ -171,7 +171,7 @@ class Quadcopter_UnitBox(Model):
            offu = np.zeros(num_dirs);
            offl = np.zeros(num_dirs);
 
-           offu[2] = 0.21; offl[2] = -0.20;
+           offu[2] = 0.21; offl[2] = -0.17;
            offu[6] = 1; offl[6] = -1;
            #offu[17] = 100; offl[17] = 100;
 
