@@ -1,0 +1,72 @@
+ Base Vertex for Current Paratope: [3.0, 1.0]
+
+Vertex List For Paratope: [array([2., 1.]), array([ 3., -1.])]
+
+Vector List For Paratope: [[-1.0, 0.0], [0.0, -2.0]]
+
+GenFun for Paratope: [3.0 - 1.0*x, 1.0 - 2.0*y]
+Polynomial for Column 0: 1.0 - 2.0*y
+Column 0: (1.0, 1.0)
+
+Polynomial for Column 1: 1.0*x - 3.0
+Column 1: (-2.0, 3.0)
+
+Computed Step 0 -- Time Elapsed: 0.04567885398864746 sec
+
+ Base Vertex for Current Paratope: [1.0, -2.0]
+
+Vertex List For Paratope: [array([-1., -2.]), array([ 1., -3.])]
+
+Vector List For Paratope: [[-2.0, 0.0], [0.0, -1.0]]
+
+GenFun for Paratope: [1.0 - 2.0*x, -1.0*y - 2.0]
+Polynomial for Column 0: -1.0*y - 2.0
+Column 0: (-2.0, 3.0)
+
+Polynomial for Column 1: 2.0*x - 1.0
+Column 1: (1.0, 1.0)
+
+Computed Step 1 -- Time Elapsed: 0.01211094856262207 sec
+
+ Base Vertex for Current Paratope: [-2.0, 1.0]
+
+Vertex List For Paratope: [array([-3.,  1.]), array([-2., -1.])]
+
+Vector List For Paratope: [[-1.0, 0.0], [0.0, -2.0]]
+
+GenFun for Paratope: [-1.0*x - 2.0, 1.0 - 2.0*y]
+Polynomial for Column 0: 1.0 - 2.0*y
+Column 0: (1.0, 1.0)
+
+Polynomial for Column 1: 1.0*x + 2.0
+Column 1: (3.0, -2.0)
+
+Computed Step 2 -- Time Elapsed: 0.00463414192199707 sec
+
+ Base Vertex for Current Paratope: [1.0, 3.0]
+
+Vertex List For Paratope: [array([-1.,  3.]), array([1., 2.])]
+
+Vector List For Paratope: [[-2.0, 0.0], [0.0, -1.0]]
+
+GenFun for Paratope: [1.0 - 2.0*x, 3.0 - 1.0*y]
+Polynomial for Column 0: 3.0 - 1.0*y
+Column 0: (3.0, -2.0)
+
+Polynomial for Column 1: 2.0*x - 1.0
+Column 1: (1.0, 1.0)
+
+Computed Step 3 -- Time Elapsed: 0.004129171371459961 sec
+
+ Base Vertex for Current Paratope: [3.0, 1.0]
+
+Vertex List For Paratope: [array([2., 1.]), array([ 3., -1.])]
+
+Vector List For Paratope: [[-1.0, 0.0], [0.0, -2.0]]
+
+GenFun for Paratope: [3.0 - 1.0*x, 1.0 - 2.0*y]
+Polynomial for Column 0: 1.0 - 2.0*y
+Column 0: (1.0, 1.0)
+
+Polynomial for Column 1: 1.0*x - 3.0
+Column 1: (-2.0, 3.0)

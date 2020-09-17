@@ -1,4 +1,5 @@
 import numpy as np
+import sympy as sp
 import multiprocessing as mp
 
 from kaa.lputil import minLinProg, maxLinProg
@@ -14,7 +15,7 @@ class Parallelotope:
         self.vars = vars
         self.dim = len(vars)
 
-        self.A = A
+        self.A = A[:self.dim]
         self.b = b
 
     """
@@ -58,8 +59,8 @@ class Parallelotope:
     def _computeGenerators(self, base_vertex):
 
         u_b = self.b[:self.dim]
-        coeff_mat = self.A[:self.dim]
-
+        coeff_mat = self._convertMatFormat(self.A)
+        
         'Hacky way to toggle parallelism for experiments'
         if KaaSettings.use_parallel:
             p = mp.Pool(processes=4)
@@ -85,11 +86,14 @@ class Parallelotope:
     """
     def _gen_worker(self, i, u_b, coeff_mat):
         #print(coeff_mat, u_b)
+
         negated_bi = np.copy(u_b)
         negated_bi[i] = -self.b[i + self.dim]
-        sol_set_i = np.linalg.solve(coeff_mat, negated_bi)
+        negated_bi = self._convertMatFormat(negated_bi)
+        #print("(coeff_mat, negated_bi): {}".format((coeff_mat, negated_bi)))
+        sol_set_i = sp.linsolve((coeff_mat, negated_bi), self.vars)
 
-        return sol_set_i
+        return self._convertSolSetToList(sol_set_i)
 
     """
     Calculate the base vertex of the parallelotope (variable q)
@@ -104,7 +108,32 @@ class Parallelotope:
     def _computeBaseVertex(self):
 
         u_b = self.b[:self.dim]
-        u_A = self.A[:self.dim]
-        sol_set = np.linalg.solve(u_A, u_b)
+        
+        coeff_mat = self._convertMatFormat(self.A)
+        offset_mat = self._convertMatFormat(u_b)
+
+        sol_set = sp.linsolve((coeff_mat, offset_mat), self.vars)
+        sol_set = self._convertSolSetToList(sol_set)
         print(" \n Base Vertex for Current Paratope: {} \n".format(list(sol_set)))
-        return list(sol_set)
+
+        return sol_set
+
+
+    """
+    Convert numpy matrix into sympy matrix
+    @params mat: numpy matrix
+    @returns sympy matrix counterpart
+    """
+    def _convertMatFormat(self, mat):
+        return sp.Matrix(mat.tolist())
+
+    """
+    Takes solution set returned by sympy and converts into list
+    @params fin_set: FiniteSet
+    @returns list of sympy solution set
+    """
+    def _convertSolSetToList(self, fin_set):
+
+        assert fin_set is not sp.EmptySet
+
+        return list(fin_set.args[0])

@@ -37,11 +37,11 @@ class HarOsc(Model):
         offl = np.empty(2)
 
         offu[0] = 3
-        offu[1] = -2
+        offu[1] = 1
         #offu[2] = 5
         #offu[3] = 5
 
-        offl[0] = 1
+        offl[0] = -2
         offl[1] = 1
         #offl[2] = 5
         #offl[3] = 5

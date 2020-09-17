@@ -156,22 +156,30 @@ class BundleTransformer:
             genFun = p.getGeneratorRep()
 
             'Create subsitutions tuples.'
-            var_sub = []
+            var_sub = {}
             for var_ind, var in enumerate(bund.vars):
-                var_sub.append((var, genFun[var_ind]))
+                var_sub[var] = genFun[var_ind]
+
+            print(var_sub)
+            exit()
 
             Timer.start('Functional Composition')
-            fog = [ f.subs(var_sub) for f in self.f ]
+            fog = [ func.evalf(subs=var_sub) for func in self.f ]
+        #Run this in interactive output for SIR Column 3 output.
             Timer.stop('Functional Composition')
-            
+
+            print("FOG: {}".format(fog))
+
             print("GenFun for Paratope: {}".format(genFun))
 
             for column in row.astype(int):
                 curr_L = bund.L[column]
 
                 'Perform functional composition with exact transformation from unitbox to parallelotope.'
-                bound_polyu = [ curr_L[func_ind] * func for func_ind, func in enumerate(fog) ]
-                bound_polyu = reduce(add, bound_polyu)
+                bound_polyu = 0
+                for coeff_idx, coeff in enumerate(curr_L):
+                    bound_polyu += coeff * fog[coeff_idx]
+
                 print("Polynomial for Column {}: {}".format(column, bound_polyu))
 
                 'Calculate min/max Bernstein coefficients.'

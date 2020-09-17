@@ -9,7 +9,7 @@ def test_HarOsc():
     model = HarOsc()
     #trajs = generate_traj(model, 10, 200)
     mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(50)
+    mod_flow = mod_reach.computeReachSet(5)
 
     sir_plot = Plot()
     #trajs = generate_traj(model, 10, 200)
