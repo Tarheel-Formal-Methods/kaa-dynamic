@@ -10,7 +10,7 @@ def test_SIR():
     model = SIR()
     #trajs = generate_traj(model, 10, 200)
     mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(3)
+    mod_flow = mod_reach.computeReachSet(200)
 
     sir_plot = Plot()
     #trajs = generate_traj(model, 10, 200)

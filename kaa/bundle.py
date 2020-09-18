@@ -156,21 +156,18 @@ class BundleTransformer:
             genFun = p.getGeneratorRep()
 
             'Create subsitutions tuples.'
-            var_sub = {}
+            var_sub = []
             for var_ind, var in enumerate(bund.vars):
-                var_sub[var] = genFun[var_ind]
-
-            print(var_sub)
-            exit()
+                var_sub.append((var, genFun[var_ind]))
 
             Timer.start('Functional Composition')
-            fog = [ func.evalf(subs=var_sub) for func in self.f ]
-        #Run this in interactive output for SIR Column 3 output.
+            fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
+            #Run this in interactive output for SIR Column 3 output.
             Timer.stop('Functional Composition')
 
-            print("FOG: {}".format(fog))
 
-            print("GenFun for Paratope: {}".format(genFun))
+            #print("FOG: {}".format(fog))
+            #print("GenFun for Paratope: {}".format(genFun))
 
             for column in row.astype(int):
                 curr_L = bund.L[column]
@@ -180,15 +177,14 @@ class BundleTransformer:
                 for coeff_idx, coeff in enumerate(curr_L):
                     bound_polyu += coeff * fog[coeff_idx]
 
-                print("Polynomial for Column {}: {}".format(column, bound_polyu))
+                #print("Polynomial for Column {}: {}".format(column, bound_polyu))
 
                 'Calculate min/max Bernstein coefficients.'
                 Timer.start('Kodiak Computation')
                 ub, lb = OptProd(bound_polyu, bund).getBounds()
                 Timer.stop('Kodiak Computation')
 
-                print("Column {}: {} \n".format(column, (ub,-1*lb)))
-
+                #print("Column {}: {} \n".format(column, (ub,-1*lb)))
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])
 

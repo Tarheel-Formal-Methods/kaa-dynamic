@@ -1,5 +1,4 @@
 import numpy as np
-import sympy as sp
 import multiprocessing as mp
 
 from kaa.lputil import minLinProg, maxLinProg
@@ -17,6 +16,7 @@ class Parallelotope:
 
         self.A = A[:self.dim]
         self.b = b
+        self.u_b = self.b[:self.dim]
 
     """
     Return list of functions transforming the n-unit-box over the parallelotope.
@@ -57,9 +57,6 @@ class Parallelotope:
     @returns generator vectors g_j
     """
     def _computeGenerators(self, base_vertex):
-
-        u_b = self.b[:self.dim]
-        coeff_mat = self._convertMatFormat(self.A)
         
         'Hacky way to toggle parallelism for experiments'
         if KaaSettings.use_parallel:
@@ -70,11 +67,11 @@ class Parallelotope:
         else:
             vertices = []
             for i in range(self.dim):
-               vertices.append(self._gen_worker(i, u_b, coeff_mat))
+               vertices.append(self._gen_worker(i, self.u_b, self.A))
 
         vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
-        print("Vertex List For Paratope: {} \n".format(vertices))
-        print("Vector List For Paratope: {} \n".format(vertex_list))
+        #print("Vertex List For Paratope: {} \n".format(vertices))
+        #print("Vector List For Paratope: {} \n".format(vertex_list))
         return vertex_list
 
     """
@@ -87,13 +84,12 @@ class Parallelotope:
     def _gen_worker(self, i, u_b, coeff_mat):
         #print(coeff_mat, u_b)
 
-        negated_bi = np.copy(u_b)
+        negated_bi = np.copy(self.u_b)
         negated_bi[i] = -self.b[i + self.dim]
-        negated_bi = self._convertMatFormat(negated_bi)
         #print("(coeff_mat, negated_bi): {}".format((coeff_mat, negated_bi)))
-        sol_set_i = sp.linsolve((coeff_mat, negated_bi), self.vars)
+        sol_set_i = np.linalg.solve(coeff_mat, negated_bi)
 
-        return self._convertSolSetToList(sol_set_i)
+        return list(sol_set_i)
 
     """
     Calculate the base vertex of the parallelotope (variable q)
@@ -107,16 +103,9 @@ class Parallelotope:
     """
     def _computeBaseVertex(self):
 
-        u_b = self.b[:self.dim]
-        
-        coeff_mat = self._convertMatFormat(self.A)
-        offset_mat = self._convertMatFormat(u_b)
-
-        sol_set = sp.linsolve((coeff_mat, offset_mat), self.vars)
-        sol_set = self._convertSolSetToList(sol_set)
-        print(" \n Base Vertex for Current Paratope: {} \n".format(list(sol_set)))
-
-        return sol_set
+        sol_set = np.linalg.solve(self.A, self.u_b)
+        #print(" \n Base Vertex for Current Paratope: {} \n".format(list(sol_set)))
+        return list(sol_set)
 
 
     """

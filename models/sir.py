@@ -12,7 +12,7 @@ class SIR(Model):
 
       ds = s - (0.34*s*i)*0.1;
       di = i + (0.34*s*i - 0.05*i)*0.1;
-      dr = r + 0.05*i*0.1;
+      dr = r + (0.05*i)*0.1;
 
       dyns = [ds, di, dr]
       vars = [s, i, r] #In predetermined order
@@ -42,10 +42,10 @@ class SIR(Model):
       offl = np.zeros(num_direct)
 
       offu[0] = 0.8
-      offl[0] = -0.75
+      offl[0] = -0.79
 
       offu[1] = 0.2
-      offl[1] = -0.15
+      offl[1] = -0.19
 
       offu[2] = 0.001
       offl[2] = -0.00099
