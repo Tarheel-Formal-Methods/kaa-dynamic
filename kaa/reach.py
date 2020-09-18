@@ -1,9 +1,14 @@
+from termcolor import colored 
+
 from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 
 DefaultStrat = KaaSettings.DefaultStrat
+
+bolden = lambda string: colored(string, 'white', attrs=['bold'])
+
 
 """
 Object handling all reachable flowpipe computations.
@@ -19,11 +24,11 @@ class ReachSet:
             TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object with computed flowpipe
     """
-    def computeReachSet(self, time_steps, TempStrat=DefaultStrat):
+    def computeReachSet(self, time_steps, TempStrat=None):
 
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model)
-        strat = TempStrat(self.model)
+        strat = TempStrat if TempStrat is not None else DefaultStrat(self.model)
         flowpipe = [initial_set]
 
 
@@ -45,7 +50,7 @@ class ReachSet:
 
             reach_time = Timer.stop('Reachable Set Computation')
 
-            print("Computed Step {} -- Time Elapsed: {} sec".format(ind, reach_time))
+            print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(ind), bolden(reach_time)))
             flowpipe.append(trans_bund)
 
         return FlowPipe(flowpipe, self.model)

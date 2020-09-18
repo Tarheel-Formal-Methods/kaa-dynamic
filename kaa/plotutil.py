@@ -66,14 +66,19 @@ class Plot:
     @params: *var_tup: indices of desired variables
              path: optional variable designated the path to store the generated matplotlib figure.
     """
-    def plot(self, *var_tup, path=PlotSettings.default_fig_path):
+    def plot(self, *var_tup, path=PlotSettings.default_fig_path, overlap=True):
 
         assert self.model is not None, "No data has been added to the Plot object."
         num_var = len(var_tup)
+        num_flowpipes = len(self.flowpipes)
+
         figure = plt.figure.Figure(figsize=PlotSettings.fig_size)
+        figure.subplots_adjust(hspace=0.3,wspace=0.2)
 
         'Hackish way of adding subplots to Figure objects.'
-        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ]
+        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ] \
+        if overlap else \
+        [[figure.add_subplot(num_flowpipes, num_var, (y*num_var)+(i+1)) for i in range(num_var)] for y in range(num_flowpipes)]
 
         for ax_idx, var_ind in enumerate(var_tup):
 
@@ -90,17 +95,17 @@ class Plot:
                 flow_min, flow_max = flowpipe.get2DProj(var_ind)
                 flowpipe_label = name if label is None else label
 
-                ax[ax_idx].fill_between(t, flow_min, flow_max, label=flowpipe_label, color="C{}".format(flow_idx))
+                curr_ax = ax[ax_idx] if overlap else ax[flow_idx][ax_idx]
 
-                ax[ax_idx].set_xlabel("t: time steps")
-                ax[ax_idx].set_ylabel(("Reachable Set for {}".format(var)))
-                ax[ax_idx].set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
-                ax[ax_idx].legend()
+                curr_ax.fill_between(t, flow_min, flow_max, label=flowpipe_label, color="C{}".format(flow_idx), alpha=0.5)
+                curr_ax.set_xlabel("t: time steps")
+                curr_ax.set_ylabel(("Reachable Set for {}".format(var)))
+                curr_ax.set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
+                curr_ax.legend()
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_tup])
             figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
-
             figure.savefig(os.path.join(path, figure_name), format='png')
         else:
             figure.show()
