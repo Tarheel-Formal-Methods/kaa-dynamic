@@ -101,6 +101,7 @@ def calc_envelop_box(bund):
         box_interval.append([minCood, maxCood])
 
     return box_interval
+
 """
 Checks if point is indeed contained in initial polyhedron
 @params point: point to test
@@ -115,3 +116,19 @@ def check_membership(point, bund):
         if np.dot(row, point) > b[row_idx]:
             return False
     return True
+
+"""
+Calculates naive supremum bound on the difference between two Flowpipe objects
+@params flowpipe1: first Flowpipe object
+        flowpipe2: second Flowpipe object
+        var_ind: index of variable.
+@returns maximum difference calculated along desired projection.
+"""
+def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
+    y1_max, y1_min = flowpipe1.get2DProj(var_ind)
+    y2_max, y2_min = flowpipe2.get2DProj(var_ind)
+
+    max_diff = np.absolute(np.subtract(y1_max, y2_max))
+    min_diff = np.absolute(np.subtract(y1_min, y2_min))
+
+    return np.amax(np.append(max_diff, min_diff))

@@ -8,7 +8,7 @@ from models.lotkavolterra import LotkaVolterra, LotkaVolterra_UnitBox
 from models.quadcopter import Quadcopter, Quadcopter_UnitBox
 
 from kaa.timer import Timer
-from kaa.experiutil import generate_traj
+from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
 
 NUM_STEPS = 100
@@ -31,8 +31,14 @@ def test_sir_pca_strat():
         sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(sir_pca, iter_steps=2*i))
         sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(2*i))
     
-    sir_plot.plot(0,1,2)
+    #sir_plot.plot(0,1,2)
     Timer.generate_stats()
+    err_s = sup_error_bounds(sir_flow, sir_flow_pca, 0)
+    err_i = sup_error_bounds(sir_flow, sir_flow_pca, 1)
+    err_r = sup_error_bounds(sir_flow, sir_flow_pca, 2)
+    print(colored("Maximum Error between PCA and Sapo along S: {}".format(err_s),'red',attrs=['blink']))
+    print(colored("Maximum Error between PCA and Sapo along I: {}".format(err_i),'red',attrs=['blink']))
+    print(colored("Maximum Error between PCA and Sapo along R: {}".format(err_r),'red',attrs=['blink']))
 
 def test_rossler_pca_strat():
 

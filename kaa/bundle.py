@@ -1,9 +1,6 @@
 import numpy as np
 import sympy as sp
 
-from operator import add
-from functools import reduce
-
 from kaa.parallelotope import Parallelotope
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
@@ -162,12 +159,7 @@ class BundleTransformer:
 
             Timer.start('Functional Composition')
             fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
-            #Run this in interactive output for SIR Column 3 output.
             Timer.stop('Functional Composition')
-
-
-            #print("FOG: {}".format(fog))
-            #print("GenFun for Paratope: {}".format(genFun))
 
             for column in row.astype(int):
                 curr_L = bund.L[column]
@@ -177,14 +169,11 @@ class BundleTransformer:
                 for coeff_idx, coeff in enumerate(curr_L):
                     bound_polyu += coeff * fog[coeff_idx]
 
-                #print("Polynomial for Column {}: {}".format(column, bound_polyu))
-
                 'Calculate min/max Bernstein coefficients.'
                 Timer.start('Kodiak Computation')
                 ub, lb = OptProd(bound_polyu, bund).getBounds()
                 Timer.stop('Kodiak Computation')
 
-                #print("Column {}: {} \n".format(column, (ub,-1*lb)))
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])
 
