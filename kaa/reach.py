@@ -1,7 +1,7 @@
 from termcolor import colored 
 
 from kaa.timer import Timer
-from kaa.bundle import Bundle, BundleTransformer
+from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 
@@ -24,11 +24,11 @@ class ReachSet:
             TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object with computed flowpipe
     """
-    def computeReachSet(self, time_steps, TempStrat=None):
+    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.OFO):
 
         initial_set = self.model.bund
-        transformer = BundleTransformer(self.model)
-        strat = TempStrat if TempStrat is not None else DefaultStrat(self.model)
+        transformer = BundleTransformer(self.model, transmode)
+        strat = tempstrat if tempstrat is not None else DefaultStrat(self.model)
         flowpipe = [initial_set]
 
 

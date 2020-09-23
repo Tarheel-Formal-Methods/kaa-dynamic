@@ -1,6 +1,8 @@
 import numpy as np
 import sympy as sp
 
+from enum import Enum
+
 from kaa.parallelotope import Parallelotope
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
@@ -129,12 +131,26 @@ class Bundle:
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
 
 """
+Wrapper over bundle transformation modes.
+"""
+class BundleMode(Enum):
+    AFO = 0
+    OFO = 1
+
+"""
 Object responsible for transforming Bundle objects according to input model's dynamics.
 """
 class BundleTransformer:
 
-    def __init__(self, model):
+    """
+    Constuctor for BundleTransformer
+    @params mode: mode for performing bundle transformations.
+    A value of BundleMode.OFO (1) indicates using the One-for-One transformation method.
+    Otherwise, a value of BundleMode.AFO (0) indicates using the All-for-One transformation method.
+    """
+    def __init__(self, model, mode):
         self.f = model.f
+        self.ofo_mode = mode
 
     """
     Transforms the bundle according to the dynamics governing the system. (dictated by self.f)
@@ -161,7 +177,13 @@ class BundleTransformer:
             fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
             Timer.stop('Functional Composition')
 
-            for column in row.astype(int):
+
+            'Toggle iterators between OFO/AFO'
+            'Warning: assuming for now that all directions are used in defining templates.'
+            direct_iter = row.astype(int) if self.ofo_mode else \
+                           range(self.num_direct)
+
+            for column in direct_iter:
                 curr_L = bund.L[column]
 
                 'Perform functional composition with exact transformation from unitbox to parallelotope.'
@@ -170,9 +192,9 @@ class BundleTransformer:
                     bound_polyu += coeff * fog[coeff_idx]
 
                 'Calculate min/max Bernstein coefficients.'
-                Timer.start('Kodiak Computation')
+                Timer.start('Bound Computation')
                 ub, lb = OptProd(bound_polyu, bund).getBounds()
-                Timer.stop('Kodiak Computation')
+                Timer.stop('Bound Computation')
 
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(-1 * lb, new_offl[column])

@@ -5,12 +5,14 @@ from models.sir import SIR, SIR_UnitBox
 from kaa.timer import Timer
 from kaa.experiutil import generate_traj
 
+from kaa.bundle import BundleMode
+
 def test_SIR():
 
     model = SIR()
     #trajs = generate_traj(model, 10, 200)
     mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(200)
+    mod_flow = mod_reach.computeReachSet(200, transmode=BundleMode.AFO)
 
     sir_plot = Plot()
     #trajs = generate_traj(model, 10, 200)
