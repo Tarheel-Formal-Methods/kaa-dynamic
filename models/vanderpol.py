@@ -44,5 +44,4 @@ class VanDerPol(Model):
         offu[2] = 1.85; offl[2] = -1.55;
         offu[3] = 2.45; offl[3] = -2.35;
 
-        b = Bundle(T, L,  offu, offl, vars)
-        super().__init__(b, dyns, vars)
+        super().__init__(dyns, vars, T, L, offu, offl)

@@ -9,7 +9,6 @@ DefaultStrat = KaaSettings.DefaultStrat
 
 bolden = lambda string: colored(string, 'white', attrs=['bold'])
 
-
 """
 Object handling all reachable flowpipe computations.
 """
@@ -22,7 +21,7 @@ class ReachSet:
     Compute reachable set for the alloted number of time steps.
     @params time_steps: number of time steps to carry out the reachable set computation.
             TempStrat: template loading strategy to use during this reachable set computation.
-    @returns FlowPipe object with computed flowpipe
+    @returns FlowPipe object containing computed flowpipe
     """
     def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.OFO):
 

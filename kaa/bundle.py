@@ -19,29 +19,29 @@ class Bundle:
         assert np.size(L,0) == np.size(offl,0), "Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0))
         assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
 
-        self.T = T 
+        self.T = T
         self.L = L
         self.offu = offu
         self.offl = offl
         self.model = model
         self.vars = model.vars
         self.sys_dim = len(model.vars)
-        self.num_direct = len(self.L)
-
+        self.num_dir = len(self.L)
 
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
     """
     def getIntersect(self):
-        A = np.empty([2*self.num_direct, self.sys_dim])
-        b = np.empty(2*self.num_direct) 
 
-        for ind in range(self.num_direct):
+        A = np.empty([2*self.num_dir, self.sys_dim])
+        b = np.empty(2*self.num_dir)
+
+        for ind in range(self.num_dir):
             A[ind] = self.L[ind]
-            A[ind + self.num_direct] = np.negative(self.L[ind])
+            A[ind + self.num_dir] = np.negative(self.L[ind])
             b[ind] = self.offu[ind]
-            b[ind + self.num_direct] = self.offl[ind]
+            b[ind + self.num_dir] = self.offl[ind]
 
         return A, b
 
@@ -98,14 +98,19 @@ class Bundle:
     """
     def add_dir(self, dir_row_mat):
         A, b = self.getIntersect()
+        prev_len = len(self.L)
 
+        'Update new templates to envelope current polytope'
         self.L = np.append(self.L, dir_row_mat, axis=0)
         new_uoffsets = [[ (maxLinProg(row, A, b)).fun for row in dir_row_mat ]]
         new_loffsets = [[ (maxLinProg(np.negative(row), A, b)).fun for row in dir_row_mat ]]
         
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
-        self.num_direct = len(self.L)
+        self.num_dir = len(self.L)
+
+        'Return indices of added directions'
+        return [i + prev_len for i in range(len(dir_row_mat))]
         
     """
     Remove specified direction entries from directions matrix.
@@ -113,7 +118,7 @@ class Bundle:
     """
     def remove_dir(self, dir_idx):
         self.L = np.delete(self.L, dir_idx, axis=0)
-        self.num_direct = len(self.L)
+        self.num_dir = len(self.L)
 
         self.offu = np.delete(self.offu, dir_idx, axis=0)
         self.offl = np.delete(self.offl, dir_idx, axis=0)
@@ -159,8 +164,9 @@ class BundleTransformer:
     @returns canonized transformed bundle.
     """
     def transform(self, bund):
-        new_offu = np.full(bund.num_direct, np.inf)
-        new_offl = np.full(bund.num_direct, np.inf)
+
+        new_offu = np.full(bund.num_dir, np.inf)
+        new_offl = np.full(bund.num_dir, np.inf)
 
         for row_ind, row in enumerate(bund.T):
             
@@ -181,7 +187,7 @@ class BundleTransformer:
             'Toggle iterators between OFO/AFO'
             'Warning: assuming for now that all directions are used in defining templates.'
             direct_iter = row.astype(int) if self.ofo_mode else \
-                           range(self.num_direct)
+                           range(self.num_dir)
 
             for column in direct_iter:
                 curr_L = bund.L[column]

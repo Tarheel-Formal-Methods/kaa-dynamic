@@ -1,5 +1,4 @@
 from kaa.reach import ReachSet
-from kaa.flowpipe import FlowPipePlotter
 from models.vanderpol import VanDerPol
 
 def test_VDP():
@@ -8,4 +7,4 @@ def test_VDP():
     mod_reach = ReachSet(model)
     mod_flow = mod_reach.computeReachSet(100)
 
-    FlowPipePlotter(mod_flow).plot2DPhase(0,1)
+    mod_flow.plot2DPhase(0,1)

@@ -2,14 +2,14 @@ import numpy as np
 from abc import ABC, abstractmethod
 
 """
-Object containing routines to dynamically change the template matrix of a bundle based off a pre-determined
+Object containing routines and data structures required to dynamically change the template matrix of a bundle based off a pre-determined
 strategy
 """
 class TempStrategy(ABC):
 
     def __init__(self, model):
         self.model = model
-
+        self.dir_hash = {}
     """
     Method called before the transformation operation is made.
     """
@@ -23,6 +23,12 @@ class TempStrategy(ABC):
     @abstractmethod
     def close_strat(self, bund):
         pass
+
+    def add_hash_dir(self, key, dir_idxs):
+        self.dir_hash[key] = dir_idxs
+
+    def rm_hash_dir(self, key):
+        return self.dir_hash.pop(key)
 
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.

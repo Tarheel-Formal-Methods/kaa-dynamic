@@ -25,6 +25,7 @@ class PCAStrat(TempStrategy):
         if not self.counter % self.iter_steps:
 
             if self.counter:
+               'We remove the last template added through PCA'
                bund.remove_temp(-1)
                bund.remove_dir(self.pca_relevant_idx(bund))
 
