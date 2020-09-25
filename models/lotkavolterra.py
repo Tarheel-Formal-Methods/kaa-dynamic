@@ -43,11 +43,11 @@ class LotkaVolterra(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 1.0; offl[0] = -0.95;
-        offu[1] = 1.0; offl[1] = -0.95;
-        offu[2] = 1.0; offl[2] = -0.95;
-        offu[3] = 1.0; offl[3] = -0.95;
-        offu[4] = 1.0; offl[4] = -0.95;
+        offu[0] = 1.0; offl[0] = -0.90;
+        offu[1] = 1.0; offl[1] = -0.90;
+        offu[2] = 1.0; offl[2] = -0.90;
+        offu[3] = 1.0; offl[3] = -0.90;
+        offu[4] = 1.0; offl[4] = -0.90;
 
         offu[5] = 10.0; offl[5] = 1;
         offu[6] = 10.0; offl[6] = 1;
@@ -89,11 +89,11 @@ class LotkaVolterra_UnitBox(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 1.0; offl[0] = -0.95;
-        offu[1] = 1.0; offl[1] = -0.95;
-        offu[2] = 1.0; offl[2] = -0.95;
-        offu[3] = 1.0; offl[3] = -0.95;
-        offu[4] = 1.0; offl[4] = -0.95;
+        offu[0] = 1.0; offl[0] = -0.90;
+        offu[1] = 1.0; offl[1] = -0.90;
+        offu[2] = 1.0; offl[2] = -0.90;
+        offu[3] = 1.0; offl[3] = -0.90;
+        offu[4] = 1.0; offl[4] = -0.90;
 
         #offu[5] = 10.0; offl[5] = 1;
         #offu[6] = 10.0; offl[6] = 1;

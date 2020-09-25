@@ -11,10 +11,11 @@ Object encapsulating flowpipe data. A flowpipe in this case will be a sequence o
 """
 class FlowPipe:
 
-    def __init__(self, flowpipe, model):
+    def __init__(self, flowpipe, model, strat):
 
         self.flowpipe = flowpipe
         self.model = model
+        self.strat = strat
         self.vars = model.vars
         self.dim = len(self.vars)
 
@@ -123,3 +124,6 @@ class FlowPipe:
 
     def __iter__(self):
         return iter(self.flowpipe)
+
+    def __str__(self):
+        return "{} Len: {}".format(self.strat, len(self))

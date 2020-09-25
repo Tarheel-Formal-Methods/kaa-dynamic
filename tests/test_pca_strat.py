@@ -11,8 +11,8 @@ from kaa.timer import Timer
 from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
 
-NUM_STEPS = 100
-ITER_SPREAD = 2
+NUM_STEPS = 300
+ITER_SPREAD = 5
 
 def test_sir_pca_strat():
 
@@ -25,13 +25,13 @@ def test_sir_pca_strat():
     sir_plot = Plot()
     sir_plot.add(sir_flow)
 
-    for i in range(1,ITER_SPREAD):
-        print(colored("Generating PCA with Iterative Step Size: {}".format(2*i), "white", attrs=['reverse', 'blink']))
+    for i in range(10, 11):
+        print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         sir_pca_reach = ReachSet(sir_pca)
-        sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(sir_pca, iter_steps=2*i))
-        sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(2*i))
+        sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(sir_pca, iter_steps=i))
+        sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(i))
     
-    #sir_plot.plot(0,1,2)
+    sir_plot.plot(0,1,2)
     Timer.generate_stats()
     err_s = sup_error_bounds(sir_flow, sir_flow_pca, 0)
     err_i = sup_error_bounds(sir_flow, sir_flow_pca, 1)
@@ -51,11 +51,11 @@ def test_rossler_pca_strat():
     rossler_plot = Plot()
     rossler_plot.add(rossler_flow)
 
-    for i in range(1,ITER_SPREAD):
-        print(colored("Generating PCA with Iterative Step Size: {}".format(2*i), "white", attrs=['reverse', 'blink']))
+    for i in range(10, 11):
+        print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         rossler_pca_reach = ReachSet(rossler_pca)
-        rossler_flow_pca = rossler_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(rossler_pca, iter_steps=2*i))
-        rossler_plot.add(rossler_flow_pca, "Rossler_PCA_{}".format(2*i))
+        rossler_flow_pca = rossler_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(rossler_pca, iter_steps=i))
+        rossler_plot.add(rossler_flow_pca, "Rossler_PCA_{}".format(i))
 
     rossler_plot.plot(0,1,2)
     Timer.generate_stats()

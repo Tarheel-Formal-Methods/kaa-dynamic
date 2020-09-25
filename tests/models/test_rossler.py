@@ -8,7 +8,7 @@ def test_Rossler():
 
     model = Rossler()
     mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(200)
+    mod_flow = mod_reach.computeReachSet(300)
 
     rossler_plot = Plot()
     rossler_plot.add(mod_flow)

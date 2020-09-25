@@ -42,9 +42,9 @@ class Rossler(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 0.1; offl[0] = -0.09;
-        offu[1] = 5; offl[1] = -4.99;
-        offu[2] = 0.1; offl[2] = -0.09;
+        offu[0] = 0.1; offl[0] = -0.05;
+        offu[1] = 5; offl[1] = -4.95;
+        offu[2] = 0.1; offl[2] = -0.05;
         offu[3] = 10; offl[3] = 0;
         offu[4] = 10; offl[4] = 0;
 
@@ -80,9 +80,9 @@ class Rossler_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 0.1; offl[0] = -0.09;
-        offu[1] = 5; offl[1] = -4.99;
-        offu[2] = 0.1; offl[2] = -0.09;
+        offu[0] = 0.1; offl[0] = -0.05;
+        offu[1] = 5; offl[1] = -4.95;
+        offu[2] = 0.1; offl[2] = -0.05;
         #offu[3] = 10; offl[3] = 0;
         #offu[4] = 10; offl[4] = 0;
         #

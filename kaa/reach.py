@@ -52,4 +52,4 @@ class ReachSet:
             print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(ind), bolden(reach_time)))
             flowpipe.append(trans_bund)
 
-        return FlowPipe(flowpipe, self.model)
+        return FlowPipe(flowpipe, self.model, strat)

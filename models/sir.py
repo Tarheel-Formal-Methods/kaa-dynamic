@@ -93,7 +93,7 @@ class SIR_UnitBox(Model):
 
       offu[0] = 0.8
       offl[0] = -0.79
-
+      
       offu[1] = 0.2
       offl[1] = -0.19
 

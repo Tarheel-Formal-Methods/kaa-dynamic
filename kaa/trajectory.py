@@ -52,5 +52,17 @@ class Traj:
         return self.num_points
 
     @property
+    def end_point(self):
+
+        assert self.num_points != 0, "Trajectory must be popoulated before querying its terminal point."
+        return self[-1]
+
+    @property
+    def start_point(self):
+        assert self.num_points != 0, "Trajectory must be popoulated before querying its terminal point."
+        return self[0]
+
+
+    @property
     def model_name(self):
         return self.model.name

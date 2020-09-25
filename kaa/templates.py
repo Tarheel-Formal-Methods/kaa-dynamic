@@ -9,6 +9,7 @@ class TempStrategy(ABC):
 
     def __init__(self, model):
         self.model = model
+        self.dim = len(model.vars)
         self.dir_hash = {}
     """
     Method called before the transformation operation is made.
@@ -24,10 +25,10 @@ class TempStrategy(ABC):
     def close_strat(self, bund):
         pass
 
-    def add_hash_dir(self, key, dir_idxs):
+    def hash_dir(self, key, dir_idxs):
         self.dir_hash[key] = dir_idxs
 
-    def rm_hash_dir(self, key):
+    def pop_hash_dir(self, key):
         return self.dir_hash.pop(key)
 
 """

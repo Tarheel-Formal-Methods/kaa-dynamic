@@ -105,7 +105,9 @@ class Plot:
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_tup])
-            figure_name = "Kaa{}Proj{}.png".format(self.model.name, var_str)
+            strat_str = ' vs '.join([str(pipe[1]) for pipe in self.flowpipes])
+            
+            figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, var_str, strat_str)
             figure.savefig(os.path.join(path, figure_name), format='png')
         else:
             figure.show()
