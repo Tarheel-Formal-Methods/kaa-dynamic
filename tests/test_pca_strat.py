@@ -10,6 +10,7 @@ from models.quadcopter import Quadcopter, Quadcopter_UnitBox
 from kaa.timer import Timer
 from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
+from kaa.bundle import BundleMode
 
 NUM_STEPS = 300
 ITER_SPREAD = 5
@@ -21,14 +22,14 @@ def test_sir_pca_strat():
     sir = SIR()
     sir_reach = ReachSet(sir)
 
-    sir_flow = sir_reach.computeReachSet(NUM_STEPS)
+    #sir_flow = sir_reach.computeReachSet(NUM_STEPS)
     sir_plot = Plot()
-    sir_plot.add(sir_flow)
+    #sir_plot.add(sir_flow)
 
-    for i in range(10, 11):
+    for i in range(3, 4):
         print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         sir_pca_reach = ReachSet(sir_pca)
-        sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(sir_pca, iter_steps=i))
+        sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, tempstrat=PCAStrat(sir_pca, iter_steps=i), transmode=BundleMode.AFO)
         sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(i))
     
     sir_plot.plot(0,1,2)
@@ -47,11 +48,11 @@ def test_rossler_pca_strat():
     rossler = Rossler()
     rossler_reach = ReachSet(rossler)
 
-    rossler_flow = rossler_reach.computeReachSet(NUM_STEPS)
+    #rossler_flow = rossler_reach.computeReachSet(NUM_STEPS)
     rossler_plot = Plot()
-    rossler_plot.add(rossler_flow)
+    #rossler_plot.add(rossler_flow)
 
-    for i in range(10, 11):
+    for i in range(3, 4):
         print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         rossler_pca_reach = ReachSet(rossler_pca)
         rossler_flow_pca = rossler_pca_reach.computeReachSet(NUM_STEPS, PCAStrat(rossler_pca, iter_steps=i))

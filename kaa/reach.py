@@ -37,8 +37,8 @@ class ReachSet:
 
             starting_bund = flowpipe[ind].copy()
 
-            #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
-            #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
+            print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
+            print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
             strat.open_strat(starting_bund)
             trans_bund = transformer.transform(starting_bund)
