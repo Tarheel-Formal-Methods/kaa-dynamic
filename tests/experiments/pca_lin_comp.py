@@ -23,11 +23,11 @@ def pca_lin_comp():
     sir_plot = Plot()
     sir_plot.add(sir_flow)
 
-    sir_lin_flow = sir_reach.computeReachSet(NUM_STEPS, LinStrat(sir, iter_steps=5))
-    sir_pca_flow = sir_reach.computeReachSet(NUM_STEPS, PCAStrat(sir, iter_steps=5))
+    sir_lin_flow = sir_reach.computeReachSet(NUM_STEPS, LinStrat(sir, iter_steps=150))
+    #sir_pca_flow = sir_reach.computeReachSet(NUM_STEPS, PCAStrat(sir, iter_steps=50))
 
     sir_plot.add(sir_lin_flow, "SIR_LIN")
-    sir_plot.add(sir_pca_flow, "SIR_PCA")
+    #sir_plot.add(sir_pca_flow, "SIR_PCA")
 
     sir_plot.plot(0,1,2)
     Timer.generate_stats()
