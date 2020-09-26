@@ -4,6 +4,9 @@ import numpy as np
 from kaa.templates import TempStrategy
 from kaa.experiutil import generate_traj
 
+"""
+Local linear approximation strategy.
+"""
 class LinStrat(TempStrategy):
 
     def __init__(self, model, iter_steps=2):
@@ -32,7 +35,6 @@ class LinStrat(TempStrategy):
             print("Calculated")
 
         self.counter += 1
-        # print("Calculated")
         return bund
 
 
@@ -42,7 +44,8 @@ class LinStrat(TempStrategy):
     def _approx_A(self, bund, num_traj):
         trajs = generate_traj(bund, num_traj, self.iter_steps)
         coeff_mat = np.zeros((self.dim*num_traj,self.dim**2), dtype='float')
-        
+
+        'Initialize the A matrix containing linear constraints.'
         for t_idx, t in enumerate(trajs):
             for i in range(self.dim):
                 for j in range(self.dim):

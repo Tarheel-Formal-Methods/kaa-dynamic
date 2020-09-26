@@ -25,7 +25,7 @@ class Bundle:
         self.offl = offl
         self.model = model
         self.vars = model.vars
-        self.sys_dim = len(model.vars)
+        self.dim = model.dim
         self.num_dir = len(self.L)
 
     """
@@ -34,7 +34,7 @@ class Bundle:
     """
     def getIntersect(self):
 
-        A = np.empty([2*self.num_dir, self.sys_dim])
+        A = np.empty([2*self.num_dir, self.dim])
         b = np.empty(2*self.num_dir)
 
         for ind in range(self.num_dir):
@@ -44,6 +44,7 @@ class Bundle:
             b[ind + self.num_dir] = self.offl[ind]
 
         return A, b
+
 
     """
     Returns the bundle with tightest offsets for each direction vector in self.L
@@ -65,15 +66,15 @@ class Bundle:
     """
     def getParallelotope(self, temp_ind):
 
-        A = np.empty([2*self.sys_dim,self.sys_dim])
-        b = np.empty(2*self.sys_dim)
+        A = np.empty([2*self.dim,self.dim])
+        b = np.empty(2*self.dim)
 
         'Fetch linear constraints defining the parallelotope.'
         for fac_ind, facet in enumerate(self.T[temp_ind].astype(int)):
             A[fac_ind] = self.L[facet]
-            A[fac_ind + self.sys_dim] = np.negative(self.L[facet])
+            A[fac_ind + self.dim] = np.negative(self.L[facet])
             b[fac_ind] = self.offu[facet]
-            b[fac_ind + self.sys_dim] = self.offl[facet]
+            b[fac_ind + self.dim] = self.offl[facet]
 
         return Parallelotope(A, b, self.vars)
 

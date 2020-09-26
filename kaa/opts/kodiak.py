@@ -12,8 +12,8 @@ class KodiakProd(OptimizationProd):
     def getBounds(self):
 
         'Unit box bounds'
-        bounds = [[0,1] for _ in range(self.bund.sys_dim)]
-        jac_mat = np.zeros((self.bund.sys_dim, self.bund.sys_dim))
+        bounds = [[0,1] for _ in range(self.bund.dim)]
+        jac_mat = np.zeros((self.bund.dim, self.bund.dim))
 
         lb, ub, _, _ = Kodiak.minmax_diff(self.kodiak_poly, jac_mat, 0, bounds)
 

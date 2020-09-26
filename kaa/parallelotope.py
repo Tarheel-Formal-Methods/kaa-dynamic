@@ -104,7 +104,6 @@ class Parallelotope:
     def _computeBaseVertex(self):
 
         sol_set = np.linalg.solve(self.A, self.u_b)
-        #print(" \n Base Vertex for Current Paratope: {} \n".format(list(sol_set)))
         return list(sol_set)
 
 

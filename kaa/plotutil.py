@@ -1,10 +1,14 @@
 import matplotlib as plt
 import numpy as np
+from scipy.spatial import HalfspaceIntersection
 import os
 
 from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
 from kaa.flowpipe import FlowPipe
+from kaa.timer import Timer
+from kaa.lputil import minLinProg, maxLinProg
+
 
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
 
@@ -38,7 +42,7 @@ class Plot:
     """
     def __add_traj(self, traj):
 
-        assert isinstance(traj, Traj), "Only Traj objects can be added through Plot.add_flowpipe"
+        assert isinstance(traj, Traj), "Only Traj objects can be added through Plot.__add_flowpipe"
         if self.model is not None:
             assert self.model.name == traj.model_name, "Trajectories and Plot must describe the same system."
 
@@ -53,7 +57,7 @@ class Plot:
     """
     def __add_flowpipe(self, flowpipe, label=None):
 
-        assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.add_flowpipe"
+        assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
         if self.model is not None:
               assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
 
@@ -76,9 +80,8 @@ class Plot:
         figure.subplots_adjust(hspace=0.3,wspace=0.2)
 
         'Hackish way of adding subplots to Figure objects.'
-        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ] \
-        if overlap else \
-        [[figure.add_subplot(num_flowpipes, num_var, (y*num_var)+(i+1)) for i in range(num_var)] for y in range(num_flowpipes)]
+        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ] if overlap else \
+             [[figure.add_subplot(num_flowpipes, num_var, (y*num_var)+(i+1)) for i in range(num_var)] for y in range(num_flowpipes)]
 
         for ax_idx, var_ind in enumerate(var_tup):
 
@@ -105,9 +108,92 @@ class Plot:
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_tup])
-            strat_str = ' vs '.join([str(pipe[1]) for pipe in self.flowpipes])
+            strat_str = ' vs '.join([str(pipe) for label, pipe in self.flowpipes])
             
             figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, var_str, strat_str)
             figure.savefig(os.path.join(path, figure_name), format='png')
         else:
             figure.show()
+
+    """
+
+    Plots phase between two variables of dynamical system.
+    NOTE: This method for now creates rather crude, segmented phase plots by simply scattering the support points.
+
+    @params x: index of variable to be plotted as x-axis of desired phase
+            y: index of variable to be plotted as y-axis of desired phase
+    """
+    def plot2DPhase(self, x, y):
+
+        Timer.start('Phase')
+
+        dim = self.model.dim
+        x_var, y_var = self.model.vars[x], self.model.vars[y]
+
+        'Define the following projected normal vectors.'
+        norm_vecs = np.zeros([4, dim])
+        norm_vecs[0][x] = 1; norm_vecs[1][y] = 1;
+        norm_vecs[2][x] = -1; norm_vecs[3][y] = -1;
+    
+        figure = plt.figure.Figure(figsize=PlotSettings.fig_size)
+        ax = figure.add_subplot(1,1,1)
+
+        comple_dim = [i for i in range(dim) if i not in [x,y]]
+
+        'Initialize objective function for Chebyshev intersection LP routine.'
+        c = [0 for _ in range(dim + 1)]
+        c[-1] = 1
+
+        for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
+
+            for bund in flowpipe:
+                bund_A, bund_b = bund.getIntersect()
+
+                supp_points = np.asarray([ maxLinProg(vec, bund_A, bund_b).x  for vec in norm_vecs ])
+                x_points = supp_points[:,x]
+                y_points = supp_points[:,y]
+
+                ax.scatter(x_points, y_points, label=flow_label, color="C{}".format(flow_idx))
+
+            ax.set_xlabel(f'{x_var}')
+            ax.set_ylabel(f'{y_var}')
+            ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
+
+        if PlotSettings.save_fig:
+            var_str = ''.join([str(self.model.vars[var]).upper() for var in [x,y]])
+            figure_name = "Kaa{}Phase{}.png".format(flowpipe.model.name, var_str)
+
+            figure.savefig(os.path.join(PlotSettings.default_fig_path, figure_name), format='png')
+        else:
+            figure.show()
+
+        phase_time = Timer.stop('Phase')
+        print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
+
+
+    """
+    Use scipy.HalfspaceIntersection to fill in phase plot projections.
+    """
+    def __halfspace_inter_plot(bund, x, y, ax, norm_vecs):
+        'Compute the normal vector offsets'
+        bund_off = np.empty([len(norm_vecs), 1])
+
+        for i in range(len(norm_vecs)):
+            bund_off[i] = minLinProg(np.negative(norm_vecs[i]), bund_A, bund_b).fun
+
+        'Remove irrelevant model.dimensions. Mostly doing this to make HalfspaceIntersection happy.'
+        phase_intersect = np.hstack((norm_vecs, bund_off))
+        phase_intersect = np.delete(phase_intersect, comple_dim, axis=1)
+
+        'Compute Chebyshev center of intersection.'
+        row_norm = np.reshape(np.linalg.norm(norm_vecs, axis=1), (norm_vecs.shape[0], 1))
+        center_A = np.hstack((norm_vecs, row_norm))
+
+        neg_bund_off = np.negative(bund_off)
+        center_pt = maxLinProg(c, center_A, list(neg_bund_off.flat)).x
+        center_pt = np.asarray([b for b_i, b in enumerate(center_pt) if b_i in [x, y]])
+
+        'Run scipy.spatial.HalfspaceIntersection.'
+        hs = HalfspaceIntersection(phase_intersect, center_pt)
+        inter_x, inter_y = zip(*hs.intersections)
+        ax.fill(inter_x, inter_y, label=flow_label, color="C{}".format(flow_idx))

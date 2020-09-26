@@ -24,7 +24,7 @@ def test_SIR():
     #for traj in trajs:
     #    sir_plot.add(traj)
     sir_plot.add(mod_flow)
-    sir_plot.add(mod_unit_flow)
+    sir_plot.add(mod_unit_flowq)
     sir_plot.plot(0,1,2)
     
     Timer.generate_stats()

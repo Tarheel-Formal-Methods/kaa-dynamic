@@ -14,6 +14,9 @@ class Model:
         'List of system variables.'
         self.vars = vars
 
+        'Dimension of system'
+        self.dim = len(vars)
+
         'Name of system.'
         self.name = name
 

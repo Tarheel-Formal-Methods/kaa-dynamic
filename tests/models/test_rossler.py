@@ -15,3 +15,16 @@ def test_Rossler():
     rossler_plot.plot(0,1,2)
 
     Timer.generate_stats()
+
+
+def test_rossler_phase():
+
+    model = Rossler()
+    mod_reach = ReachSet(model)
+    mod_flow = mod_reach.computeReachSet(200)
+
+    rossler_plot = Plot()
+    rossler_plot.add(mod_flow)
+    rossler_plot.plot2DPhase(0,1)
+
+    Timer.generate_stats()

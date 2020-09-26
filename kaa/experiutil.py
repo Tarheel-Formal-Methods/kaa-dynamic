@@ -89,11 +89,10 @@ Calculate the enveloping box over the initial polyhedron
 def calc_envelop_box(bund):
 
     A, b = bund.getIntersect()
-    dim = len(bund.vars)
 
     box_interval = []
     for i in range(dim):
-        y = [0 for _ in range(dim)]
+        y = [0 for _ in range(bund.dim)]
         y[i] = 1
         
         maxCood = maxLinProg(y, A, b).fun
