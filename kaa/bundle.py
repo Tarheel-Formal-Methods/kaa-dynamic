@@ -27,7 +27,7 @@ class Bundle:
         self.vars = model.vars
         self.dim = model.dim
         self.num_dir = len(self.L)
-
+        self.num_temp = len(self.T)
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
@@ -83,7 +83,12 @@ class Bundle:
     @params temp_row_mat: Matrix of new template entries.
     """
     def add_temp(self, temp_row_mat):
+        prev_len = self.num_temp
+
         self.T = np.append(self.T, temp_row_mat, axis=0)
+        self.num_temp = len(self.T)
+
+        return [i + prev_len for i in range(len(temp_row_mat))]
 
     """
     Remove specified template entries from templates matrix.
@@ -99,7 +104,7 @@ class Bundle:
     """
     def add_dir(self, dir_row_mat):
         A, b = self.getIntersect()
-        prev_len = len(self.L)
+        prev_len = self.num_dir
 
         'Update new templates to envelope current polytope'
         self.L = np.append(self.L, dir_row_mat, axis=0)

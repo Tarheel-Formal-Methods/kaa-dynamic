@@ -12,15 +12,15 @@ class LinStrat(TempStrategy):
     def __init__(self, model, iter_steps=2):
         super().__init__(model)
         self.iter_steps = iter_steps
-        self.counter = 0
-        
+
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
 
             if self.counter:
-                bund.remove_temp(-1)
+                bund.remove_temp(self.temp_hash['LinTemp'])
                 bund.remove_dir(self.dir_hash['LinDir'])
-                self.pop_hash_dir('LinDir')
+                self.pop_temp('LinTemp')
+                self.pop_dir('LinDir')
 
             approx_A = self._approx_A(bund, self.dim)
             inv_A = np.linalg.inv(approx_A)
@@ -29,10 +29,10 @@ class LinStrat(TempStrategy):
             lin_dir = np.dot(unit_dir_mat, inv_A)
 
             dir_idxs = bund.add_dir(lin_dir)
-            bund.add_temp([dir_idxs])
-            self.hash_dir('LinDir', dir_idxs)
+            temp_idxs = bund.add_temp([dir_idxs])
 
-            print("Calculated")
+            self.hash_temp('LinTemp', temp_idxs)
+            self.hash_dir('LinDir', dir_idxs)
 
         self.counter += 1
         return bund

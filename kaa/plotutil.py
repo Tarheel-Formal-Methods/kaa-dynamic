@@ -1,7 +1,8 @@
+import os
 import matplotlib as plt
 import numpy as np
 from scipy.spatial import HalfspaceIntersection
-import os
+
 
 from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
@@ -92,6 +93,7 @@ class Plot:
             for traj_idx, traj in enumerate(self.trajs):
                 x = np.arange(len(traj))
                 y = traj.get_traj_proj(var)
+
                 ax[ax_idx].plot(x, y, color="C{}".format(traj_idx))
 
             for flow_idx, (label, flowpipe) in enumerate(self.flowpipes):
@@ -108,7 +110,7 @@ class Plot:
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_tup])
-            strat_str = ' vs '.join([str(pipe) for label, pipe in self.flowpipes])
+            strat_str = ' vs '.join([str(pipe) for _ , pipe in self.flowpipes])
             
             figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, var_str, strat_str)
             figure.savefig(os.path.join(path, figure_name), format='png')

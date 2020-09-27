@@ -30,25 +30,23 @@ def generate_traj(bund, num_traj, time_steps):
 
     model = bund.model
     var = bund.vars
+    df = model.df
 
+    'Empty Trajectory objects.'
     trajs = [ Traj(model) for _ in range(num_traj) ]
 
     box_interval = calc_envelop_box(bund)
-    initial_points = []
     points_generated = 0
 
     'Generate points by enveloping a box over the initial polyhedron and picking the points that land within the polyhedron'
     while points_generated < num_traj:
-        gen_point = list(map(lambda x: random.uniform(x[0], x[1]), box_interval))
+        
+        gen_point = [ random.uniform(b[0], b[1]) for b in box_interval ]
+        
         if check_membership(gen_point, bund):
             initial_points.append(gen_point)
+            trajs[points_generated].add_point(gen_point)
             points_generated += 1
-
-    'Create trajectories with initial points.'
-    for point_idx, point in enumerate(initial_points):
-        trajs[point_idx].add_point(point)
-
-    df = model.f
 
     'Parallelize point propagation'
     p = mp.Pool(processes=4)
@@ -89,8 +87,8 @@ Calculate the enveloping box over the initial polyhedron
 def calc_envelop_box(bund):
 
     A, b = bund.getIntersect()
-
     box_interval = []
+
     for i in range(dim):
         y = [0 for _ in range(bund.dim)]
         y[i] = 1
