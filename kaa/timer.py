@@ -60,6 +60,9 @@ class Timer:
         for label, times in Timer.time_table.items():
             print("Average {} Duration: {} sec".format(label, Timer.avg_time(times)))
 
+        timer_stack = []
+        time_table = {}
+
     def avg_time(times):
         return reduce(add, [t.duration for t in times]) / len(times)
 

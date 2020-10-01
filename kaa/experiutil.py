@@ -30,7 +30,7 @@ def generate_traj(bund, num_traj, time_steps):
 
     model = bund.model
     var = bund.vars
-    df = model.df
+    df = model.f
 
     'Empty Trajectory objects.'
     trajs = [ Traj(model) for _ in range(num_traj) ]
@@ -44,7 +44,6 @@ def generate_traj(bund, num_traj, time_steps):
         gen_point = [ random.uniform(b[0], b[1]) for b in box_interval ]
         
         if check_membership(gen_point, bund):
-            initial_points.append(gen_point)
             trajs[points_generated].add_point(gen_point)
             points_generated += 1
 
@@ -89,7 +88,8 @@ def calc_envelop_box(bund):
     A, b = bund.getIntersect()
     box_interval = []
 
-    for i in range(dim):
+    for i in range(bund.dim):
+
         y = [0 for _ in range(bund.dim)]
         y[i] = 1
         

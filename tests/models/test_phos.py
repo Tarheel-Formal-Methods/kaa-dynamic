@@ -1,13 +1,16 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
-from models.phos import Phosphorelay
+from models.phos import Phosphorelay, Phosphorelay_UnitBox
 
-import kaa.benchmark as Timer
+from kaa.timer import Timer
 
 def test_Phos():
 
     model = Phosphorelay()
+    unit_model = Phosphorelay_UnitBox()
     mod_reach = ReachSet(model)
+    mod_unit_reach = ReachSet(unit_model)
+    unit_flow = mod_unit_reach.computeReachSet(200)
     mod_flow = mod_reach.computeReachSet(200)
 
     phos_plot = Plot()

@@ -26,7 +26,7 @@ class Phosphorelay(Model):
         dyns = [dx1,dx2,dx3,dx4,dx5,dx6,dx7];
 
         num_dirs = 10
-        num_temps = 2
+        num_temps = 4
 
         L = np.zeros([num_dirs,dim_sys])
         for i in range(dim_sys):
@@ -39,8 +39,8 @@ class Phosphorelay(Model):
         T = np.zeros([num_temps,dim_sys])
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4; T[0][5] = 5; T[0][6] = 6;
         T[1][0] = 0; T[1][1] = 1; T[1][2] = 2; T[1][3] = 7; T[1][4] = 4; T[1][5] = 5; T[1][6] = 6;
-        #T[2][0] = 0; T[2][1] = 1; T[2][2] = 2; T[2][3] = 7; T[2][4] = 8; T[2][5] = 5; T[2][6] = 6;
-        #T[3][0] = 0; T[3][1] = 1; T[3][2] = 2; T[3][3] = 7; T[3][4] = 9; T[3][5] = 5; T[3][6] = 6;
+        T[2][0] = 0; T[2][1] = 1; T[2][2] = 2; T[2][3] = 7; T[2][4] = 8; T[2][5] = 5; T[2][6] = 6;
+        T[3][0] = 0; T[3][1] = 1; T[3][2] = 2; T[3][3] = 7; T[3][4] = 9; T[3][5] = 5; T[3][6] = 6;
 
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
@@ -57,10 +57,7 @@ class Phosphorelay(Model):
         offu[8] = 100; offl[8] = 100;
         offu[9] = 100; offl[9] = 100;
 
-
-        B = Bundle(T,L,offu,offl,vars)
-
-        super().__init__(dyns, vars, T, L, offu, offl, name="Quad")
+        super().__init__(dyns, vars, T, L, offu, offl, name="Phos")
 
 class Phosphorelay_UnitBox(Model):
 
@@ -111,11 +108,4 @@ class Phosphorelay_UnitBox(Model):
         offu[5] = 1.01; offl[5] = -1.00;
         offu[6] = 1.01; offl[6] = -1.00;
 
-        offu[7] = 100; offl[7] = 100;
-        offu[8] = 100; offl[8] = 100;
-        offu[9] = 100; offl[9] = 100;
-
-
-        B = Bundle(T,L,offu,offl,vars)
-
-        super().__init__(dyns, vars, T, L, offu, offl, name="Quad")
+        super().__init__(dyns, vars, T, L, offu, offl, name="Phos")

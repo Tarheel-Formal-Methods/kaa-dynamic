@@ -34,7 +34,7 @@ class TempStrategy(ABC):
         return self.dir_hash.pop(key)
 
     def hash_temp(self, key, temp_idxs):
-        self.dir_hash[key] = temp_idxs
+        self.temp_hash[key] = temp_idxs
 
     def pop_temp(self, key):
         return self.temp_hash.pop(key)

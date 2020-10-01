@@ -1,5 +1,5 @@
 import os
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import HalfspaceIntersection
 
@@ -77,7 +77,7 @@ class Plot:
         num_var = len(var_tup)
         num_flowpipes = len(self.flowpipes)
 
-        figure = plt.figure.Figure(figsize=PlotSettings.fig_size)
+        figure = plt.figure(figsize=PlotSettings.fig_size)
         figure.subplots_adjust(hspace=0.3,wspace=0.2)
 
         'Hackish way of adding subplots to Figure objects.'
@@ -115,7 +115,7 @@ class Plot:
             figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, var_str, strat_str)
             figure.savefig(os.path.join(path, figure_name), format='png')
         else:
-            figure.show()
+            plt.show()
 
     """
 
@@ -167,7 +167,7 @@ class Plot:
 
             figure.savefig(os.path.join(PlotSettings.default_fig_path, figure_name), format='png')
         else:
-            figure.show()
+            plt.show()
 
         phase_time = Timer.stop('Phase')
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))

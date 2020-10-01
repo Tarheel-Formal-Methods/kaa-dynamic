@@ -2,7 +2,7 @@ from termcolor import colored
 
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
-From models.sir import SIR_UnitBox, SIR
+from models.sir import SIR_UnitBox, SIR
 from models.rossler import Rossler, Rossler_UnitBox
 from models.lotkavolterra import LotkaVolterra, LotkaVolterra_UnitBox
 from models.quadcopter import Quadcopter, Quadcopter_UnitBox

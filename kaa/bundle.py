@@ -6,7 +6,6 @@ from enum import Enum
 from kaa.parallelotope import Parallelotope
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
-
 from kaa.timer import Timer
 
 OptProd = KaaSettings.OptProd
@@ -96,6 +95,7 @@ class Bundle:
     """
     def remove_temp(self, temp_idx):
         self.T = np.delete(self.T, temp_idx, axis=0)
+        self.num_temp = len(self.T)
 
     """
     Add matrix of direction to end of directions matrix.

@@ -11,11 +11,11 @@ Implementation of creating templates through PCA
 """
 class PCAStrat(TempStrategy):
 
-    def __init__(self, model, traj_steps=5, num_traj=100, iter_steps=10):
+    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=10):
         super().__init__(model)
 
         self.traj_steps = traj_steps
-        self.num_traj = num_traj
+        self.num_trajs = num_trajs
         self.iter_steps = iter_steps
 
 
@@ -24,7 +24,7 @@ class PCAStrat(TempStrategy):
 
             if self.counter:
                'We remove the last template added through PCA'
-               bund.remove_temp(self.temp_hash('PCATemp'))
+               bund.remove_temp(self.temp_hash['PCATemp'])
                bund.remove_dir(self.dir_hash['PCADir'])
                self.pop_dir('PCADir')
                self.pop_temp('PCATemp')
@@ -32,8 +32,9 @@ class PCAStrat(TempStrategy):
             #print("Before: L: {} \n T: {}".format(bund.L, bund.T))
             #print("Before: offu: {}  offl: {}".format(bund.offu, bund.offl))
 
-            trajs = generate_traj(bund, self.num_traj, self.traj_steps)
-            traj_mat = np.empty((self.num_traj, self.dim))
+            trajs = generate_traj(bund, self.num_trajs, self.traj_steps)
+            traj_mat = np.empty((self.num_trajs, bund.dim))
+
 
             'Populate data matrix for PCA routine.'
             for traj_idx, traj in enumerate(trajs):
