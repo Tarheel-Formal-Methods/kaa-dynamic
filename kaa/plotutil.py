@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import matplotlib.patches as pat
 import numpy as np
 from scipy.spatial import HalfspaceIntersection
 
@@ -140,34 +141,10 @@ class Plot:
         figure = plt.figure(figsize=PlotSettings.fig_size)
         ax = figure.add_subplot(1,1,1)
 
-        comple_dim = [i for i in range(dim) if i not in [x,y]]
-
-        'Initialize objective function for Chebyshev intersection LP routine.'
-        c = [0 for _ in range(dim + 1)]
-        c[-1] = 1
-
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
-            'List of tuples of x,y coordinate lists to feed into ax.plot during the final step.'
-            supp_traj_points = [([],[]) for _ in enumerate(norm_vecs)]
+            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax, norm_vecs)
 
-            for bund in flowpipe:
-                bund_A, bund_b = bund.getIntersect()
-
-                supp_points = np.asarray([ maxLinProg(vec, bund_A, bund_b).x  for vec in norm_vecs ])
-                x_points = supp_points[:,x]
-                y_points = supp_points[:,y]
-
-                ax.scatter(x_points, y_points, label=flow_label, color="C{}".format(flow_idx))
-
-                for p_idx, (x1, y1) in enumerate(zip(x_points, y_points)):
-                    supp_traj_points[p_idx][0].append(x1)
-                    supp_traj_points[p_idx][1].append(y1)
-
-            'Plot the curves showing phase trajectories'
-            for points in supp_traj_points:
-                ax.plot(points[0], points[1], color="C{}".format(flow_idx))
-                
             ax.set_xlabel(f'{x_var}')
             ax.set_ylabel(f'{y_var}')
             ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
@@ -184,29 +161,74 @@ class Plot:
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
 
 
+    def __scatter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, norm_vecs):
+
+        'List of tuples of x,y coordinate lists to feed into ax.plot during the final step.'
+        supp_traj_points = [([],[]) for _ in enumerate(norm_vecs)]
+
+        for bund in flowpipe:
+            bund_A, bund_b = bund.getIntersect()
+
+            supp_points = np.asarray([ maxLinProg(vec, bund_A, bund_b).x  for vec in norm_vecs ])
+            x_points = supp_points[:,x]
+            y_points = supp_points[:,y]
+
+            ax.scatter(x_points, y_points, label=flow_label, color="C{}".format(flow_idx))
+
+            'Add to trajectories.'
+            for p_idx, (x1, y1) in enumerate(zip(x_points, y_points)):
+                supp_traj_points[p_idx][0].append(x1)
+                supp_traj_points[p_idx][1].append(y1)
+
+        'Plot the curves showing phase trajectories'
+        for points in supp_traj_points:
+            ax.plot(points[0], points[1], color="C{}".format(flow_idx))
+
+
     """
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
+    @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(bund, x, y, ax, norm_vecs):
-        'Compute the normal vector offsets'
-        bund_off = np.empty([len(norm_vecs), 1])
+    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, norm_vecs, separate=False):
 
-        for i in range(len(norm_vecs)):
-            bund_off[i] = minLinProg(np.negative(norm_vecs[i]), bund_A, bund_b).fun
+        dim = self.model.dim
+        comple_dim = [i for i in range(dim) if i not in [x,y]]
 
-        'Remove irrelevant model.dimensions. Mostly doing this to make HalfspaceIntersection happy.'
-        phase_intersect = np.hstack((norm_vecs, bund_off))
-        phase_intersect = np.delete(phase_intersect, comple_dim, axis=1)
+        'Initialize objective function for Chebyshev intersection LP routine.'
+        c = [0 for _ in range(dim + 1)]
+        c[-1] = 1
 
-        'Compute Chebyshev center of intersection.'
-        row_norm = np.reshape(np.linalg.norm(norm_vecs, axis=1), (norm_vecs.shape[0], 1))
-        center_A = np.hstack((norm_vecs, row_norm))
+        for bund in flowpipe:
 
-        neg_bund_off = np.negative(bund_off)
-        center_pt = maxLinProg(c, center_A, list(neg_bund_off.flat)).x
-        center_pt = np.asarray([b for b_i, b in enumerate(center_pt) if b_i in [x, y]])
+            bund_A, bund_b = bund.getIntersect()
 
-        'Run scipy.spatial.HalfspaceIntersection.'
-        hs = HalfspaceIntersection(phase_intersect, center_pt)
-        inter_x, inter_y = zip(*hs.intersections)
-        ax.fill(inter_x, inter_y, label=flow_label, color="C{}".format(flow_idx))
+            'Compute the normal vector offsets'
+            bund_off = np.empty([len(norm_vecs), 1])
+
+            for i in range(len(norm_vecs)):
+                bund_off[i] = minLinProg(np.negative(norm_vecs[i]), bund_A, bund_b).fun
+
+            'Remove irrelevant model.dimensions. Mostly doing this to make HalfspaceIntersection happy.'
+            phase_intersect = np.hstack((norm_vecs, bund_off))
+            phase_intersect = np.delete(phase_intersect, comple_dim, axis=1)
+
+            'Compute Chebyshev center of intersection.'
+            row_norm = np.reshape(np.linalg.norm(norm_vecs, axis=1), (norm_vecs.shape[0], 1))
+            center_A = np.hstack((norm_vecs, row_norm))
+
+            neg_bund_off = np.negative(bund_off)
+            center_pt = maxLinProg(c, center_A, list(neg_bund_off.flat)).x
+            center_pt = np.asarray([b for b_i, b in enumerate(center_pt) if b_i in [x, y]])
+
+            'Run scipy.spatial.HalfspaceIntersection.'
+            hs = HalfspaceIntersection(phase_intersect, center_pt)
+            vertices = hs.intersections
+            'Use this to create correct plots for HarOsc for now.'
+            vertices[[2,3]] = vertices[[3,2]]
+
+            ptope = pat.Polygon(vertices, fill=False)
+
+            ax.add_patch(ptope)
+
+            inter_x, inter_y = zip(*hs.intersections)
+            ax.scatter(inter_x, inter_y)

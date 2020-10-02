@@ -77,6 +77,11 @@ class Bundle:
 
         return Parallelotope(A, b, self.vars)
 
+    "Returns list of Parallelotope objects defining this bundle."
+    @property
+    def parallelotopes(self):
+        return [self.getParallelotope(i) for i,_ in enumerate(self.T)]
+
     """
     Add a matrix of templates to the end of templates matrix.
     @params temp_row_mat: Matrix of new template entries.
