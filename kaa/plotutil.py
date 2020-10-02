@@ -137,7 +137,7 @@ class Plot:
         norm_vecs[0][x] = 1; norm_vecs[1][y] = 1;
         norm_vecs[2][x] = -1; norm_vecs[3][y] = -1;
     
-        figure = plt.figure.Figure(figsize=PlotSettings.fig_size)
+        figure = plt.figure(figsize=PlotSettings.fig_size)
         ax = figure.add_subplot(1,1,1)
 
         comple_dim = [i for i in range(dim) if i not in [x,y]]
@@ -148,6 +148,9 @@ class Plot:
 
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
+            'List of tuples of x,y coordinate lists to feed into ax.plot during the final step.'
+            supp_traj_points = [([],[]) for _ in enumerate(norm_vecs)]
+
             for bund in flowpipe:
                 bund_A, bund_b = bund.getIntersect()
 
@@ -157,6 +160,14 @@ class Plot:
 
                 ax.scatter(x_points, y_points, label=flow_label, color="C{}".format(flow_idx))
 
+                for p_idx, (x1, y1) in enumerate(zip(x_points, y_points)):
+                    supp_traj_points[p_idx][0].append(x1)
+                    supp_traj_points[p_idx][1].append(y1)
+
+            'Plot the curves showing phase trajectories'
+            for points in supp_traj_points:
+                ax.plot(points[0], points[1], color="C{}".format(flow_idx))
+                
             ax.set_xlabel(f'{x_var}')
             ax.set_ylabel(f'{y_var}')
             ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))

@@ -16,6 +16,9 @@ class KaaSettings:
     'The default template loading/unloading strategy to use during reachable set computations'
     DefaultStrat = StaticStrat
 
+    'Suppress Output?'
+    SuppressOutput = True
+
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
     plot_font = 15

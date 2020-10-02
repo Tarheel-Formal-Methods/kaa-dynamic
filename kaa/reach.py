@@ -49,7 +49,10 @@ class ReachSet:
 
             reach_time = Timer.stop('Reachable Set Computation')
 
-            print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(ind), bolden(reach_time)))
+            'TODO: Revamp Kaa.log to be output sink handling all output formatting.'
+            if not KaaSettings.SuppressOutput:
+                print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(ind), bolden(reach_time)))
+                
             flowpipe.append(trans_bund)
 
         return FlowPipe(flowpipe, self.model, strat)
