@@ -234,7 +234,7 @@ class Plot:
                 proj_vertices[[2,3]] = proj_vertices[[3,2]]
                 #print("VERTICES: {}".format(proj_vertices))
 
-                ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx), alpha=0.4)
+                ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx + ptope_idx), alpha=0.4)
                 ax.add_patch(ptope)
 
                 #inter_x, inter_y = zip(*proj_vertices)
