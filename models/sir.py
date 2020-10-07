@@ -6,13 +6,13 @@ from kaa.model import Model
 
 class SIR(Model):
 
-  def __init__(self):
+  def __init__(self, delta=0.1):
 
       s, i, r = sp.Symbol('s'), sp.Symbol('i'), sp.Symbol('r')
 
-      ds = s - (0.34*s*i)*0.1;
-      di = i + (0.34*s*i - 0.05*i)*0.1;
-      dr = r + (0.05*i)*0.1;
+      ds = s - (0.34*s*i)*delta;
+      di = i + (0.34*s*i - 0.05*i)*delta;
+      dr = r + (0.05*i)*delta;
 
       dyns = [ds, di, dr]
       vars = [s, i, r] #In predetermined order
@@ -57,13 +57,13 @@ class SIR(Model):
 
 class SIR_UnitBox(Model):
 
-  def __init__(self):
+  def __init__(self, delta=0.1):
 
       s, i, r = sp.Symbol('s'), sp.Symbol('i'), sp.Symbol('r')
 
-      ds = s - (0.34*s*i)*0.1;
-      di = i + (0.34*s*i - 0.05*i)*0.1;
-      dr = r + 0.05*i*0.1;
+      ds = s - (0.34*s*i)*delta;
+      di = i + (0.34*s*i - 0.05*i)*delta;
+      dr = r + 0.05*i*delta;
 
       dyns = [ds, di, dr]
       vars = [s, i, r] #In predetermined order

@@ -138,7 +138,7 @@ class Plot:
 
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
-            #self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
             self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
 
 
@@ -178,7 +178,7 @@ class Plot:
             x_points = supp_points[:,x]
             y_points = supp_points[:,y]
 
-            ax.scatter(x_points, y_points, 'o', label=flow_label, color="C{}".format(flow_idx))
+            ax.scatter(x_points, y_points, label=flow_label, color="r")
 
             'Add to trajectories.'
             for p_idx, (x1, y1) in enumerate(zip(x_points, y_points)):
@@ -210,15 +210,8 @@ class Plot:
                 A = ptope.A
                 b = ptope.b
 
-                'Compute the normal vector offsets'
-                #bund_off = np.empty([len(norm_vecs), 1])
-
-                #for i in range(len(norm_vecs)):
-                #    bund_off[i] = minLinProg(np.negative(norm_vecs[i]), bund_A, bund_b).fun
-
                 'Remove irrelevant model.dimensions. Mostly doing this to make HalfspaceIntersection happy.'
                 phase_intersect = np.hstack((A, - np.asarray([b]).T))
-                #phase_intersect = np.delete(phase_intersect, comple_dim, axis=1)
 
                 'Compute Chebyshev center of intersection.'
                 row_norm = np.reshape(np.linalg.norm(A, axis=1), (A.shape[0], 1))
@@ -226,26 +219,20 @@ class Plot:
                 
                 center_pt = maxLinProg(c, center_A, b).x
                 center_pt = np.asarray(center_pt[:-1])
-                #center_pt = np.asarray([b for b_i, b in enumerate(center_pt) if b_i in [x, y]])
-
-                #ax.add_patch(pat.Circle(center_pt, rad))
-                #ax.scatter(center_pt[0],center_pt[1])
 
                 'Run scipy.spatial.HalfspaceIntersection.'
 
                 #print("A MATRIX: {} \n".format(phase_intersect))
                 #print("FEASIBLE POINT: {}".format(center_pt))
 
-
                 hs = HalfspaceIntersection(phase_intersect, center_pt)
                 vertices = np.asarray(hs.intersections)
 
-                proj_vertices = vertices[:,comple_dim]
+                proj_vertices = np.unique(vertices[:,comple_dim], axis=0)
 
                 'Use this to create correct plots for HarOsc for now.'
-                #proj_vertices[[2,3]] = proj_vertices[[3,2]]
-
-               #print("VERTICES: {}".format(proj_vertices))
+                proj_vertices[[2,3]] = proj_vertices[[3,2]]
+                #print("VERTICES: {}".format(proj_vertices))
 
                 ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx), alpha=0.4)
                 ax.add_patch(ptope)

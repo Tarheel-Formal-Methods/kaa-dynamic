@@ -12,14 +12,14 @@ from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
 from kaa.bundle import BundleMode
 
-NUM_STEPS = 300
+NUM_STEPS = 50
 ITER_SPREAD = 5
 
 def test_sir_pca_strat():
 
     #Compute Sapo's version.
-    sir_pca = SIR_UnitBox()
-    sir = SIR()
+    sir_pca = SIR_UnitBox(delta=0.5)
+    sir = SIR(delta=0.5)
     sir_reach = ReachSet(sir)
 
     #sir_flow = sir_reach.computeReachSet(NUM_STEPS)
@@ -32,14 +32,16 @@ def test_sir_pca_strat():
         sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, tempstrat=PCAStrat(sir_pca, iter_steps=i), transmode=BundleMode.AFO)
         sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(i))
     
-    sir_plot.plot(0,1,2)
+    sir_plot.plot2DPhase(0,1)
     Timer.generate_stats()
+    """
     err_s = sup_error_bounds(sir_flow, sir_flow_pca, 0)
     err_i = sup_error_bounds(sir_flow, sir_flow_pca, 1)
     err_r = sup_error_bounds(sir_flow, sir_flow_pca, 2)
     print(colored("Maximum Error between PCA and Sapo along S: {}".format(err_s),'red',attrs=['blink']))
     print(colored("Maximum Error between PCA and Sapo along I: {}".format(err_i),'red',attrs=['blink']))
     print(colored("Maximum Error between PCA and Sapo along R: {}".format(err_r),'red',attrs=['blink']))
+    """
 
 def test_rossler_pca_strat():
 
