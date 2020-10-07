@@ -79,7 +79,7 @@ class Bundle:
 
     "Returns list of Parallelotope objects defining this bundle."
     @property
-    def parallelotopes(self):
+    def ptopes(self):
         return [self.getParallelotope(i) for i,_ in enumerate(self.T)]
 
     """

@@ -14,9 +14,10 @@ class Parallelotope:
         self.vars = vars
         self.dim = len(vars)
 
-        self.A = A[:self.dim]
+        self.A = A
         self.b = b
-        self.u_b = self.b[:self.dim]
+        self.u_A = A[:self.dim]
+        self.u_b = b[:self.dim]
 
     """
     Return list of functions transforming the n-unit-box over the parallelotope.
@@ -67,7 +68,7 @@ class Parallelotope:
         else:
             vertices = []
             for i in range(self.dim):
-               vertices.append(self._gen_worker(i, self.u_b, self.A))
+               vertices.append(self._gen_worker(i, self.u_b, self.u_A))
 
         vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
         #print("Vertex List For Paratope: {} \n".format(vertices))
@@ -103,7 +104,7 @@ class Parallelotope:
     """
     def _computeBaseVertex(self):
 
-        sol_set = np.linalg.solve(self.A, self.u_b)
+        sol_set = np.linalg.solve(self.u_A, self.u_b)
         return list(sol_set)
 
 

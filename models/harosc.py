@@ -5,12 +5,13 @@ from kaa.model import Model
 
 class HarOsc(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.05):
 
         x,y = sp.Symbol('x'), sp.Symbol('y')
 
-        dx = y
-        dy = -x
+        dx = y * delta
+        dy = -x * delta
+        
 
         dyns  = [dx, dy]
         vars = [x, y]
@@ -36,13 +37,13 @@ class HarOsc(Model):
         offu = np.empty(2)
         offl = np.empty(2)
 
-        offu[0] = 3
-        offu[1] = 1
+        offu[0] = 1
+        offu[1] = 2
         #offu[2] = 5
         #offu[3] = 5
 
-        offl[0] = -2
-        offl[1] = 1
+        offl[0] = 0
+        offl[1] = -1
         #offl[2] = 5
         #offl[3] = 5
         #
