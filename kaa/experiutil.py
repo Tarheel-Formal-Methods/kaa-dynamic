@@ -79,6 +79,11 @@ def __point_prop_worker(traj, time_steps, df, var):
     return traj
 
 """
+def gen_ran_points_center(self, bund, num_points):
+    pass
+"""
+
+"""
 Calculate the enveloping box over the initial polyhedron
 @params model: input model
 @returns list of intervals representing edges of box.

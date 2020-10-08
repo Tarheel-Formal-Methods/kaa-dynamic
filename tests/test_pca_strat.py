@@ -11,8 +11,11 @@ from kaa.timer import Timer
 from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
 from kaa.bundle import BundleMode
+from kaa.settings import PlotSettings
 
-NUM_STEPS = 50
+PlotSettings.save_fig = False
+
+NUM_STEPS = 15
 ITER_SPREAD = 5
 
 def test_sir_pca_strat():
@@ -26,13 +29,14 @@ def test_sir_pca_strat():
     sir_plot = Plot()
     #sir_plot.add(sir_flow)
 
-    for i in range(3, 4):
+    for i in range(1, 2):
         print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         sir_pca_reach = ReachSet(sir_pca)
         sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, tempstrat=PCAStrat(sir_pca, iter_steps=i), transmode=BundleMode.AFO)
         sir_plot.add(sir_flow_pca, "SIR_PCA_{}".format(i))
     
     sir_plot.plot2DPhase(0,1)
+    #sir_plot.plot(0,1,2)
     Timer.generate_stats()
     """
     err_s = sup_error_bounds(sir_flow, sir_flow_pca, 0)

@@ -1,4 +1,5 @@
 import os
+import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 import numpy as np
@@ -139,7 +140,7 @@ class Plot:
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
             self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
-            self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+            #self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
 
 
         ax.set_xlabel(f'{x_var}')
@@ -199,10 +200,6 @@ class Plot:
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
 
-        'Initialize objective function for Chebyshev intersection LP routine.'
-        c = [0 for _ in range(dim + 1)]
-        c[-1] = 1
-
         for bund in flowpipe:
             
             for ptope_idx, ptope in enumerate(bund.ptopes):
@@ -210,32 +207,21 @@ class Plot:
                 A = ptope.A
                 b = ptope.b
 
-                'Remove irrelevant model.dimensions. Mostly doing this to make HalfspaceIntersection happy.'
+                'Balfspace constraint matrix'
                 phase_intersect = np.hstack((A, - np.asarray([b]).T))
-
-                'Compute Chebyshev center of intersection.'
-                row_norm = np.reshape(np.linalg.norm(A, axis=1), (A.shape[0], 1))
-                center_A = np.hstack((A, row_norm))
-                
-                center_pt = maxLinProg(c, center_A, b).x
-                center_pt = np.asarray(center_pt[:-1])
+                center_pt = ptope.chebyshev_center
 
                 'Run scipy.spatial.HalfspaceIntersection.'
-
-                #print("A MATRIX: {} \n".format(phase_intersect))
-                #print("FEASIBLE POINT: {}".format(center_pt))
-
                 hs = HalfspaceIntersection(phase_intersect, center_pt)
                 vertices = np.asarray(hs.intersections)
 
-                proj_vertices = np.unique(vertices[:,comple_dim], axis=0)
+                proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
 
-                'Use this to create correct plots for HarOsc for now.'
-                proj_vertices[[2,3]] = proj_vertices[[3,2]]
-                #print("VERTICES: {}".format(proj_vertices))
+                'Sort by polar coordinates'
+                proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
 
                 ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx + ptope_idx), alpha=0.4)
                 ax.add_patch(ptope)
 
-                #inter_x, inter_y = zip(*proj_vertices)
-                #ax.scatter(inter_x, inter_y)
+                inter_x, inter_y = zip(*proj_vertices)
+                ax.scatter(inter_x, inter_y)

@@ -126,3 +126,20 @@ class Parallelotope:
         assert fin_set is not sp.EmptySet
 
         return list(fin_set.args[0])
+
+    """
+    Computes and returns the Chebyshev center of parallelotope.
+    @returns self.dim point marking the Chebyshev center.
+    """
+    @property
+    def chebyshev_center(self):
+
+        'Initialize objective function for Chebyshev intersection LP routine.'
+        c = [0 for _ in range(self.dim + 1)]
+        c[-1] = 1
+
+        row_norm = np.reshape(np.linalg.norm(self.A, axis=1), (self.A.shape[0], 1))
+        center_A = np.hstack((self.A, row_norm))
+        
+        center_pt = maxLinProg(c, center_A, self.b).x
+        return np.asarray(center_pt[:-1])

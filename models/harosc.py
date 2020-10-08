@@ -9,8 +9,8 @@ class HarOsc(Model):
 
         x,y = sp.Symbol('x'), sp.Symbol('y')
 
-        dx = y * delta
-        dy = -x * delta
+        dx = y
+        dy = -x
         
 
         dyns  = [dx, dy]
