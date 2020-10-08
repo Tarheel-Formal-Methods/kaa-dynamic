@@ -11,6 +11,7 @@ from kaa.trajectory import Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.lputil import minLinProg, maxLinProg
+from kaa.parallelotope import LinearSystem
 
 
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
@@ -139,7 +140,7 @@ class Plot:
 
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
-            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax, separate=True, plotvertices=False)
             #self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
 
 
@@ -195,33 +196,43 @@ class Plot:
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate=False):
+    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate=False, plotvertices=True):
 
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
 
-        for bund in flowpipe:
+        def calc_vert_plot(sys, idx_offset):
             
-            for ptope_idx, ptope in enumerate(bund.ptopes):
+            'Halfspace constraint matrix'
+            A = sys.A
+            b = sys.b
 
-                A = ptope.A
-                b = ptope.b
+            phase_intersect = np.hstack((A, - np.asarray([b]).T))
+            center_pt = sys.chebyshev_center
 
-                'Balfspace constraint matrix'
-                phase_intersect = np.hstack((A, - np.asarray([b]).T))
-                center_pt = ptope.chebyshev_center
+            'Run scipy.spatial.HalfspaceIntersection.'
+            hs = HalfspaceIntersection(phase_intersect, center_pt)
+            vertices = np.asarray(hs.intersections)
 
-                'Run scipy.spatial.HalfspaceIntersection.'
-                hs = HalfspaceIntersection(phase_intersect, center_pt)
-                vertices = np.asarray(hs.intersections)
+            proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
 
-                proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
+            'Sort by polar coordinates'
+            proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
 
-                'Sort by polar coordinates'
-                proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
+            ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx + idx_offset), alpha=0.4)
+            ax.add_patch(ptope)
 
-                ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx + ptope_idx), alpha=0.4)
-                ax.add_patch(ptope)
-
+            if plotvertices:
                 inter_x, inter_y = zip(*proj_vertices)
                 ax.scatter(inter_x, inter_y)
+
+
+        for bund in flowpipe:
+
+            if separate:
+                'Temp patch. Revise to start using LinearSystems for future work.'
+                calc_vert_plot(bund.getIntersect(linsys=True), 0)
+            else:
+                
+                for ptope_idx, ptope in enumerate(bund.ptopes):
+                    calc_vert_plot(ptope, ptope_idx)

@@ -3,7 +3,7 @@ import sympy as sp
 
 from enum import Enum
 
-from kaa.parallelotope import Parallelotope
+from kaa.parallelotope import Parallelotope, LinearSystem
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.timer import Timer
@@ -22,16 +22,18 @@ class Bundle:
         self.L = L
         self.offu = offu
         self.offl = offl
+
         self.model = model
         self.vars = model.vars
         self.dim = model.dim
+
         self.num_dir = len(self.L)
         self.num_temp = len(self.T)
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
     """
-    def getIntersect(self):
+    def getIntersect(self, linsys=False):
 
         A = np.empty([2*self.num_dir, self.dim])
         b = np.empty(2*self.num_dir)
@@ -42,7 +44,7 @@ class Bundle:
             b[ind] = self.offu[ind]
             b[ind + self.num_dir] = self.offl[ind]
 
-        return A, b
+        return (A, b) if not linsys else LinearSystem(A, b, self.vars)
 
 
     """

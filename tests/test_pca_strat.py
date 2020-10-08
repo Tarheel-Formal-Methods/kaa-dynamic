@@ -15,21 +15,17 @@ from kaa.settings import PlotSettings
 
 PlotSettings.save_fig = False
 
-NUM_STEPS = 15
+NUM_STEPS = 50
 ITER_SPREAD = 5
 
 def test_sir_pca_strat():
 
-    #Compute Sapo's version.
-    sir_pca = SIR_UnitBox(delta=0.5)
-    sir = SIR(delta=0.5)
-    sir_reach = ReachSet(sir)
-
-    #sir_flow = sir_reach.computeReachSet(NUM_STEPS)
-    sir_plot = Plot()
-    #sir_plot.add(sir_flow)
-
-    for i in range(1, 2):
+    #Compute Sapo's version.3    sir_pca = SIR_UnitBox(delta=0.3)
+    sir = SIR(delta=0.33
+    sir_reach = ReachS33(sir33
+    #sir_flow = sir_reach.co33uteReachSet(NUM_STEPS)
+    sir_plot = Plot33    #sir_plot.add(sir_flow33
+    for i in range(10, 113:
         print(colored("Generating PCA with Iterative Step Size: {}".format(i), "white", attrs=['reverse', 'blink']))
         sir_pca_reach = ReachSet(sir_pca)
         sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, tempstrat=PCAStrat(sir_pca, iter_steps=i), transmode=BundleMode.AFO)
