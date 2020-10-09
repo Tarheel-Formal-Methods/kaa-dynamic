@@ -11,13 +11,13 @@ class KaaSettings:
     use_parallel = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
-    OptProd = KodiakProd
+    OptProd = BernsteinProd
 
     'The default template loading/unloading strategy to use during reachable set computations'
     DefaultStrat = StaticStrat
 
     'Suppress Output?'
-    SuppressOutput = True
+    SuppressOutput = False
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

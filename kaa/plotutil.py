@@ -128,7 +128,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y):
+    def plot2DPhase(self, x, y, separate=True, plotvertices=False):
 
         Timer.start('Phase')
 
@@ -140,7 +140,7 @@ class Plot:
 
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
-            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax, separate=True, plotvertices=False)
+            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax, separate, plotvertices)
             #self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
 
 
@@ -196,7 +196,7 @@ class Plot:
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate=False, plotvertices=True):
+    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate, plotvertices):
 
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
@@ -229,7 +229,7 @@ class Plot:
 
         for bund in flowpipe:
 
-            if separate:
+            if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
                 calc_vert_plot(bund.getIntersect(linsys=True), 0)
             else:

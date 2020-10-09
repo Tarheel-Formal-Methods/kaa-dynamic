@@ -5,6 +5,7 @@ import multiprocessing as mp
 
 from kaa.trajectory import Traj
 from kaa.lputil import minLinProg, maxLinProg
+from kaa.settings import KaaSettings
 
 
 """
@@ -32,26 +33,26 @@ def generate_traj(bund, num_traj, time_steps):
     var = bund.vars
     df = model.f
 
-    'Empty Trajectory objects.'
+    'Trajectory objects containing random initial points '
     trajs = [ Traj(model) for _ in range(num_traj) ]
-
-    box_interval = calc_envelop_box(bund)
     points_generated = 0
 
-    'Generate points by enveloping a box over the initial polyhedron and picking the points that land within the polyhedron'
+    ptope = bund.ptopes[0]
     while points_generated < num_traj:
-        
-        gen_point = [ random.uniform(b[0], b[1]) for b in box_interval ]
-        
-        if check_membership(gen_point, bund):
-            trajs[points_generated].add_point(gen_point)
+        ran_pt = ptope.gen_random_pt()
+        if check_membership(bund, ran_pt):
+            trajs[points_generated].add_point(ran_pt)
             points_generated += 1
 
-    'Parallelize point propagation'
-    p = mp.Pool(processes=4)
-    prop_trajs = p.starmap(__point_prop_worker, [ (trajs[i], time_steps, df, var) for i in range(num_traj) ])
-    p.close()
-    p.join()
+    if KaaSettings.use_parallel:
+        'Parallelize point propagation'
+        p = mp.Pool(processes=4)
+        prop_trajs = p.starmap(__point_prop_worker, [ (trajs[i], time_steps, df, var) for i in range(num_traj) ])
+        p.close()
+        p.join()
+
+    else:
+        prop_trajs =  [  __point_prop_worker(traj,  time_steps, df, var) for traj in trajs ]
 
     return prop_trajs
 
@@ -77,11 +78,6 @@ def __point_prop_worker(traj, time_steps, df, var):
         prev_point = next_point
 
     return traj
-
-"""
-def gen_ran_points_center(self, bund, num_points):
-    pass
-"""
 
 """
 Calculate the enveloping box over the initial polyhedron
@@ -110,7 +106,7 @@ Checks if point is indeed contained in initial polyhedron
         model: input model
 @returns boolean value indictating membership.
 """
-def check_membership(point, bund):
+def check_membership(bund, point):
 
     A, b = bund.getIntersect()
 

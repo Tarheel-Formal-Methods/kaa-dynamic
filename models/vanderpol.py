@@ -7,10 +7,9 @@ from kaa.model import Model
 
 class VanDerPol(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.02):
 
-        x, y = sp.Symbol('x'), sp.Symbol('y')
-        delta = 0.02
+        x, y = sp.Symbol('x'), s.Symbol('y')
         dx = x + y*delta
         dy = y + (1*(1-x**2)*y - 2*x + x)*delta
 
