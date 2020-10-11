@@ -4,7 +4,6 @@ import numpy as np
 import multiprocessing as mp
 
 from kaa.trajectory import Traj
-from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 
 
@@ -30,6 +29,7 @@ Generate random trajectories from polytope defined by parallelotope bundle.
 def generate_traj(bund, num_traj, time_steps):
 
     model = bund.model
+    bund_sys = bund.getIntersect()
     var = bund.vars
     df = model.f
 
@@ -37,10 +37,12 @@ def generate_traj(bund, num_traj, time_steps):
     trajs = [ Traj(model) for _ in range(num_traj) ]
     points_generated = 0
 
+    'Choose the first bundle to generate random points over.'
     ptope = bund.ptopes[0]
+
     while points_generated < num_traj:
         ran_pt = ptope.gen_random_pt()
-        if check_membership(bund, ran_pt):
+        if bund_sys.check_membership(ran_pt):
             trajs[points_generated].add_point(ran_pt)
             points_generated += 1
 
@@ -86,7 +88,7 @@ Calculate the enveloping box over the initial polyhedron
 """
 def calc_envelop_box(bund):
 
-    A, b = bund.getIntersect()
+    bund_sys = bund.getIntersect()
     box_interval = []
 
     for i in range(bund.dim):
@@ -94,26 +96,11 @@ def calc_envelop_box(bund):
         y = [0 for _ in range(bund.dim)]
         y[i] = 1
         
-        maxCood = maxLinProg(y, A, b).fun
-        minCood = minLinProg(y, A, b).fun
+        maxCood = bund_sys.max_opt(y).fun
+        minCood = bund_sys.min_opt(y).fun
         box_interval.append([minCood, maxCood])
 
     return box_interval
-
-"""
-Checks if point is indeed contained in initial polyhedron
-@params point: point to test
-        model: input model
-@returns boolean value indictating membership.
-"""
-def check_membership(bund, point):
-
-    A, b = bund.getIntersect()
-
-    for row_idx, row in enumerate(A):
-        if np.dot(row, point) > b[row_idx]:
-            return False
-    return True
 
 """
 Calculates naive supremum bound on the difference between two Flowpipe objects

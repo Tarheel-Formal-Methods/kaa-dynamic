@@ -1,9 +1,9 @@
 import numpy as np
 import sympy as sp
-
 from enum import Enum
 
-from kaa.parallelotope import Parallelotope, LinearSystem
+from kaa.parallelotope import Parallelotope
+from kaa.linearsystem import LinearSystem
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.timer import Timer
@@ -33,7 +33,7 @@ class Bundle:
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
     """
-    def getIntersect(self, linsys=False):
+    def getIntersect(self):
 
         A = np.empty([2*self.num_dir, self.dim])
         b = np.empty(2*self.num_dir)
@@ -44,7 +44,7 @@ class Bundle:
             b[ind] = self.offu[ind]
             b[ind + self.num_dir] = self.offl[ind]
 
-        return (A, b) if not linsys else LinearSystem(A, b, self.vars)
+        return LinearSystem(A, b, self.vars)
 
 
     """
@@ -53,12 +53,12 @@ class Bundle:
     @returns canonized Bundle object
     """
     def canonize(self):
-        A, b = self.getIntersect()
+        bund_sys = self.getIntersect()
 
         for row_ind, row in enumerate(self.L):
 
-            self.offu[row_ind] = (maxLinProg(row, A, b)).fun
-            self.offl[row_ind] = (maxLinProg(np.negative(row), A, b)).fun
+            self.offu[row_ind] = bund_sys.max_opt(row).fun
+            self.offl[row_ind] = bund_sys.max_opt(np.negative(row)).fun
 
     """
     Returns the Parallelotope object defined by a row in the template matrix.
@@ -110,13 +110,13 @@ class Bundle:
     @params dir_row_mat: Matrix of new direction entries
     """
     def add_dir(self, dir_row_mat):
-        A, b = self.getIntersect()
+        bund_sys = self.getIntersect()
         prev_len = self.num_dir
 
         'Update new templates to envelope current polytope'
         self.L = np.append(self.L, dir_row_mat, axis=0)
-        new_uoffsets = [[ (maxLinProg(row, A, b)).fun for row in dir_row_mat ]]
-        new_loffsets = [[ (maxLinProg(np.negative(row), A, b)).fun for row in dir_row_mat ]]
+        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
+        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
         
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)

@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
 
@@ -41,10 +40,10 @@ class FlowPipe:
         'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'
         for bund_ind, bund in enumerate(self.flowpipe):
 
-            bund_A, bund_b = bund.getIntersect()
+            bund_sys = bund.getIntersect()
 
-            y_min[bund_ind] = minLinProg(y_obj, bund_A, bund_b).fun
-            y_max[bund_ind] = maxLinProg(y_obj, bund_A, bund_b).fun
+            y_min[bund_ind] = bund_sys.max_opt(y_obj).fun
+            y_max[bund_ind] = bund_sys.min_opt(y_obj).fun
 
         Timer.stop("Proj")
 

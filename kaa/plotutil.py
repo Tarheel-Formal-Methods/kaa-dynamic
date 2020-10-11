@@ -10,7 +10,6 @@ from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
-from kaa.lputil import minLinProg, maxLinProg
 from kaa.parallelotope import LinearSystem
 
 
@@ -174,9 +173,9 @@ class Plot:
         supp_traj_points = [([],[]) for _ in enumerate(norm_vecs)]
 
         for bund in flowpipe:
-            bund_A, bund_b = bund.getIntersect()
+            bund_sys = bund.getIntersect()
 
-            supp_points = np.asarray([ maxLinProg(vec, bund_A, bund_b).x  for vec in norm_vecs ])
+            supp_points = np.asarray([ bund_sys.max_opt(vec).x  for vec in norm_vecs ])
             x_points = supp_points[:,x]
             y_points = supp_points[:,y]
 
@@ -231,7 +230,7 @@ class Plot:
 
             if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
-                calc_vert_plot(bund.getIntersect(linsys=True), 0)
+                calc_vert_plot(bund.getIntersect(), 0)
             else:
                 
                 for ptope_idx, ptope in enumerate(bund.ptopes):
