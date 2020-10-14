@@ -5,8 +5,9 @@ from kaa.temp.pca_strat import PCAStrat
 from kaa.temp.lin_app_strat import LinStrat
 from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
-
 from kaa.timer import Timer
+from kaa.bundle import BundleMode
+
 from itertools import product
 
 PlotSettings.save_fig = False
@@ -28,7 +29,7 @@ def test_HarOsc():
     SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
     pca_strat = PCAStrat(model, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(3, tempstrat=pca_strat)
+    mod_pca_flow = mod_reach.computeReachSet(3, tempstrat=pca_strat, transmode=BundleMode.AFO)
     #trajs = generate_traj(model, 10, 200)
 
     'Generaste the trajectories and add them to the plot.'
@@ -57,7 +58,7 @@ def test_lin_HarOsc():
     SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
     pca_strat = LinStrat(model, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat)
+    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat, transmode=BundleMode.AFO)
     trajs = [Traj(model, point, steps=NUM_STEPS) for point in product([-5,-4],[0,1])]
 
     'Generaste the trajectories and add them to the plot.'

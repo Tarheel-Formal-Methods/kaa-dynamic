@@ -23,7 +23,7 @@ class ReachSet:
             TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
-    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.OFO):
+    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.AFO):
 
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model, transmode)
@@ -42,7 +42,7 @@ class ReachSet:
 
             strat.open_strat(starting_bund)
             trans_bund = transformer.transform(starting_bund)
-            strat.close_strat(trans_bund)
+            #strat.close_strat(trans_bund)
 
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))

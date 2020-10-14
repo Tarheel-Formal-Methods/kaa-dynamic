@@ -5,13 +5,11 @@ import matplotlib.patches as pat
 import numpy as np
 from scipy.spatial import HalfspaceIntersection
 
-
 from kaa.settings import PlotSettings
 from kaa.trajectory import Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.parallelotope import LinearSystem
-
 
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
 
@@ -150,12 +148,10 @@ class Plot:
             ax.plot(x_coord, y_coord, color=f"C{traj_idx}")
             ax.scatter(x_coord, y_coord, color=f"C{traj_idx}")
 
-
         ax.set_xlabel(f'{x_var}')
         ax.set_ylabel(f'{y_var}')
         ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
         ax.legend(handles = [pat.Patch(color = f"C{l}", label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
-
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_ind]).upper() for var_ind in [x,y]])

@@ -152,8 +152,8 @@ class Bundle:
 Wrapper over bundle transformation modes.
 """
 class BundleMode(Enum):
-    AFO = 0
-    OFO = 1
+    AFO = False
+    OFO = True
 
 """
 Object responsible for transforming Bundle objects according to input model's dynamics.
@@ -168,6 +168,7 @@ class BundleTransformer:
     """
     def __init__(self, model, mode):
         self.f = model.f
+        self.vars = model.vars
         self.ofo_mode = mode
 
     """
@@ -184,42 +185,61 @@ class BundleTransformer:
         for row_ind, row in enumerate(bund.T):
             
             'Find the generator of the parallelotope.'
-            p = bund.getParallelotope(row_ind)
-            genFun = p.getGeneratorRep()
-
-            'Create subsitutions tuples.'
-            var_sub = []
-            for var_ind, var in enumerate(bund.vars):
-                var_sub.append((var, genFun[var_ind]))
-
-            Timer.start('Functional Composition')
-            fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
-            Timer.stop('Functional Composition')
-
+            ptope = bund.getParallelotope(row_ind)
+            #print(f"Ptope {row_ind}\n")
 
             'Toggle iterators between OFO/AFO'
             'Warning: assuming for now that all directions are used in defining templates.'
-            direct_iter = row.astype(int) if self.ofo_mode else \
-                           range(self.num_dir)
+            direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
+            #print(f"Num of directions: {bund.num_dir}")
 
             for column in direct_iter:
                 curr_L = bund.L[column]
-
-                'Perform functional composition with exact transformation from unitbox to parallelotope.'
-                bound_polyu = 0
-                for coeff_idx, coeff in enumerate(curr_L):
-                    bound_polyu += coeff * fog[coeff_idx]
-
-                'Calculate min/max Bernstein coefficients.'
-                Timer.start('Bound Computation')
-                ub, lb = OptProd(bound_polyu, bund).getBounds()
-                Timer.stop('Bound Computation')
+                #print(f"Curr_L: {curr_L}")
+                ub, lb = self.find_bounds(curr_L, ptope, bund)
 
                 new_offu[column] = min(ub, new_offu[column])
-                new_offl[column] = min(-1 * lb, new_offl[column])
+                new_offl[column] = min(lb, new_offl[column])
 
         bund.offu = new_offu
         bund.offl = new_offl
-        bund.canonize()
 
+        #print("Upper Offsets: {}\n".format(bund.offu))
+        #print("Lower Offsets: {}\n".format(bund.offl))
+
+        bund.canonize()
         return bund
+
+    """
+    Find bounds for max c^Tf(x) over paralleltope
+    @params: ptope: Parallelotope object to optimize over.
+             dir_vec: direction vector
+    @returns: upper bound, lower bound
+    """
+    def find_bounds(self, dir_vec, ptope, bund):
+
+        'Find the generator of the parallelotope.'
+        genFun = ptope.getGeneratorRep()
+
+        'Create subsitutions tuples.'
+        var_sub = []
+        for var_ind, var in enumerate(bund.vars):
+            var_sub.append((var, genFun[var_ind]))
+
+        #print(f"Variable Sub for {dir_vec}: {var_sub}")
+        
+        Timer.start('Functional Composition')
+        fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
+        Timer.stop('Functional Composition')
+
+        'Perform functional composition with exact transformation from unitbox to parallelotope.'
+        bound_polyu = 0
+        for coeff_idx, coeff in enumerate(dir_vec):
+            bound_polyu += coeff * fog[coeff_idx]
+
+        'Calculate min/max Bernstein coefficients.'
+        Timer.start('Bound Computation')
+        ub, lb = OptProd(bound_polyu, bund).getBounds()
+        Timer.stop('Bound Computation')
+
+        return ub, -1 * lb
