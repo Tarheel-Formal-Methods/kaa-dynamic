@@ -30,56 +30,31 @@ def generate_traj(bund, num_traj, time_steps):
 
     model = bund.model
     bund_sys = bund.getIntersect()
-    var = bund.vars
-    df = model.f
-
-    'Trajectory objects containing random initial points '
-    trajs = [ Traj(model) for _ in range(num_traj) ]
+ 
     points_generated = 0
 
     'Choose the first bundle to generate random points over.'
     ptope = bund.ptopes[0]
+    initial_points = []
 
     while points_generated < num_traj:
         ran_pt = ptope.gen_random_pt()
         if bund_sys.check_membership(ran_pt):
-            trajs[points_generated].add_point(ran_pt)
+            initial_points.append(ran_pt)
             points_generated += 1
 
+    trajs = [ Traj(model, point, steps=time_steps) for point in initial_points ]
+
+    """
     if KaaSettings.use_parallel:
         'Parallelize point propagation'
         p = mp.Pool(processes=4)
-        prop_trajs = p.starmap(__point_prop_worker, [ (trajs[i], time_steps, df, var) for i in range(num_traj) ])
+        prop_trajs = p.starmap(point_prop, [ (model, point, time_steps) for point in initial_points ])
         p.close()
         p.join()
+    """
 
-    else:
-        prop_trajs =  [  __point_prop_worker(traj,  time_steps, df, var) for traj in trajs ]
-
-    return prop_trajs
-
-"""
-Worker routine for processes to propagate points for alloted number of time_steps
-@params traj: Traj object containing initial point
-        time_steps: number of time steps to generate trajectory
-        df: transformation dynamics from model
-        var: list of variables from model
-@returns Traj object containing propagated points.
-"""
-def __point_prop_worker(traj, time_steps, df, var):
-    
-    'Propagate the points according to the dynamics for designated number of time steps.'
-    prev_point = traj[0]
-    
-    for _ in range(time_steps):
-
-        var_sub = [ (var, prev_point[var_idx]) for var_idx, var in enumerate(var)]
-        next_point = [ f.subs(var_sub) for f in df ]
-        traj.add_point(next_point)
-        
-        prev_point = next_point
-
-    return traj
+    return trajs
 
 """
 Calculate the enveloping box over the initial polyhedron

@@ -101,7 +101,6 @@ class Parallelotope(LinearSystem):
     @returns base-vertex in list
     """
     def _computeBaseVertex(self):
-
         sol_set = np.linalg.solve(self.u_A, self.u_b)
         return list(sol_set)
 
@@ -120,9 +119,7 @@ class Parallelotope(LinearSystem):
     @returns list of sympy solution set
     """
     def _convertSolSetToList(self, fin_set):
-
         assert fin_set is not sp.EmptySet
-
         return list(fin_set.args[0])
     
     """
@@ -131,8 +128,7 @@ class Parallelotope(LinearSystem):
     @returns list of random points contained inside parallelotope.
     """
     def gen_random_pt(self):
-
         gen_expr = self.getGeneratorRep()
-
+        
         interval_ran_pts = [ (var, random.uniform(0,1)) for var in self.vars ]
         return [ expr.subs(interval_ran_pts, simultaneous=True) for expr in gen_expr ]

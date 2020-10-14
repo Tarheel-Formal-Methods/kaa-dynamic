@@ -106,8 +106,8 @@ class Plot:
 
                 curr_ax.fill_between(t, flow_min, flow_max, label=flowpipe_label, color="C{}".format(flow_idx), alpha=0.5)
                 curr_ax.set_xlabel("t: time steps")
-                curr_ax.set_ylabel(("Reachable Set for {}".format(var)))
-                curr_ax.set_title("Projection of Reachable Set for {} Variable: {}".format(name, var))
+                curr_ax.set_ylabel(f"Reachable Set for {var}")
+                curr_ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
                 curr_ax.legend()
 
         if PlotSettings.save_fig:
@@ -127,7 +127,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=True, plotvertices=False):
+    def plot2DPhase(self, x, y, separate=True, plotvertices=False, ):
 
         Timer.start('Phase')
 
@@ -140,16 +140,25 @@ class Plot:
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
 
             self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, ax, separate, plotvertices)
-            #self.__scatter_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+            #self.__support_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+
+        for traj_idx, traj in enumerate(self.trajs):
+
+            x_coord = traj.get_proj(x_var)
+            y_coord = traj.get_proj(y_var)
+
+            ax.plot(x_coord, y_coord, color=f"C{traj_idx}")
+            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}")
 
 
         ax.set_xlabel(f'{x_var}')
         ax.set_ylabel(f'{y_var}')
         ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
-        ax.legend(handles = [pat.Patch(color = 'C{}'.format(l), label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
+        ax.legend(handles = [pat.Patch(color = f"C{l}", label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
+
 
         if PlotSettings.save_fig:
-            var_str = ''.join([str(self.model.vars[var]).upper() for var in [x,y]])
+            var_str = ''.join([str(self.model.vars[var_ind]).upper() for var_ind in [x,y]])
             figure_name = "Kaa{}Phase{}.png".format(flowpipe.model.name, var_str)
 
             figure.savefig(os.path.join(PlotSettings.default_fig_path, figure_name), format='png')
@@ -160,7 +169,7 @@ class Plot:
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
 
 
-    def __scatter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax):
+    def __support_plot(self, flowpipe, flow_idx, flow_label, x, y, ax):
 
         dim = self.model.dim
 
@@ -168,9 +177,6 @@ class Plot:
         norm_vecs = np.zeros([4, dim])
         norm_vecs[0][x] = 1; norm_vecs[1][y] = 1;
         norm_vecs[2][x] = -1; norm_vecs[3][y] = -1;
-    
-        'List of tuples of x,y coordinate lists to feed into ax.plot during the final step.'
-        supp_traj_points = [([],[]) for _ in enumerate(norm_vecs)]
 
         for bund in flowpipe:
             bund_sys = bund.getIntersect()
@@ -188,7 +194,7 @@ class Plot:
 
         'Plot the curves showing phase trajectories'
         for points in supp_traj_points:
-            ax.plot(points[0], points[1], color="C{}".format(flow_idx))
+            ax.plot(points[0], points[1], color=f"C{flow_idx}")
 
 
     """
@@ -225,6 +231,10 @@ class Plot:
                 inter_x, inter_y = zip(*proj_vertices)
                 ax.scatter(inter_x, inter_y)
 
+            return
+
+
+
 
         for bund in flowpipe:
 
@@ -232,6 +242,5 @@ class Plot:
                 'Temp patch. Revise to start using LinearSystems for future work.'
                 calc_vert_plot(bund.getIntersect(), 0)
             else:
-                
                 for ptope_idx, ptope in enumerate(bund.ptopes):
                     calc_vert_plot(ptope, ptope_idx)
