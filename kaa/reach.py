@@ -42,8 +42,8 @@ class ReachSet:
 
             strat.open_strat(starting_bund)
             trans_bund = transformer.transform(starting_bund)
-            #strat.close_strat(trans_bund)
-
+            strat.close_strat(trans_bund)
+            
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
 

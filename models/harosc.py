@@ -6,7 +6,7 @@ from kaa.model import Model
 
 class HarOsc(Model):
 
-    def __init__(self, delta=0.05):
+    def __init__(self, init_box=[[-5,-4],[0,1]]):
 
         x,y = sp.Symbol('x'), sp.Symbol('y')
 
@@ -36,14 +36,9 @@ class HarOsc(Model):
         offu = np.empty(2)
         offl = np.empty(2)
 
-        offu[0] = -4
-        offu[1] = 1
-        #offu[2] = 5
-        #offu[3] = 5
+        for i in range(2):
+            offu[i] = init_box[i][1]
+            offl[i] = - init_box[i][0]
 
-        offl[0] = 5
-        offl[1] = 0
-        #offl[2] = 5
-        #offl[3] = 5
-        #
+
         super().__init__(dyns, vars, T, L, offu, offl, name="HarOsc")

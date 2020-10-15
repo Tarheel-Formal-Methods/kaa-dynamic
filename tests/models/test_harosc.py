@@ -14,6 +14,8 @@ PlotSettings.save_fig = False
 
 def test_HarOsc():
 
+    NUM_STEPS = 4
+
     model = HarOsc()
     #trajs = generate_traj(model, 10, 200)
     mod_reach = ReachSet(model)
@@ -21,19 +23,17 @@ def test_HarOsc():
 
     sir_plot = Plot()
 
-    #mod_flow = mod_reach.computeReachSet(NUM_STEPS)
-
     SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
-    SIR_PCA_TRAJ_STEPS = 1 #Number of steps our sample trajectories should run.
+    SIR_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
     SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
     pca_strat = PCAStrat(model, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(3, tempstrat=pca_strat, transmode=BundleMode.AFO)
+    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat, transmode=BundleMode.AFO)
     #trajs = generate_traj(model, 10, 200)
 
     'Generaste the trajectories and add them to the plot.'
-    sir_plot.add(mod_pca_flow)
+    sir_plot.add(mod_pca_flow, "HarOsc PCA")
     sir_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
     
     Timer.generate_stats()
@@ -41,7 +41,7 @@ def test_HarOsc():
 
 def test_lin_HarOsc():
 
-    NUM_STEPS = 3
+    NUM_STEPS = 5
 
     model = HarOsc()
     #trajs = generate_traj(model, 10, 200)
@@ -52,17 +52,14 @@ def test_lin_HarOsc():
 
     #mod_flow = mod_reach.computeReachSet(NUM_STEPS)
 
-    SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    'PCA Strategy Parameters'
-    SIR_PCA_TRAJ_STEPS = 1 #Number of steps our sample trajectories should run.
-    SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
+    SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
 
-    pca_strat = LinStrat(model, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat, transmode=BundleMode.AFO)
+    lin_strat = LinStrat(model, iter_steps=SIR_LIN_ITER_STEPS)
+    mod_lin_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=lin_strat, transmode=BundleMode.AFO)
     trajs = [Traj(model, point, steps=NUM_STEPS) for point in product([-5,-4],[0,1])]
 
     'Generaste the trajectories and add them to the plot.'
-    sir_plot.add(mod_pca_flow, "HarOsc LINAPP")
+    sir_plot.add(mod_lin_flow, "HarOsc LINAPP")
     for t in trajs:
         sir_plot.add(t)
 

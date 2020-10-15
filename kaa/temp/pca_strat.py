@@ -17,19 +17,15 @@ class PCAStrat(TempStrategy):
         self.traj_steps = traj_steps
         self.num_trajs = num_trajs
         self.iter_steps = iter_steps
+        self.curr_temp = None
 
 
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
-
-            if self.counter:
-               'We remove the last template added through PCA'
-               bund.remove_temp(self.temp_hash['PCATemp'])
-               bund.remove_dir(self.dir_hash['PCADir'])
-               self.pop_dir('PCADir')
-               self.pop_temp('PCATemp')
+            print(f"OPEN TEMP: {bund.T}")
 
             #print("Before: L: {} \n T: {}".format(bund.L, bund.T))
+            #
             #print("Before: offu: {}  offl: {}".format(bund.offu, bund.offl))
 
             trajs = generate_traj(bund, self.num_trajs, self.traj_steps)
@@ -47,18 +43,29 @@ class PCAStrat(TempStrategy):
             mean = pca.mean_
 
             dir_idxs = bund.add_dir(comps)
-            temp_idxs = bund.add_temp([dir_idxs])
 
             self.hash_dir('PCADir',dir_idxs)
-            self.hash_temp('PCATemp', temp_idxs)
+            self.curr_temp = dir_idxs
             
             #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
             #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
-            
-        self.counter += 1
+
         return bund
         
     def close_strat(self, bund):
+
+        if not self.counter % self.iter_steps:
+
+            if self.counter:
+                bund.remove_temp(self.temp_hash['PCATemp'])
+                self.pop_temp('PCATemp')
+
+            temp_idx = bund.add_temp([self.curr_temp])
+            self.hash_temp('PCATemp', temp_idx)
+
+        print(f"CLOSE TEMP MAT: {bund.T}")
+
+        self.counter += 1
         return bund
 
 

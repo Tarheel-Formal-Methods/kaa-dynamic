@@ -17,38 +17,41 @@ class LinStrat(TempStrategy):
         for i in range(self.dim):
             self.unit_dir_mat[i][i] = 1
 
+        self.curr_temp = None
+        self.curr_dir = None
+
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
 
-            "Remove previous iteration's templates and directions."
-            if self.counter:
-                bund.remove_temp(self.temp_hash['LinTemp'])
-                bund.remove_dir(self.dir_hash['LinDir'])
-                self.pop_temp('LinTemp')
-                self.pop_dir('LinDir')
+            print(f"OPEN DIR: {bund.L}")
 
             approx_A = self._approx_A(bund, self.dim)
             inv_A = np.linalg.inv(approx_A)
-
-            #print(f"Approx A: {approx_A}")
-            #print(f"Inv A: {inv_A}")
-
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
-            print(lin_dir)
-
             dir_idxs = bund.add_dir(lin_dir)
-            temp_idxs = bund.add_temp([dir_idxs])
+            self.curr_temp = dir_idxs
 
-            self.hash_temp('LinTemp', temp_idxs)
             self.hash_dir('LinDir', dir_idxs)
+            self.unit_dir_mat = lin_dir
 
-        self.counter += 1
         return bund
 
 
     def close_strat(self, bund):
-        pass
+        
+        if not self.counter % self.iter_steps:
+            
+            if self.counter:
+                bund.remove_temp(self.temp_hash['LinTemp'])
+                self.pop_temp('LinTemp')
+                
+            temp_idx = bund.add_temp([self.curr_temp])
+            self.hash_temp('LinTemp', temp_idx)
+            
+        self.counter += 1
+        print(f"CLOSE TEMP MAT: {bund.T}")
+
 
     def _approx_A(self, bund, num_traj):
 
