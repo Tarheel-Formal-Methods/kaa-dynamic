@@ -195,7 +195,7 @@ class BundleTransformer:
 
             for column in direct_iter:
                 curr_L = bund.L[column]
-                print(f"Curr_L: {curr_L}")
+                #print(f"Curr_L: {curr_L}")
                 ub, lb = self.find_bounds(curr_L, ptope, bund)
 
                 new_offu[column] = min(ub, new_offu[column])
@@ -204,8 +204,8 @@ class BundleTransformer:
         bund.offu = new_offu
         bund.offl = new_offl
 
-        print("Upper Offsets: {}\n".format(bund.offu))
-        print("Lower Offsets: {}\n".format(bund.offl))
+        #print("Upper Offsets: {}\n".format(bund.offu))
+        #print("Lower Offsets: {}\n".format(bund.offl))
 
         bund.canonize()
         return bund

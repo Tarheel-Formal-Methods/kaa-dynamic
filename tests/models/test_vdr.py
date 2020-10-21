@@ -49,16 +49,11 @@ def test_lin_VDP():
     #mod_flow = mod_reach.computeReachSet(NUM_STEPS)
 
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    'PCA Strategy Parameters'
-    VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
-    VDP_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
-    pca_strat = LinStrat(model, iter_steps=VDP_LIN_ITER_STEPS)
-    mod_pca_flow = unit_mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat)
+    lin_strat = LinStrat(model, iter_steps=VDP_LIN_ITER_STEPS)
+    mod_lin_flow = unit_mod_reach.computeReachSet(NUM_STEPS, tempstrat=lin_strat)
 
     vdp_plot = Plot()
-    #vdp_plot.add(mod_flow)
     vdp_plot.add(mod_pca_flow, "VDP LinApp Strat")
     vdp_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
 

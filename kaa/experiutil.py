@@ -1,6 +1,8 @@
-import random
+import math
+import random as ran
 import sympy as sp
 import numpy as np
+from itertools import product
 import multiprocessing as mp
 
 from kaa.trajectory import Traj
@@ -22,26 +24,25 @@ def generate_init_traj(model, num, time_steps):
 """
 Generate random trajectories from polytope defined by parallelotope bundle.
 @params model: Model
-        num_traj: number of trajectories to generate.
+        num_traj: umber of trajectories to generate.
         time_steps: number of time steps to generate trajs.
 @returns list of Traj objects representing num random trajectories.
 """
-def generate_traj(bund, num_traj, time_steps):
+def generate_traj(bund, num_trajs, time_steps):
 
     model = bund.model
     bund_sys = bund.getIntersect()
- 
-    points_generated = 0
 
     'Choose the first bundle to generate random points over.'
-    ptope = bund.ptopes[0]
-    initial_points = []
+    chebycenter = bund_sys.chebyshev_center
+    center = chebycenter.center
+    radius = chebycenter.radius
 
-    while points_generated < num_traj:
-        ran_pt = ptope.gen_random_pt()
-        if bund_sys.check_membership(ran_pt):
-            initial_points.append(ran_pt)
-            points_generated += 1
+    box_intervals = [[c - radius, c + radius] for c in center]
+    
+    initial_points = []
+    for _ in range(num_trajs):
+        initial_points.append([ran.uniform(bound[0], bound[1]) for bound in box_intervals])
 
     trajs = [ Traj(model, point, steps=time_steps) for point in initial_points ]
 
@@ -55,6 +56,13 @@ def generate_traj(bund, num_traj, time_steps):
     """
 
     return trajs
+
+
+"""
+def traj_from_init_box(init_box, depth=2):
+"""
+
+
 
 """
 Calculate the enveloping box over the initial polyhedron

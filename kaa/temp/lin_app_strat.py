@@ -23,16 +23,18 @@ class LinStrat(TempStrategy):
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
 
-            print(f"OPEN DIR: {bund.L}")
+            #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
 
             approx_A = self._approx_A(bund, self.dim)
             inv_A = np.linalg.inv(approx_A)
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
             dir_idxs = bund.add_dir(lin_dir)
-            self.curr_temp = dir_idxs
 
-            self.hash_dir('LinDir', dir_idxs)
+            if not self.counter:
+                bund.add_temp([dir_idxs])
+                self.hash_dir('PrevDir', dir_idxs)
+
             self.unit_dir_mat = lin_dir
 
         return bund
@@ -43,14 +45,10 @@ class LinStrat(TempStrategy):
         if not self.counter % self.iter_steps:
             
             if self.counter:
-                bund.remove_temp(self.temp_hash['LinTemp'])
-                self.pop_temp('LinTemp')
-                
-            temp_idx = bund.add_temp([self.curr_temp])
-            self.hash_temp('LinTemp', temp_idx)
+                bund.remove_dir(self.dir_hash['PrevDir'])
             
         self.counter += 1
-        print(f"CLOSE TEMP MAT: {bund.T}")
+        #print(f"CLOSE DIR/TEMP MAT: {bund.L},  {bund.T}")
 
 
     def _approx_A(self, bund, num_traj):

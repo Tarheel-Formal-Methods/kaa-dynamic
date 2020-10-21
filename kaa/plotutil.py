@@ -44,8 +44,8 @@ class Plot:
     def __add_traj(self, traj):
 
         assert isinstance(traj, Traj), "Only Traj objects can be added through Plot.__add_flowpipe"
-        if self.model is not None:
-            assert self.model.name == traj.model_name, "Trajectories and Plot must describe the same system."
+        #if self.model is not None:
+        #    assert self.model.name == traj.model_name, "Trajectories and Plot must describe the same system."
 
         self.trajs.append(traj)
         self.model = traj.model if self.model is None else self.model
@@ -59,8 +59,8 @@ class Plot:
     def __add_flowpipe(self, flowpipe, label=None):
 
         assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
-        if self.model is not None:
-              assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
+        #if self.model is not None:
+        #      assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
 
         self.flowpipes.append((label, flowpipe))
         self.model = flowpipe.model if self.model is None else self.model
@@ -209,7 +209,7 @@ class Plot:
             b = sys.b
 
             phase_intersect = np.hstack((A, - np.asarray([b]).T))
-            center_pt = sys.chebyshev_center
+            center_pt = np.asarray(sys.chebyshev_center.center)
 
             'Run scipy.spatial.HalfspaceIntersection.'
             hs = HalfspaceIntersection(phase_intersect, center_pt)
@@ -226,11 +226,6 @@ class Plot:
             if plotvertices:
                 inter_x, inter_y = zip(*proj_vertices)
                 ax.scatter(inter_x, inter_y)
-
-            return
-
-
-
 
         for bund in flowpipe:
 

@@ -4,6 +4,12 @@ import random
 
 from kaa.lputil import minLinProg, maxLinProg
 
+class ChebyCenter:
+
+    def __init__(self, center, radius):
+        self.center = center
+        self.radius = radius
+
 class LinearSystem:
 
     def __init__(self, A, b, vars):
@@ -27,7 +33,7 @@ class LinearSystem:
         center_A = np.hstack((self.A, row_norm))
 
         center_pt = maxLinProg(c, center_A, self.b).x
-        return np.asarray(center_pt[:-1])
+        return ChebyCenter(center_pt[:-1], center_pt[-1])
 
     """
     Maxmize optimization function y over Ax \leq b
