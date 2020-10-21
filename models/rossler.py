@@ -6,16 +6,16 @@ from kaa.bundle import Bundle
 
 class Rossler(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.025):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = [x, y, z]
 
         dim_sys = len(vars)
 
-        dx = x + (-y-z)*0.025
-        dy = y + (x + 0.1*y)*0.025
-        dz = z + (0.1 + z*(x-14))*0.02
+        dx = x + (-y-z)*delta
+        dy = y + (x + 0.1*y)*delta
+        dz = z + (0.1 + z*(x-14))*delta
 
         dyns = [dx, dy ,dz]
 
@@ -52,16 +52,16 @@ class Rossler(Model):
 
 class Rossler_UnitBox(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.025):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = [x, y, z]
 
         dim_sys = len(vars)
 
-        dx = x + (-y-z)*0.025
-        dy = y + (x + 0.1*y)*0.025
-        dz = z + (0.1 + z*(x-14))*0.02
+        dx = x + (-y-z)*delta
+        dy = y + (x + 0.1*y)*delta
+        dz = z + (0.1 + z*(x-14))*delta
 
         dyns = [dx, dy ,dz]
 

@@ -189,14 +189,12 @@ class BundleTransformer:
             #print(f"Ptope {row_ind}\n")
 
             'Toggle iterators between OFO/AFO'
-            'Warning: assuming for now that all directions are used in defining templates.'
             direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
             #print(f"Num of directions: {bund.num_dir}")
 
             for column in direct_iter:
                 curr_L = bund.L[column]
-                #print(f"Curr_L: {curr_L}")
-                ub, lb = self.find_bounds(curr_L, ptope, bund)
+                ub, lb = self.__find_bounds(curr_L, ptope, bund)
 
                 new_offu[column] = min(ub, new_offu[column])
                 new_offl[column] = min(lb, new_offl[column])
@@ -216,14 +214,14 @@ class BundleTransformer:
              dir_vec: direction vector
     @returns: upper bound, lower bound
     """
-    def find_bounds(self, dir_vec, ptope, bund):
+    def __find_bounds(self, dir_vec, ptope, bund):
 
         'Find the generator of the parallelotope.'
         genFun = ptope.getGeneratorRep()
 
         'Create subsitutions tuples.'
         var_sub = []
-        for var_ind, var in enumerate(bund.vars):
+        for var_ind, var in enumerate(self.vars):
             var_sub.append((var, genFun[var_ind]))
 
         #print(f"Variable Sub for {dir_vec}: {var_sub}")

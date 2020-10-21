@@ -76,6 +76,7 @@ Generates random points through the generators of the initial box and checking m
 """
 def gen_ran_pts_ptope(bund, num_trajs):
 
+    bund_sys = bund.getIntersect()
     points_generated = 0
     gen_pts = []
 
@@ -83,10 +84,10 @@ def gen_ran_pts_ptope(bund, num_trajs):
     gen_expr = ptope.getGeneratorRep()
 
     while points_generated < num_trajs:
-        interval_ran_pts = [ (var, random.uniform(0,1)) for var in self.vars ]
+        interval_ran_pts = [ (var, ran.uniform(0,1)) for var in bund.vars ]
         ran_pt = [ expr.subs(interval_ran_pts, simultaneous=True) for expr in gen_expr ]
 
-        if bund.check_membership(ran_pt):
+        if bund_sys.check_membership(ran_pt):
             gen_pts.append(ran_pt)
             points_generated += 1
 
