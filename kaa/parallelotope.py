@@ -121,14 +121,3 @@ class Parallelotope(LinearSystem):
     def _convertSolSetToList(self, fin_set):
         assert fin_set is not sp.EmptySet
         return list(fin_set.args[0])
-    
-    """
-    Generate list of random points contained inside the parallelotope.
-    @params: num_points: number of points to generate.
-    @returns list of random points contained inside parallelotope.
-    """
-    def gen_random_pt(self):
-        gen_expr = self.getGeneratorRep()
-        
-        interval_ran_pts = [ (var, random.uniform(0,1)) for var in self.vars ]
-        return [ expr.subs(interval_ran_pts, simultaneous=True) for expr in gen_expr ]

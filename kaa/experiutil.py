@@ -31,18 +31,8 @@ Generate random trajectories from polytope defined by parallelotope bundle.
 def generate_traj(bund, num_trajs, time_steps):
 
     model = bund.model
-    bund_sys = bund.getIntersect()
 
-    'Choose the first bundle to generate random points over.'
-    chebycenter = bund_sys.chebyshev_center
-    center = chebycenter.center
-    radius = chebycenter.radius
-
-    box_intervals = [[c - radius, c + radius] for c in center]
-    
-    initial_points = []
-    for _ in range(num_trajs):
-        initial_points.append([ran.uniform(bound[0], bound[1]) for bound in box_intervals])
+    initial_points = gen_ran_pts_box(bund, num_trajs)
 
     trajs = [ Traj(model, point, steps=time_steps) for point in initial_points ]
 
@@ -56,13 +46,56 @@ def generate_traj(bund, num_trajs, time_steps):
     """
 
     return trajs
+"""
+Generates random points contained within the tightest enveloping parallelotope of the Chevyshev sphere.
+@params bund: Bundle object
+        num_trajs: number of trajs to generate
+        shrinkfactor: factor to shrink the radius of the sphere. This allows a box with smaller dimensions
+@returns list of generated random points.
+"""
+def gen_ran_pts_box(bund, num_trajs, shrinkfactor=1):
+    bund_sys = bund.getIntersect()
+    chebycenter = bund_sys.chebyshev_center
+    
+    center = chebycenter.center
+    radius = chebycenter.radius
+
+    box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
+
+    gen_points = []
+    for _ in range(num_trajs):
+        gen_points.append([ran.uniform(bound[0], bound[1]) for bound in box_intervals])
+
+    return gen_points
+
+"""
+Generates random points through the generators of the initial box and checking membership. Could be extremely time-consuming if the intersection is thin.
+@params bund: Bundle object
+        num_trajs: number of trajs to generate
+@returns points generated.
+"""
+def gen_ran_pts_ptope(bund, num_trajs):
+
+    points_generated = 0
+    gen_pts = []
+
+    ptope = bund.ptopes[0] #Initial Box from Bund.
+    gen_expr = ptope.getGeneratorRep()
+
+    while points_generated < num_trajs:
+        interval_ran_pts = [ (var, random.uniform(0,1)) for var in self.vars ]
+        ran_pt = [ expr.subs(interval_ran_pts, simultaneous=True) for expr in gen_expr ]
+
+        if bund.check_membership(ran_pt):
+            gen_pts.append(ran_pt)
+            points_generated += 1
+
+    return gen_pts
 
 
 """
 def traj_from_init_box(init_box, depth=2):
 """
-
-
 
 """
 Calculate the enveloping box over the initial polyhedron
