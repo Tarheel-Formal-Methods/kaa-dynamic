@@ -1,6 +1,9 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
 from models.rossler import Rossler, Rossler_UnitBox
+from kaa.trajectory import Traj
+from kaa.temp.pca_lin_strat import PCALinStrat
+
 
 from kaa.timer import Timer
 
@@ -27,4 +30,31 @@ def test_rossler_phase():
     rossler_plot.add(mod_flow)
     rossler_plot.plot2DPhase(0,1)
 
+    Timer.generate_stats()
+
+
+def test_pca_lin_Rossler():
+    NUM_STEPS = 5
+    ROSS_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    ROSS_PCA_TRAJ_STEPS = 1 #Number of steps our sample trajectories should run.
+    ROSS_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
+
+    rossler_pca = Rossler_UnitBox(delta=0.5)
+    rossler_plot = Plot()
+
+    points = [[0.05,4.95,0.05], [0.1,4.95,0.05], [0.05,5,0.05], [0.1,5,0.05], [0.05,4.95,0.05], [0.05,4.95,0.1], [0.1,4.95,0.1], [0.1,5,0.1]]
+    trajs = [Traj(rossler_pca, point, NUM_STEPS) for point in points]
+
+    pca_strat = PCALinStrat(rossler_pca, traj_steps=ROSS_PCA_TRAJ_STEPS, num_trajs=ROSS_PCA_NUM_TRAJ, iter_steps=ROSS_PCA_ITER_STEPS)
+
+    ross_pca_reach = ReachSet(rossler_pca)
+    ross_flow_pca = ross_pca_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat)
+    rossler_plot.add(ross_flow_pca, "SIR_LinApp&PCA")
+
+    'Add trajectories'
+    for traj in trajs:
+        rossler_plot.add(traj)
+
+    rossler_plot.plot2DPhase(0,1,separate=True, plotvertices=True)
     Timer.generate_stats()
