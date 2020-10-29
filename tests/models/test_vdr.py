@@ -1,5 +1,6 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
+from kaa.trajectory import Traj
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 
 from kaa.temp.pca_strat import PCAStrat
@@ -10,7 +11,24 @@ from kaa.timer import Timer
 
 PlotSettings.save_fig = False
 
+
 def test_VDP():
+    NUM_STEPS = 300
+
+    model = VanDerPol()
+    mod_reach = ReachSet(model)
+
+    mod_flow = mod_reach.computeReachSet(NUM_STEPS)
+
+    vdp_plot = Plot()
+    vdp_plot.add(mod_flow, "VDP Sapo")
+
+    vdp_plot.plot2DPhase(0,1, separate=False, plotvertices=True)
+    Timer.generate_stats()
+
+
+
+def test_pca_VDP():
 
     NUM_STEPS = 4
 
@@ -39,22 +57,25 @@ def test_VDP():
 
 def test_lin_VDP():
 
-    NUM_STEPS = 4
+    NUM_STEPS = 60
+    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
 
-    model = VanDerPol()
-    unit_model = VanDerPol_UnitBox()
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    unit_mod_reach = ReachSet(unit_model)
 
-    #mod_reach = ReachSet(model)
-    unit_mod_reach = ReachSet(model)
-    #mod_flow = mod_reach.computeReachSet(NUM_STEPS)
-
-    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-
-    lin_strat = LinStrat(model, iter_steps=VDP_LIN_ITER_STEPS)
+    lin_strat = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS)
     mod_lin_flow = unit_mod_reach.computeReachSet(NUM_STEPS, tempstrat=lin_strat)
 
+    points = [[0,1.90], [0.1, 1.90], [0.1,2], [0,2], [0.05,1.9], [0.05,2], [0,1.9],  [0,1.95], [0.1,1.95]]
+    trajs = [Traj(unit_model, point, NUM_STEPS) for point in points]
+
     vdp_plot = Plot()
-    vdp_plot.add(mod_pca_flow, "VDP LinApp Strat")
+    vdp_plot.add(mod_lin_flow, "VDP LinAPP")
+
+    'Add trajectories'
+    for traj in trajs:
+        vdp_plot.add(traj)
+
     vdp_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
 
     Timer.generate_stats()

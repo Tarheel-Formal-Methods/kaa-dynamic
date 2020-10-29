@@ -152,6 +152,8 @@ class Plot:
         ax.set_ylabel(f'{y_var}')
         ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
         ax.legend(handles = [pat.Patch(color = f"C{l}", label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
+        plt.axis('square')
+
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_ind]).upper() for var_ind in [x,y]])
@@ -225,7 +227,7 @@ class Plot:
 
             if plotvertices:
                 inter_x, inter_y = zip(*proj_vertices)
-                ax.scatter(inter_x, inter_y)
+                ax.scatter(inter_x, inter_y, s=0.1)
 
         for bund in flowpipe:
 
