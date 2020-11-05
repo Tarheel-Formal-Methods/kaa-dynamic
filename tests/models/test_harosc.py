@@ -31,7 +31,7 @@ def test_pca_HarOsc():
     SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
     pca_strat = PCAStrat(model, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat, transmode=BundleMode.AFO)
+    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=[pca_strat], transmode=BundleMode.AFO)
     #trajs = generate_traj(model, 10, 200)
 
     'Generaste the trajectories and add them to the plot.'
@@ -81,13 +81,14 @@ def test_pca_lin_HarOsc():
 
     sir_plot = Plot()
 
+    SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
     SIR_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
     SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
 
-    pca_strat = PCALinStrat(model, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, iter_steps=SIR_PCA_ITER_STEPS)
-    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat, transmode=BundleMode.AFO)
+    tandem_strat = [LinStrat(model, iter_steps=SIR_LIN_ITER_STEPS), PCAStrat(model, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, iter_steps=SIR_PCA_ITER_STEPS)]
+    mod_pca_flow = mod_reach.computeReachSet(NUM_STEPS, tempstrat=tandem_strat, transmode=BundleMode.AFO)
     #trajs = generate_traj(model, 10, 200)
 
     'Generaste the trajectories and add them to the plot.'
