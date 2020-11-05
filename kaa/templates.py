@@ -28,7 +28,7 @@ class TempStrategy(ABC):
         pass
 
     def hash_ptope(self, temp_idxs, name=None):
-        key = generate_unique_id() if name is None else name
+        key = self.__generate_unique_id() if name is None else name
         self.ptope_hash[key] = temp_idxs
         return key
 
@@ -40,9 +40,9 @@ class TempStrategy(ABC):
         bund.remove_dirs(self, ptope_labels)
         bund.remove_temp(self, key)
 
-    def add_ptope_to_bund(self, bund, key):
+    def add_ptope_to_bund(self, bund,  key):
         ptope_labels = self.ptope_hash[key]
-        bund.add_dirs(self, ptope_labels)
+        #bund.add_dirs(self, dir_row_mat, ptope_labels)
         bund.add_temp(self, ptope_labels, key)
 
     def __generate_unique_id(self):

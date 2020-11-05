@@ -20,6 +20,7 @@ class LinStrat(TempStrategy):
         self.__initialize_unit_mat()
 
         self.cond_threshold = cond_threshold
+        self.lin_app_ptope_queue = []
 
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
@@ -28,12 +29,11 @@ class LinStrat(TempStrategy):
 
             approx_A = self.__approx_A(bund, self.dim)
             inv_A = np.linalg.inv(approx_A)
-            
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
-            cond_num = np.linalg.cond(lin_dir)
-
-            print(f"COND NUM: {cond_num}")
-
+            
+            #cond_num = np.linalg.cond(lin_dir)
+            #print(f"COND NUM: {cond_num}")
+            """
             if cond_num > self.cond_threshold:
                 norm_lin_dir = self.__normalize_mat(lin_dir)
                 print(f"NORM_LIN_DIR: {norm_lin_dir}")
@@ -41,13 +41,11 @@ class LinStrat(TempStrategy):
                 closest_dirs = self.__find_closest_dirs(norm_lin_dir)
                 lin_dir = self.__merge_closest_dirs(norm_lin_dir, closest_dirs)
                 print(f"LIN DIR: {lin_dir}")
+            """
+            new_ptope_labels = [ str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir) ]
+            bund.add_dirs(self, lin_dir,  new_ptope_labels)
 
-            dir_idxs = bund.add_dir(lin_dir)
-            
-            if not self.counter:
-                bund.add_temp([dir_idxs])
-                self.hash_dir('PrevDir', dir_idxs)
-
+            self.lin_app_ptope_queue.append(self.hash_ptope(new_ptope_labels))
             self.unit_dir_mat = lin_dir
 
         return bund
@@ -57,7 +55,10 @@ class LinStrat(TempStrategy):
         if not self.counter % self.iter_steps:
             
             if self.counter:
-                bund.remove_dir(self.dir_hash['PrevDir'])
+                self.rm_ptope_from_bund(bund, self.lin_app_ptope_queue.pop(0))
+
+            self.add_ptope_to_bund(bund, self.lin_app_ptope_queue[0])
+
             
         self.counter += 1
         #print(f"CLOSE DIR/TEMP MAT: {bund.L},  {bund.T}")

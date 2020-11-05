@@ -1,6 +1,7 @@
 import numpy as np
 import sympy as sp
 from enum import Enum
+import warnings
 
 from kaa.parallelotope import Parallelotope
 from kaa.linearsystem import LinearSystem
@@ -9,6 +10,8 @@ from kaa.settings import KaaSettings
 from kaa.timer import Timer
 
 OptProd = KaaSettings.OptProd
+
+warnings.filterwarnings('ignore')
 
 class Bundle:
 
@@ -19,9 +22,8 @@ class Bundle:
         assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
 
         'Label the initial directions and templates with Default moniker.'
-        self.labeled_L = map(lambda row: (row, "DefaultTemp"), L)
-
-        self.labeled_T = map(lambda row: (row, "DefaultDir"), self.__convert_to_labeled_T(T))
+        self.labeled_L = [(dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L)]
+        self.labeled_T = list(map(lambda row: (row, "DefaultTemp"), self.__convert_to_labeled_T(T)))
 
         self.offu = offu
         self.offl = offl
@@ -30,22 +32,25 @@ class Bundle:
         self.vars = model.vars
         self.dim = model.dim
 
-        self.num_dir = len(self.L)
-        self.num_temp = len(self.T)
+        self.num_dir = len(L)
+        self.num_temp = len(T)
 
     @property
     def T(self):
 
-        curr_T = self.get_row(self.labeled_T)
+        curr_T = self.__get_row(self.labeled_T)
         gen_T = np.empty((self.num_temp, self.dim))
+        #print(f"L: {self.labeled_L}")
 
         for row_idx, row_labels in enumerate(curr_T):
             for col_idx, row_label in enumerate(row_labels):
-                gen_T[row_idx][col_idx] = __get_dir_row(row_label)
+                gen_T[row_idx][col_idx] = self.__get_dir_row_from_label(row_label)
+
+        return gen_T
 
     @property
     def L(self):
-        return __get_row(self.labeled_L)
+        return np.asarray(self.__get_row(self.labeled_L))
 
     """
     Returns linear constraints representing the polytope defined by bundle.
@@ -113,7 +118,7 @@ class Bundle:
     def add_temp(self, asso_strat, row_labels, temp_label):
         prev_len = self.num_temp
 
-        self.labeled_T = np.append(self.labeled_T, (row_labels, str(asso_strat) + temp_label), axis=0)
+        self.labeled_T.append(([str(asso_strat) + row_lab for row_lab in row_labels], str(asso_strat) + temp_label))
         self.num_temp = len(self.labeled_T)
 
     """
@@ -122,8 +127,9 @@ class Bundle:
     """
     def remove_temp(self, asso_strat, temp_label):
 
-        lab_mask = self.__get_label_mask(self.labeled_T, str(asso_strat) + temp_label)
-        self.labeled_T = np.delete(self.labeled_T, lab_mask, axis=0)
+        label_indices = self.__get_label_indices(self.labeled_T, [str(asso_strat) + temp_label])
+        self.labeled_T = list(np.delete(self.labeled_T, label_indices, axis=0))
+        #print(f"labeled_T: {self.labeled_T}")
         self.num_temp = len(self.labeled_T)
 
     """
@@ -142,9 +148,9 @@ class Bundle:
         labeled_L_ents = [ (dir_row, str(asso_strat) + label) for dir_row, label in dir_lab_tups ]
 
         'Update new templates to envelope current polytope'
-        self.labeled_L = np.append(self.labeled_L, labeled_L_ents , axis=0)
-        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in self.__get_row(dir_row_mat) ]]
-        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in self.__get_row(dir_row_mat) ]]
+        self.labeled_L += labeled_L_ents
+        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
+        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
         
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
@@ -153,42 +159,51 @@ class Bundle:
     """
     Remove specified direction entries from directions matrix from their labels.
     @params temp_idx: list of indices specifying row indices in directions matrix
+    WARNING: NEED TO FIX RECKLESS CASTING BETWEEN NUMPY ARR AND LISTS SOMEHOW
     """
-    def remove_dir(self, asso_strat, labels):
-        lab_mask = self.get_label_mask(self.L, [ str(asso_strat) + label for label in labels ])
+    def remove_dirs(self, asso_strat, labels):
+        global_labels =  [ str(asso_strat) + label for label in labels ]
+        label_indices = self.__get_label_indices(self.labeled_L, global_labels)
+
+
+        #print(f"RemoveDir: Labels: {global_labels}")
+        #print(f"labeled_L: {self.labeled_L}")
+        #print(f"Mask: {label_indices}")
         
-        self.L = np.delete(self.labeled_L, lab_mask, axis=0)
+        self.labeled_L = list(np.delete(self.labeled_L, label_indices, axis=0))
         self.num_dir = len(self.labeled_L)
 
-        self.offu = np.delete(self.offu, lab_mask, axis=0)
-        self.offl = np.delete(self.offl, lab_mask, axis=0)
+        self.offu = np.delete(self.offu, label_indices, axis=0)
+        self.offl = np.delete(self.offl, label_indices, axis=0)
 
-    def __get_label_mask(self, mat, labels):
+    def __get_label_indices(self, mat, labels):
         label_set = set(labels)
-        return map(lambda lab: lab in label_set, self.get_vec(mat))
+        return [idx for idx, label in enumerate(self.__get_label(mat)) if label in label_set]
 
     def __get_row(self, tup_mat):
-        return map(lambda row_label_tup: row_label_tup[0], mat)
+        return list(map(lambda row_label_tup: row_label_tup[0], tup_mat))
 
     def __get_label(self, tup_mat):
-        return map(lambda row_label_tup: row_label_tup[1], mat)
+        return list(map(lambda row_label_tup: row_label_tup[1], tup_mat))
 
-    def __get_dir_row(self, dir_label):
-        label_mask = __get_label_mask(self.labeled_L, dir_label)
-        return label_mask.index(True)
+    def __get_dir_row_from_label(self, dir_label):
+        #print(dir_label)
+        label_indices = self.__get_label_indices(self.labeled_L, [dir_label])
+        return label_indices[0]
 
     def __convert_to_labeled_T(self, T):
 
         labeled_T = []
         for temp_row in T:
-            labeled_T.append([self.labeled_L[col][1] for col in temp_row])
+            labeled_T.append([self.labeled_L[col][1] for col in temp_row.astype(int)])
 
         return np.asarray(labeled_T)
+
 
     """
     Copies bundle information into a new Bundle object
     @returns new Bundle object copy.
-    """
+
     def copy(self):
         new_T = np.copy(self.T)
         new_L = np.copy(self.L)
@@ -196,7 +211,7 @@ class Bundle:
         new_offl = np.copy(self.offl)
         
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
-
+    """
 """
 Wrapper over bundle transformation modes.
 """
@@ -228,10 +243,12 @@ class BundleTransformer:
     """
     def transform(self, bund):
 
+        L = bund.L
+        T = bund.T
         new_offu = np.full(bund.num_dir, np.inf)
         new_offl = np.full(bund.num_dir, np.inf)
 
-        for row_ind, row in enumerate(bund.T):
+        for row_ind, row in enumerate(T):
             
             'Find the generator of the parallelotope.'
             ptope = bund.getParallelotope(row_ind)
@@ -242,7 +259,7 @@ class BundleTransformer:
             #print(f"Num of directions: {bund.num_dir}")
 
             for column in direct_iter:
-                curr_L = bund.L[column]
+                curr_L = L[column]
                 ub, lb = self.__find_bounds(curr_L, ptope, bund)
 
                 new_offu[column] = min(ub, new_offu[column])

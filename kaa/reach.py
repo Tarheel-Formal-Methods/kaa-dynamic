@@ -1,9 +1,11 @@
+import copy
 from termcolor import colored 
 
 from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
+
 
 DefaultStrat = KaaSettings.DefaultStrat
 
@@ -35,7 +37,7 @@ class ReachSet:
             
             Timer.start('Reachable Set Computation')
 
-            starting_bund = flowpipe[ind].copy()
+            starting_bund = copy.deepcopy(flowpipe[ind])
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
