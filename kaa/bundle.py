@@ -18,8 +18,11 @@ class Bundle:
         assert np.size(L,0) == np.size(offl,0), "Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0))
         assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
 
-        self.T = T
-        self.L = L
+        'Label the initial directions and templates with Default moniker.'
+        self.labeled_L = map(lambda row: (row, "DefaultTemp"), L)
+
+        self.labeled_T = map(lambda row: (row, "DefaultDir"), self.__convert_to_labeled_T(T))
+
         self.offu = offu
         self.offl = offl
 
@@ -29,18 +32,34 @@ class Bundle:
 
         self.num_dir = len(self.L)
         self.num_temp = len(self.T)
+
+    @property
+    def T(self):
+
+        curr_T = self.get_row(self.labeled_T)
+        gen_T = np.empty((self.num_temp, self.dim))
+
+        for row_idx, row_labels in enumerate(curr_T):
+            for col_idx, row_label in enumerate(row_labels):
+                gen_T[row_idx][col_idx] = __get_dir_row(row_label)
+
+    @property
+    def L(self):
+        return __get_row(self.labeled_L)
+
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
     """
     def getIntersect(self):
 
+        L = self.L
         A = np.empty([2*self.num_dir, self.dim])
         b = np.empty(2*self.num_dir)
 
         for ind in range(self.num_dir):
-            A[ind] = self.L[ind]
-            A[ind + self.num_dir] = np.negative(self.L[ind])
+            A[ind] = L[ind]
+            A[ind + self.num_dir] = np.negative(L[ind])
             b[ind] = self.offu[ind]
             b[ind + self.num_dir] = self.offl[ind]
 
@@ -54,8 +73,9 @@ class Bundle:
     """
     def canonize(self):
         bund_sys = self.getIntersect()
+        L = self.L
 
-        for row_ind, row in enumerate(self.L):
+        for row_ind, row in enumerate(L):
 
             self.offu[row_ind] = bund_sys.max_opt(row).fun
             self.offl[row_ind] = bund_sys.max_opt(np.negative(row)).fun
@@ -67,13 +87,15 @@ class Bundle:
     """
     def getParallelotope(self, temp_ind):
 
+        L = self.L
+        T = self.T
         A = np.empty([2*self.dim,self.dim])
         b = np.empty(2*self.dim)
 
         'Fetch linear constraints defining the parallelotope.'
-        for fac_ind, facet in enumerate(self.T[temp_ind].astype(int)):
-            A[fac_ind] = self.L[facet]
-            A[fac_ind + self.dim] = np.negative(self.L[facet])
+        for fac_ind, facet in enumerate(T[temp_ind].astype(int)):
+            A[fac_ind] = L[facet]
+            A[fac_ind + self.dim] = np.negative(L[facet])
             b[fac_ind] = self.offu[facet]
             b[fac_ind + self.dim] = self.offl[facet]
 
@@ -88,53 +110,80 @@ class Bundle:
     Add a matrix of templates to the end of templates matrix.
     @params temp_row_mat: Matrix of new template entries.
     """
-    def add_temp(self, temp_row_mat):
+    def add_temp(self, asso_strat, row_labels, temp_label):
         prev_len = self.num_temp
 
-        self.T = np.append(self.T, temp_row_mat, axis=0)
-        self.num_temp = len(self.T)
-
-        return [i + prev_len for i in range(len(temp_row_mat))]
+        self.labeled_T = np.append(self.labeled_T, (row_labels, str(asso_strat) + temp_label), axis=0)
+        self.num_temp = len(self.labeled_T)
 
     """
     Remove specified template entries from templates matrix.
     @params temp_idx: list of indices specifying row indices in template matrix
     """
-    def remove_temp(self, temp_idx):
-        self.T = np.delete(self.T, temp_idx, axis=0)
-        self.num_temp = len(self.T)
+    def remove_temp(self, asso_strat, temp_label):
+
+        lab_mask = self.__get_label_mask(self.labeled_T, str(asso_strat) + temp_label)
+        self.labeled_T = np.delete(self.labeled_T, lab_mask, axis=0)
+        self.num_temp = len(self.labeled_T)
 
     """
     Add matrix of direction to end of directions matrix.
     Appends new row elemets into the offset matrices as well.
     @params dir_row_mat: Matrix of new direction entries
     """
-    def add_dir(self, dir_row_mat):
+    def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
+
+        assert len(dir_row_mat) == len(dir_labels), "Number of input direction rows must be one-to-one with the labels"
+
         bund_sys = self.getIntersect()
         prev_len = self.num_dir
 
+        dir_lab_tups = zip(dir_row_mat, dir_labels)
+        labeled_L_ents = [ (dir_row, str(asso_strat) + label) for dir_row, label in dir_lab_tups ]
+
         'Update new templates to envelope current polytope'
-        self.L = np.append(self.L, dir_row_mat, axis=0)
-        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
-        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
+        self.labeled_L = np.append(self.labeled_L, labeled_L_ents , axis=0)
+        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in self.__get_row(dir_row_mat) ]]
+        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in self.__get_row(dir_row_mat) ]]
         
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
-        self.num_dir = len(self.L)
-
-        'Return indices of added directions'
-        return [i + prev_len for i in range(len(dir_row_mat))]
+        self.num_dir = len(self.labeled_L)
         
     """
-    Remove specified direction entries from directions matrix.
+    Remove specified direction entries from directions matrix from their labels.
     @params temp_idx: list of indices specifying row indices in directions matrix
     """
-    def remove_dir(self, dir_idx):
-        self.L = np.delete(self.L, dir_idx, axis=0)
-        self.num_dir = len(self.L)
+    def remove_dir(self, asso_strat, labels):
+        lab_mask = self.get_label_mask(self.L, [ str(asso_strat) + label for label in labels ])
+        
+        self.L = np.delete(self.labeled_L, lab_mask, axis=0)
+        self.num_dir = len(self.labeled_L)
 
-        self.offu = np.delete(self.offu, dir_idx, axis=0)
-        self.offl = np.delete(self.offl, dir_idx, axis=0)
+        self.offu = np.delete(self.offu, lab_mask, axis=0)
+        self.offl = np.delete(self.offl, lab_mask, axis=0)
+
+    def __get_label_mask(self, mat, labels):
+        label_set = set(labels)
+        return map(lambda lab: lab in label_set, self.get_vec(mat))
+
+    def __get_row(self, tup_mat):
+        return map(lambda row_label_tup: row_label_tup[0], mat)
+
+    def __get_label(self, tup_mat):
+        return map(lambda row_label_tup: row_label_tup[1], mat)
+
+    def __get_dir_row(self, dir_label):
+        label_mask = __get_label_mask(self.labeled_L, dir_label)
+        return label_mask.index(True)
+
+    def __convert_to_labeled_T(self, T):
+
+        labeled_T = []
+        for temp_row in T:
+            labeled_T.append([self.labeled_L[col][1] for col in temp_row])
+
+        return np.asarray(labeled_T)
 
     """
     Copies bundle information into a new Bundle object

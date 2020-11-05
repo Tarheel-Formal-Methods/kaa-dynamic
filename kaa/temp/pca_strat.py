@@ -17,6 +17,7 @@ class PCAStrat(TempStrategy):
         self.traj_steps = traj_steps
         self.num_trajs = num_trajs
         self.iter_steps = iter_steps
+        self.pca_ptope_queue = []
 
     def open_strat(self, bund):
 
@@ -30,17 +31,17 @@ class PCAStrat(TempStrategy):
             for traj_idx, traj in enumerate(trajs):
                 traj_mat[traj_idx] = traj.end_point
 
-            pca = PCA(n_components=self.model.dim)
+            pca = PCA(n_components = self.model.dim)
             pca.fit(traj_mat)
 
             comps = pca.components_
             mean = pca.mean_
 
-            dir_idxs = bund.add_dir(comps)
+            ptope_labels = [str((counter, comp_idx)) for comp_idx, _ in enumerate(comps) ]
+            bund.add_dir(self, comps, ptope_labels)
 
-            if not self.counter:
-                bund.add_temp([dir_idxs])
-                self.hash_dir('PrevDir', dir_idxs)
+            'Hash labels and insert into Queue'
+            self.pca_ptope_queue.append(self.hash_ptope(ptope_labels))
             
             #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
             #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
@@ -50,12 +51,10 @@ class PCAStrat(TempStrategy):
     def close_strat(self, bund):
 
         if not self.counter % self.iter_steps:
-
             if self.counter:
-                'Remove the previous steps directions'
-                bund.remove_dir(self.dir_hash['PrevDir'])
+                self.rm_ptope_from_bund(bund, self.pca_ptope_queue.pop(0))
 
-        #print(f"CLOSE DIR/TEMP MAT: {bund.L},  {bund.T}")
+            self.add_ptope_to_bund(bund, self.pca_ptope_queue[0])
 
         self.counter += 1
         return bund

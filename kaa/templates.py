@@ -9,37 +9,45 @@ class TempStrategy(ABC):
 
     def __init__(self, model):
         self.model = model
-        self.dir_hash = {}
-        self.temp_hash = {}
+        self.ptope_hash = {}
+        self.ptope_counter = 0
         self.counter = 0
         
     """
-    Method called before the transformation operation is made.
+    Method called before the transformation operation and maximization over parallotopes are performed.
     """
     @abstractmethod
     def open_strat(self, bund):
         pass
 
     """
-    Method called after the transformation operation is made.
+    Method called after the transformation operation is performed.
     """
     @abstractmethod
     def close_strat(self, bund):
         pass
 
-    def hash_dir(self, key, dir_idxs):
-        self.dir_hash[key] = dir_idxs
-
-    def pop_dir(self, key):
-        return self.dir_hash.pop(key)
-
-    def hash_temp(self, key, temp_idxs):
-        self.temp_hash[key] = temp_idxs
+    def hash_ptope(self, temp_idxs, name=None):
+        key = generate_unique_id() if name is None else name
+        self.ptope_hash[key] = temp_idxs
+        return key
 
     def pop_temp(self, key):
-        return self.temp_hash.pop(key)
+        return self.ptope_hash.pop(key)
 
+    def rm_ptope_from_bund(self, bund, key):
+        ptope_labels = self.ptope_hash[key]
+        bund.remove_dirs(self, ptope_labels)
+        bund.remove_temp(self, key)
 
+    def add_ptope_to_bund(self, bund, key):
+        ptope_labels = self.ptope_hash[key]
+        bund.add_dirs(self, ptope_labels)
+        bund.add_temp(self, ptope_labels, key)
+
+    def __generate_unique_id(self):
+        self.ptope_counter += 1
+        return "Ptope" + str(self.ptope_counter)
 
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.

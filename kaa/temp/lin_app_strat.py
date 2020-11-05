@@ -30,9 +30,6 @@ class LinStrat(TempStrategy):
             inv_A = np.linalg.inv(approx_A)
             
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
-
-
-            """
             cond_num = np.linalg.cond(lin_dir)
 
             print(f"COND NUM: {cond_num}")
@@ -44,7 +41,7 @@ class LinStrat(TempStrategy):
                 closest_dirs = self.__find_closest_dirs(norm_lin_dir)
                 lin_dir = self.__merge_closest_dirs(norm_lin_dir, closest_dirs)
                 print(f"LIN DIR: {lin_dir}")
-            """
+
             dir_idxs = bund.add_dir(lin_dir)
             
             if not self.counter:
@@ -124,7 +121,6 @@ class LinStrat(TempStrategy):
         for i in range(self.dim):
             self.unit_dir_mat[i][i] = 1
 
-    
     def __str__(self):
         return "LinApp(Steps:{})".format(self.iter_steps)
 
