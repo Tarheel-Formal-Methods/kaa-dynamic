@@ -88,15 +88,15 @@ def test_lin_VDP():
 
 def test_pca_lin_VDP():
 
-    NUM_STEPS = 30
+    NUM_STEPS = 70
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
     VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
-    VDP_PCA_DELAY = 2
+    VDP_PCA_DELAY = 4
 
-    unit_model = VanDerPol_UnitBox(delta=0.04)
+    unit_model = VanDerPol_UnitBox(delta=0.08)
     unit_mod_reach = ReachSet(unit_model)
 
     lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \
