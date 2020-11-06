@@ -11,13 +11,12 @@ Implementation of creating templates through PCA
 """
 class PCAStrat(TempStrategy):
 
-    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=10, order=None):
+    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=10):
         super().__init__(model)
 
         self.traj_steps = traj_steps
         self.num_trajs = num_trajs
         self.iter_steps = iter_steps
-        self.order = order
         self.pca_ptope_queue = []
 
     def open_strat(self, bund):

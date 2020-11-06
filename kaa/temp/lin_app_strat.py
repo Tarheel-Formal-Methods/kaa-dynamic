@@ -59,7 +59,6 @@ class LinStrat(TempStrategy):
 
             self.add_ptope_to_bund(bund, self.lin_app_ptope_queue[0])
 
-            
         self.counter += 1
         #print(f"CLOSE DIR/TEMP MAT: {bund.L},  {bund.T}")
 

@@ -30,9 +30,7 @@ class ReachSet:
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model, transmode)
 
-        strats = tempstrat if tempstrat is not None else [DefaultStrat(self.model)]
-        strats = [strats] if not isinstance(strats, list) else strats
-
+        strat = tempstrat if tempstrat is not None else [DefaultStrat(self.model)]
         flowpipe = [initial_set]
 
         for ind in range(time_steps):
@@ -44,13 +42,9 @@ class ReachSet:
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
-            for strat in strats:
-                strat.open_strat(starting_bund)
-
+            strat.open_strat(starting_bund)
             trans_bund = transformer.transform(starting_bund)
-
-            for strat in strats:
-                strat.close_strat(trans_bund)
+            strat.close_strat(trans_bund)
             
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))

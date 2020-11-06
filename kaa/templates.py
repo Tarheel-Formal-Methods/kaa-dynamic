@@ -7,10 +7,11 @@ strategy
 """
 class TempStrategy(ABC):
 
-    def __init__(self, model):
+    def __init__(self, model, order=None):
         self.model = model
         self.ptope_hash = {}
         self.ptope_counter = 0
+        self.order = order
         self.counter = 0
         
     """
@@ -48,7 +49,6 @@ class TempStrategy(ABC):
     def __generate_unique_id(self):
         self.ptope_counter += 1
         return "Ptope" + str(self.ptope_counter)
-
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.
 """
@@ -62,3 +62,33 @@ class StaticStrat(TempStrategy):
 
     def close_strat(self, bund):
         return bund
+
+
+class MultiStrategy(TempStrategy):
+
+    def __init__(self, *var_tup):
+
+        self.strat_list = []
+        self.strat_freq = {}
+
+        for strat in var_tup:
+
+            assert isinstance(strat, TempStrategy), "Only a list of TempStrategy objects must be passed into a MultiStrategy."
+
+            if type(strat) in self.strat_freq:
+                self.strat_freq[type(strat)] += 1
+            else:
+                self.strat_freq[type(strat)] = 1
+
+            strat.order = self.strat_freq[type(strat)]
+            self.strat_list.append(strat)
+
+    def open_strat(self, bund):
+
+        for strat in self.strat_list:
+            strat.open_strat(bund)
+
+    def close_strat(self, bund):
+
+        for strat in self.strat_list:
+            strat.close_strat(bund)
