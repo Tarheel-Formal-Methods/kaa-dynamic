@@ -30,7 +30,7 @@ class ReachSet:
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model, transmode)
 
-        strat = tempstrat if tempstrat is not None else [DefaultStrat(self.model)]
+        strat = tempstrat if tempstrat is not None else DefaultStrat(self.model)
         flowpipe = [initial_set]
 
         for ind in range(time_steps):

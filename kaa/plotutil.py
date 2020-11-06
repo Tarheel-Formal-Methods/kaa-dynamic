@@ -125,7 +125,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=True, plotvertices=False, xlim=None, ylim=None):
+    def plot2DPhase(self, x, y, separate=True, plotvertices=False, lims=None):
 
         Timer.start('Phase')
 
@@ -152,6 +152,10 @@ class Plot:
         ax.set_ylabel(f'{y_var}')
         ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
         ax.legend(handles = [pat.Patch(color = f"C{l}", label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
+
+        if lims is not None:
+            ax.set_xlim(lims)
+            ax.set_ylim(lims)
 
         if PlotSettings.save_fig:
             var_str = ''.join([str(self.model.vars[var_ind]).upper() for var_ind in [x,y]])
