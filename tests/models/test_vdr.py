@@ -16,7 +16,7 @@ PlotSettings.save_fig = False
 def test_VDP():
     NUM_STEPS = 70
 
-    model = VanDerPol(delta=0.08)
+    model = VanDerPol(delta=0.04)
     mod_reach = ReachSet(model)
 
     mod_flow = mod_reach.computeReachSet(NUM_STEPS)
@@ -63,24 +63,24 @@ def test_pca_VDP():
 
 def test_lin_VDP():
 
-    NUM_STEPS = 60
+    NUM_STEPS = 50
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
 
-    unit_model = VanDerPol_UnitBox(delta=0.08)
+    unit_model = VanDerPol_UnitBox(delta=0.02)
     unit_mod_reach = ReachSet(unit_model)
 
     lin_strat = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS)
     mod_lin_flow = unit_mod_reach.computeReachSet(NUM_STEPS, tempstrat=lin_strat)
 
-    points = [[0,1.90], [0.1, 1.90], [0.1,2], [0,2], [0.05,1.9], [0.05,2], [0,1.9],  [0,1.95], [0.1,1.95]]
-    trajs = [Traj(unit_model, point, NUM_STEPS) for point in points]
+    #points = [[0,1.97], [0.01, 1.97], [0.01,2], [0,2], [0.005,1.97], [0.005,2], [0,1.97],  [0,1.985], [0.01,1.985]]
+    #trajs = [Traj(unit_model, point, NUM_STEPS) for point in points]
 
     vdp_plot = Plot()
     vdp_plot.add(mod_lin_flow, "VDP LinAPP")
 
     'Add trajectories'
-    for traj in trajs:
-        vdp_plot.add(traj)
+    #for traj in trajs:
+    #    vdp_plot.add(traj)
 
     vdp_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
 
@@ -88,7 +88,7 @@ def test_lin_VDP():
 
 def test_pca_lin_VDP():
 
-    NUM_STEPS = 70
+    NUM_STEPS = 30
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
@@ -96,7 +96,7 @@ def test_pca_lin_VDP():
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
     VDP_PCA_DELAY = 2
 
-    unit_model = VanDerPol_UnitBox(delta=0.08)
+    unit_model = VanDerPol_UnitBox(delta=0.04)
     unit_mod_reach = ReachSet(unit_model)
 
     lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \

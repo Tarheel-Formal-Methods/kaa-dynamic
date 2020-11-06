@@ -7,7 +7,12 @@ if KaaSettings.OptProd is KodiakProd:
 
 class Model:
 
-    def __init__(self, f, vars, T, L, offu, offl, name="Model"):
+    def __init__(self, f, vars, T, L, offu, offl, name="Model", compose=0):
+
+        for _ in range(compose):
+            var_sub = [ (var, f[var_idx]) for var_idx, var in enumerate(vars) ]
+            f = [ func.subs(var_sub, simultaneous=True) for func in f ]
+
         'List of system dynamics.'
         self.f = f
 

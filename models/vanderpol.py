@@ -75,4 +75,4 @@ class VanDerPol_UnitBox(Model):
         offu[0] = 0.01; offl[0] = 0;
         offu[1] = 2; offl[1] = -1.97;
 
-        super().__init__(dyns, vars, T, L, offu, offl, "VDP")
+        super().__init__(dyns, vars, T, L, offu, offl, name="VDP", compose=1)
