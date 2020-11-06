@@ -22,8 +22,8 @@ class Bundle:
         assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
 
         'Label the initial directions and templates with Default moniker.'
-        self.labeled_L = [(dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L)]
-        self.labeled_T = list(map(lambda row: (row, "DefaultTemp"), self.__convert_to_labeled_T(T)))
+        self.labeled_L = [ (dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L) ]
+        self.labeled_T = np.asarray([(row, "DefaultTemp") for row in self.__convert_to_labeled_T(T)])
 
         self.offu = offu
         self.offl = offl
@@ -52,6 +52,11 @@ class Bundle:
     def L(self):
         return np.asarray(self.__get_row(self.labeled_L))
 
+    "Returns list of Parallelotope objects defining this bundle."
+    @property
+    def ptopes(self):
+        return [self.getParallelotope(i) for i,_ in enumerate(self.T)]
+    
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
@@ -106,19 +111,16 @@ class Bundle:
 
         return Parallelotope(A, b, self.vars)
 
-    "Returns list of Parallelotope objects defining this bundle."
-    @property
-    def ptopes(self):
-        return [self.getParallelotope(i) for i,_ in enumerate(self.T)]
-
     """
     Add a matrix of templates to the end of templates matrix.
     @params temp_row_mat: Matrix of new template entries.
     """
     def add_temp(self, asso_strat, row_labels, temp_label):
-        prev_len = self.num_temp
 
-        self.labeled_T.append(([str(asso_strat) + row_lab for row_lab in row_labels], str(asso_strat) + temp_label))
+        assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
+
+        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label))
+        self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
         self.num_temp = len(self.labeled_T)
 
     """
@@ -127,8 +129,8 @@ class Bundle:
     """
     def remove_temp(self, asso_strat, temp_label):
 
-        label_indices = self.__get_label_indices(self.labeled_T, [str(asso_strat) + temp_label])
-        self.labeled_T = list(np.delete(self.labeled_T, label_indices, axis=0))
+        label_indices = self.__get_label_indices(self.labeled_T, self.__get_global_labels(asso_strat, temp_label))
+        self.labeled_T = np.delete(self.labeled_T, label_indices, axis=0)
         #print(f"labeled_T: {self.labeled_T}")
         self.num_temp = len(self.labeled_T)
 
@@ -136,6 +138,7 @@ class Bundle:
     Add matrix of direction to end of directions matrix.
     Appends new row elemets into the offset matrices as well.
     @params dir_row_mat: Matrix of new direction entries
+
     """
     def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
 
@@ -144,11 +147,10 @@ class Bundle:
         bund_sys = self.getIntersect()
         prev_len = self.num_dir
 
-        dir_lab_tups = zip(dir_row_mat, dir_labels)
-        labeled_L_ents = [ (dir_row, str(asso_strat) + label) for dir_row, label in dir_lab_tups ]
-
         'Update new templates to envelope current polytope'
-        self.labeled_L += labeled_L_ents
+        labeled_L_ents = zip(dir_row_mat, self.__get_global_labels(asso_strat, dir_labels))
+        self.labeled_L = np.append(self.labeled_L, list(labeled_L_ents), axis=0)
+
         new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
         new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
         
@@ -159,38 +161,80 @@ class Bundle:
     """
     Remove specified direction entries from directions matrix from their labels.
     @params temp_idx: list of indices specifying row indices in directions matrix
-    WARNING: NEED TO FIX RECKLESS CASTING BETWEEN NUMPY ARR AND LISTS SOMEHOW
     """
     def remove_dirs(self, asso_strat, labels):
-        global_labels =  [ str(asso_strat) + label for label in labels ]
-        label_indices = self.__get_label_indices(self.labeled_L, global_labels)
-
+    
+        label_indices = self.__get_label_indices(self.labeled_L, self.__get_global_labels(asso_strat, labels))
 
         #print(f"RemoveDir: Labels: {global_labels}")
         #print(f"labeled_L: {self.labeled_L}")
         #print(f"Mask: {label_indices}")
         
-        self.labeled_L = list(np.delete(self.labeled_L, label_indices, axis=0))
+        self.labeled_L = np.delete(self.labeled_L, label_indices, axis=0)
         self.num_dir = len(self.labeled_L)
 
         self.offu = np.delete(self.offu, label_indices, axis=0)
         self.offl = np.delete(self.offl, label_indices, axis=0)
 
-    def __get_label_indices(self, mat, labels):
-        label_set = set(labels)
-        return [idx for idx, label in enumerate(self.__get_label(mat)) if label in label_set]
+    """
+    Converts relative labels given by strategies to global labels understood by the Bundle object.
+    All labels will generally be in the form of strategy_name + relative_label
+    @params: asso_strat: strategy which claims the set of labels or label
+             labels: set of labels or label which must be converted into the global format understood by Bundle
+    @returns list of converted labels or label.
+    """
+    def __get_global_labels(self, asso_strat, labels):
+        return [ str(asso_strat) + label for label in labels ] if isinstance(labels, list) else str(asso_strat) + labels
 
+    """
+    Returns the indices which a list of indices or an index points towrads in the tuple matrix.
+    @params tup mat: input tuple matrix
+            labels: list of labels or a single label relevant to search
+    @returns list of indices which a label in the input points towards
+    """
+    def __get_label_indices(self, tup_mat, labels):
+        label_set = set(labels) if isinstance(labels, list) else set([labels])
+        #print(self.__get_label(tup_mat))
+        return [idx for idx, label in enumerate(self.__get_label(tup_mat)) if label in label_set]
+
+    """
+    Returns the row data in order of the labeled matrix rows. The input will be a
+    labeled matrix i.e list of tuples where the first coordinate contains the data
+    and the second value contains the label of the data.
+    @params tup_mat: input tuple matrix i.e self.labeled_L or self.labeled_T
+    @returns list of rows (data) in order which they appear in the input tuple matrix.
+    """
     def __get_row(self, tup_mat):
         return list(map(lambda row_label_tup: row_label_tup[0], tup_mat))
 
+    """
+    Returns the labels in order of the labeled matrix rows. The input will be a
+    labeled matrix i.e list of tuples where the first coordinate contains the data
+    and the second value contains the label of the data.
+    @params tup_mat: input tuple matrix i.e self.labeled_L or self.labeled_T
+    @returns list of labels in order which they appear in the input tuple matrix.
+    """
     def __get_label(self, tup_mat):
         return list(map(lambda row_label_tup: row_label_tup[1], tup_mat))
 
+    """
+    Searches for the row which the input label points to in the directions matrix.
+    @params dir_label: label to search for
+    @returns index which label points to.
+    """
     def __get_dir_row_from_label(self, dir_label):
-        #print(dir_label)
-        label_indices = self.__get_label_indices(self.labeled_L, [dir_label])
+        #print(dir_label, self.labeled_L)
+        label_indices = self.__get_label_indices(self.labeled_L, dir_label)
+        assert len(label_indices) == 1, f"Every index should have a unique label. Offending list: {label_indices}"
         return label_indices[0]
 
+    """
+    Converts template matrix from numpy form into a labeled form
+    containing only the list of labels pointing to the relevant rows in
+    the directions matrix
+    @params T: numpy template matrix with integer entries
+    @returns list of lists containing labels pointing to direction matrix rows.
+    """
     def __convert_to_labeled_T(self, T):
 
         labeled_T = []
@@ -198,7 +242,6 @@ class Bundle:
             labeled_T.append([self.labeled_L[col][1] for col in temp_row.astype(int)])
 
         return np.asarray(labeled_T)
-
 
     """
     Copies bundle information into a new Bundle object
@@ -212,6 +255,7 @@ class Bundle:
         
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
     """
+    
 """
 Wrapper over bundle transformation modes.
 """

@@ -11,18 +11,19 @@ Implementation of creating templates through PCA
 """
 class PCAStrat(TempStrategy):
 
-    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=10):
+    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=10, order=None):
         super().__init__(model)
 
         self.traj_steps = traj_steps
         self.num_trajs = num_trajs
         self.iter_steps = iter_steps
+        self.order = order
         self.pca_ptope_queue = []
 
     def open_strat(self, bund):
 
         if not self.counter % self.iter_steps:
-            print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
+            #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
 
             trajs = generate_traj(bund, self.num_trajs, self.traj_steps)
             traj_mat = np.empty((self.num_trajs, bund.dim))
@@ -37,17 +38,17 @@ class PCAStrat(TempStrategy):
             comps = pca.components_
             mean = pca.mean_
 
-            ptope_labels = [str((self.counter, comp_idx)) for comp_idx, _ in enumerate(comps) ]
+            'Label the component directions with a unique labels'
+            ptope_labels = [ str((self.counter, comp_idx)) for comp_idx, _ in enumerate(comps) ]
             bund.add_dirs(self, comps, ptope_labels)
 
-            'Hash labels and insert into Queue'
+            'Hash labels and insert into queue'
             self.pca_ptope_queue.append(self.hash_ptope(ptope_labels))
-
-        return bund
         
     def close_strat(self, bund):
 
         if not self.counter % self.iter_steps:
+            
             if self.counter:
                 self.rm_ptope_from_bund(bund, self.pca_ptope_queue.pop(0))
 
@@ -61,8 +62,6 @@ class PCAStrat(TempStrategy):
         #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
 
         self.counter += 1
-        return bund
-
 
     def __str__(self):
-        return "PCAStrat"
+        return "PCAStrat-" if self.order is None else f"PCAStrat{self.order}-"
