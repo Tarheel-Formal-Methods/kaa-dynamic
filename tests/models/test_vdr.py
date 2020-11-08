@@ -56,7 +56,7 @@ def test_pca_VDP():
     vdp_plot = Plot()
     #vdp_plot.add(mod_flow, "VDP SAPO")
     vdp_plot.add(mod_pca_flow, "VDP PCA")
-    vdp_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
+    vdp_plot.plot2DPhase(0,1, separate=True)
 
     Timer.generate_stats()
 
@@ -82,7 +82,7 @@ def test_lin_VDP():
     #for traj in trajs:
     #    vdp_plot.add(traj)
 
-    vdp_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
+    vdp_plot.plot2DPhase(0,1, separate=True)
 
     Timer.generate_stats()
 
@@ -94,7 +94,7 @@ def test_pca_lin_VDP():
     'PCA Strategy Parameters'
     VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
-    VDP_PCA_DELAY = 15
+    VDP_PCA_DELAY = 7
 
     unit_model = VanDerPol_UnitBox(delta=0.08)
     unit_mod_reach = ReachSet(unit_model)
@@ -115,4 +115,4 @@ def test_pca_lin_VDP():
     for traj in trajs:
         vdp_plot.add(traj)
 
-    vdp_plot.plot2DPhase(0,1, separate=False, plotvertices=True)
+    vdp_plot.plot2DPhase(0,1, separate=True)

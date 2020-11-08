@@ -25,7 +25,7 @@ class LL(Model):
 
         dim_sys = 7
         num_dirs = 9
-        num_temps = 2
+        num_temps = 3
 
         L = np.zeros([num_dirs, dim_sys])
 
@@ -38,7 +38,7 @@ class LL(Model):
 
         T = np.zeros([num_temps, dim_sys])
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4; T[0][5] = 5; T[0][6] = 6;
-        #T[0][0] = 1; T[0][1] = 2; T[0][2] = 3; T[0][3] = 4; T[0][4] = 5; T[0][5] = 6; T[0][6] = 7;
+        T[0][0] = 1; T[0][1] = 2; T[0][2] = 3; T[0][3] = 4; T[0][4] = 5; T[0][5] = 6; T[0][6] = 7;
         T[1][0] = 2; T[1][1] = 3; T[1][2] = 4; T[1][3] = 5; T[1][4] = 6; T[1][5] = 7; T[1][6] = 8;
 
         offu = np.zeros(num_dirs)

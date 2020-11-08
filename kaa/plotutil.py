@@ -125,7 +125,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=True, plotvertices=False, lims=None):
+    def plot2DPhase(self, x, y, separate=True, plotvertices=True, lims=None):
 
         Timer.start('Phase')
 

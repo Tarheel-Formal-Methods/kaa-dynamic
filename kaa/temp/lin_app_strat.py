@@ -13,7 +13,6 @@ class LinStrat(TempStrategy):
     def __init__(self, model, iter_steps=2, cond_threshold=7):
         super().__init__(model)
 
-        self.dim = model.dim
         self.iter_steps = iter_steps
 
         self.unit_dir_mat = np.zeros((self.dim, self.dim))
@@ -55,7 +54,9 @@ class LinStrat(TempStrategy):
         if not self.counter % self.iter_steps:
             
             if self.counter:
-                self.rm_ptope_from_bund(bund, self.lin_app_ptope_queue.pop(0))
+                last_ptope =  self.lin_app_ptope_queue.pop(0)
+                self.rm_ptope_from_bund(bund, last_ptope)
+                self.pop_ptope(last_ptope)
 
             self.add_ptope_to_bund(bund, self.lin_app_ptope_queue[0])
 

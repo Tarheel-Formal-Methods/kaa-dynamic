@@ -49,7 +49,9 @@ class PCAStrat(TempStrategy):
         if not self.counter % self.iter_steps:
             
             if self.counter:
-                self.rm_ptope_from_bund(bund, self.pca_ptope_queue.pop(0))
+                last_ptope = self.pca_ptope_queue.pop(0)
+                self.rm_ptope_from_bund(bund, last_ptope)
+                self.pop_ptope(last_ptope)
 
             #print(self.pca_ptope_queue)
             #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
@@ -63,4 +65,4 @@ class PCAStrat(TempStrategy):
         self.counter += 1
 
     def __str__(self):
-        return "PCAStrat-" if self.order is None else f"PCAStrat{self.order}-"
+        return "PCAStrat-" if self.strat_order is None else f"PCAStrat{self.strat_order}-"
