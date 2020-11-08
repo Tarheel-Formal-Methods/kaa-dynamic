@@ -79,7 +79,7 @@ def test_pca_lin_HarOsc():
     mod_reach = ReachSet(model)
     #mod_flow = mod_reach.computeReachSet()
 
-    sir_plot = Plot()
+    sir_plot = Plot()dd
 
     SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
@@ -93,4 +93,4 @@ def test_pca_lin_HarOsc():
 
     'Generaste the trajectories and add them to the plot.'
     sir_plot.add(mod_pca_flow, "HarOsc PCA")
-    sir_plot.plot2DPhase(0,1, separate=True, plotvertices=True)
+    sir_plot.plot2DPhase(0,1, separate=True, plotvertices=True)dd
