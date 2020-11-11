@@ -32,12 +32,12 @@ class TempStrategy(ABC):
         pass
 
     """
-    Inserts list of diretion labels associated to a ptope into the ptope dictonary.
+    Inserts list of direction labels associated to a ptope into the ptope dictonary.
     The method returns a label for the ptope if the name is not specified.
     @params dir_label_list: list of labels to direction composing the template.
     @returns key of hashed ptope
     """
-    def hash_ptope(self, dir_label_list, name=None):
+    def __hash_ptope(self, dir_label_list, name=None):
         assert len(dir_label_list) == self.dim, "Number of directions associated to a parallelotope must match the dimension of the system."
         
         key = self.__generate_unique_key() if name is None else name
@@ -48,7 +48,7 @@ class TempStrategy(ABC):
     Removes an entry in the ptope dictionary with specified key.
     @params key: key of ptope to be removed
     """
-    def pop_ptope(self, key):
+    def __pop_ptope(self, key):
         return self.ptope_hash.pop(key)
 
     """
@@ -56,20 +56,23 @@ class TempStrategy(ABC):
     @params bund: input Bundle object
             key: key of ptope indexed in self.ptope_hash
     """
-    def rm_ptope_from_bund(self, bund, key):
-        ptope_labels = self.ptope_hash[key]
-        bund.remove_dirs(self, ptope_labels)
-        bund.remove_temp(self, key)
+    def rm_ptope_from_bund(self, bund, ptope_label):
+        ptope_dir_labels = self.ptope_hash[ptope_label]
+        bund.remove_dirs(self, ptope_dir_labels)
+        bund.remove_temp(self, ptope_label)
+        self.__pop_ptope(ptope_label)
 
     """
     Adds a template contained in the ptope dictionary from an input bundle
     @params bund: input Bundle object
             key: key of ptope indexed in self.ptope_hash
     """
-    def add_ptope_to_bund(self, bund,  key):
-        ptope_labels = self.ptope_hash[key]
-        #bund.add_dirs(self, dir_row_mat, ptope_labels)
-        bund.add_temp(self, ptope_labels, key)
+    def add_ptope_to_bund(self, bund,  dir_row_mat, dir_labels):
+        ptope_name = self.__hash_ptope(dir_labels)
+        bund.add_dirs(self, dir_row_mat, dir_labels)
+        bund.add_temp(self, dir_labels, ptope_name)
+
+        return ptope_name
         
     """
     Generates a unique key for a ptope.
@@ -77,7 +80,7 @@ class TempStrategy(ABC):
     def __generate_unique_key(self):
         self.ptope_counter += 1
         return "Ptope" + str(self.ptope_counter)
-
+    
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.
 """

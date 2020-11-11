@@ -41,10 +41,10 @@ class LinStrat(TempStrategy):
                 lin_dir = self.__merge_closest_dirs(norm_lin_dir, closest_dirs)
                 print(f"LIN DIR: {lin_dir}")
 
-            new_ptope_labels = [ str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir) ]
-            bund.add_dirs(self, lin_dir,  new_ptope_labels)
+            lin_dir_labels = [ str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir) ]
 
-            self.lin_app_ptope_queue.append(self.hash_ptope(new_ptope_labels))
+            ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
+            self.lin_app_ptope_queue.append(ptope_label)
             self.unit_dir_mat = lin_dir
 
         return bund
@@ -56,9 +56,6 @@ class LinStrat(TempStrategy):
             if self.counter:
                 last_ptope =  self.lin_app_ptope_queue.pop(0)
                 self.rm_ptope_from_bund(bund, last_ptope)
-                self.pop_ptope(last_ptope)
-
-            self.add_ptope_to_bund(bund, self.lin_app_ptope_queue[0])
 
         self.counter += 1
         #print(f"CLOSE DIR/TEMP MAT: {bund.L},  {bund.T}")
