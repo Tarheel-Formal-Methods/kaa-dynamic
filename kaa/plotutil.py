@@ -94,7 +94,7 @@ class Plot:
                 x = np.arange(len(traj))
                 y = traj.get_traj_proj(var)
 
-                ax[ax_idx].plot(x, y, color="C{}".format(traj_idx))
+                ax[ax_idx].plot(x, y, color="C{}".format(traj_idx), linewidth=1)
 
             for flow_idx, (label, flowpipe) in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.get2DProj(var_ind)
@@ -145,7 +145,7 @@ class Plot:
             x_coord = traj.get_proj(x_var)
             y_coord = traj.get_proj(y_var)
 
-            ax.plot(x_coord, y_coord, color=f"C{traj_idx}")
+            ax.plot(x_coord, y_coord, color=f"C{traj_idx}", linewidth=1)
             ax.scatter(x_coord, y_coord, color=f"C{traj_idx}")
 
         ax.set_xlabel(f'{x_var}')
