@@ -6,6 +6,7 @@ from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat
 from kaa.temp.lin_app_strat import LinStrat
 from kaa.templates import MultiStrategy
+from kaa.experiments import PhaseExperiment
 
 from kaa.settings import PlotSettings
 from kaa.timer import Timer

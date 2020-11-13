@@ -2,7 +2,7 @@ import math
 import random as ran
 import sympy as sp
 import numpy as np
-from itertools import product
+from itertools import product, chain
 import multiprocessing as mp
 
 from kaa.trajectory import Traj
@@ -94,9 +94,16 @@ def gen_ran_pts_ptope(bund, num_trajs):
     return gen_pts
 
 
-"""
-def traj_from_init_box(init_box, depth=2):
-"""
+def get_init_box_borders(init_box):
+
+    midpoints = [ start + (end - start) / 2 for start, end in init_box  ]
+    border_points = list(product(*init_box))
+
+    for point_idx, point in enumerate(midpoints):
+        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, inter in enumerate(init_box) ]
+        border_points += list(product(*halfpoints))
+
+    return border_points
 
 """
 Calculate the enveloping box over the initial polyhedron
