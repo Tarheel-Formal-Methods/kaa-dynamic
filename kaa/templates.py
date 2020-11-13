@@ -117,6 +117,10 @@ class MultiStrategy(TempStrategy):
             strat.strat_order = self.strat_freq[type(strat)]
             self.strat_list.append(strat)
 
+    @property
+    def strats(self):
+        return self.strat_list
+
     def open_strat(self, bund):
 
         for strat in self.strat_list:

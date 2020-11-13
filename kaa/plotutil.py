@@ -127,6 +127,8 @@ class Plot:
     """
     def plot2DPhase(self, x, y, separate=True, plotvertices=True, lims=None):
 
+        assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
+
         Timer.start('Phase')
 
         dim = self.model.dim
@@ -146,12 +148,18 @@ class Plot:
             y_coord = traj.get_proj(y_var)
 
             ax.plot(x_coord, y_coord, color=f"C{traj_idx}", linewidth=1)
-            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}")
+            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=0.5)
 
         ax.set_xlabel(f'{x_var}')
         ax.set_ylabel(f'{y_var}')
         ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
-        ax.legend(handles = [pat.Patch(color = f"C{l}", label=flow_label) for l, (flow_label, _) in enumerate(self.flowpipes)])
+
+        axis_patches = []
+        for flow_idx, (_, flowpipe) in enumerate(self.flowpipes):
+            for strat_idx, strat in enumerate(flowpipe.strats):
+                axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
+
+        ax.legend(handles=axis_patches)
 
         if lims is not None:
             ax.set_xlim(lims)
@@ -224,7 +232,7 @@ class Plot:
             'Sort by polar coordinates'
             proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
 
-            ptope = pat.Polygon(proj_vertices, fill=True, color='C{}'.format(flow_idx + idx_offset), alpha=0.4)
+            ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{flow_idx + idx_offset}", alpha=0.4)
             ax.add_patch(ptope)
 
             if plotvertices:

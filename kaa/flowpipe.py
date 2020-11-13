@@ -3,10 +3,10 @@ import numpy as np
 
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
+from kaa.templates import MultiStrategy
 
-import os
 """
-Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of bundles.i
+Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of Bundle objects.
 """
 class FlowPipe:
 
@@ -48,6 +48,15 @@ class FlowPipe:
         Timer.stop("Proj")
 
         return y_min, y_max
+
+    """
+    Returns a list of strategies which were acting during the reachable set
+    computation producing this flowpipe. The strategies are in acting order supplied into
+    MultiStrategy.
+    """
+    @property
+    def strats(self):
+        return [s for s in self.strat.strat_list ] if isinstance(self.strat, MultiStrategy) else [self.strat]
 
     @property
     def model_name(self):

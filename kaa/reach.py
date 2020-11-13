@@ -1,5 +1,5 @@
 import copy
-from termcolor import colored 
+from termcolor import colored
 
 from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer, BundleMode

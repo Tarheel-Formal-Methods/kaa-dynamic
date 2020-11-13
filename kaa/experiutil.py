@@ -93,15 +93,21 @@ def gen_ran_pts_ptope(bund, num_trajs):
 
     return gen_pts
 
-
+"""
+Find corner vertices for an initial box along with midpoints between the corners.
+@params init_box : intervals of the box given as a list of lists where each member's left,right value
+                   are the start,end points respectively for the intervals of the box.
+@returns list of border points.
+"""
 def get_init_box_borders(init_box):
 
     midpoints = [ start + (end - start) / 2 for start, end in init_box  ]
     border_points = list(product(*init_box))
 
     for point_idx, point in enumerate(midpoints):
-        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, inter in enumerate(init_box) ]
-        border_points += list(product(*halfpoints))
+        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box) ]
+
+        border_points += list(product(*half_points))
 
     return border_points
 
