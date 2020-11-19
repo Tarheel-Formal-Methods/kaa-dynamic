@@ -31,15 +31,15 @@ class AbstractLinStrat(TempStrategy):
         lin_dir = np.dot(self.unit_dir_mat, inv_A)
         
         cond_num = np.linalg.cond(lin_dir)
-        print(f"COND NUM: {cond_num}")
+        #print(f"COND NUM: {cond_num}")
 
         if cond_num > self.cond_threshold:
             norm_lin_dir = self.__normalize_mat(lin_dir)
-            print(f"NORM_LIN_DIR: {norm_lin_dir}")
+            #print(f"NORM_LIN_DIR: {norm_lin_dir}")
 
             closest_dirs = self.__find_closest_dirs(norm_lin_dir)
             lin_dir = self.__merge_closest_dirs(norm_lin_dir, closest_dirs)
-            print(f"LIN DIR: {lin_dir}")
+            #print(f"LIN DIR: {lin_dir}")
 
         lin_dir_labels = [ str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir) ]
 
@@ -64,7 +64,7 @@ class AbstractLinStrat(TempStrategy):
 
 
     def __merge_closest_dirs(self, dir_mat, closest_dirs):
-        first_dir, second_dir = closest_dirs
+        first_dir, second_dir = (0,1)
         merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
         ortho_dir = [ uniform(-1,1) for _ in range(self.dim) ]
 

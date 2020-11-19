@@ -39,8 +39,8 @@ class VanDerPol(Model):
         offu = np.zeros(num_dirs);
         offl = np.zeros(num_dirs);
 
-        offu[0] = 0.01; offl[0] = 0;
-        offu[1] = 2; offl[1] = -1.97;
+        offu[0] = 0.03; offl[0] = 0;
+        offu[1] = 2; offl[1] = -1.94;
         offu[2] = 10; offl[2] = 10;
         offu[3] = 10; offl[3] = 10;
 
@@ -72,7 +72,7 @@ class VanDerPol_UnitBox(Model):
         offu = np.zeros(num_dirs);
         offl = np.zeros(num_dirs);
 
-        offu[0] = 0.01; offl[0] = 0;
-        offu[1] = 2; offl[1] = -1.97;
+        offu[0] = 0.03; offl[0] = 0;
+        offu[1] = 2; offl[1] = -1.94;
 
         super().__init__(dyns, vars, T, L, offu, offl, name="VDP")

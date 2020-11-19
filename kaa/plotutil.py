@@ -125,7 +125,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=True, plotvertices=True, lims=None):
+    def plot2DPhase(self, x, y, separate=False, plotvertices=True, lims=None):
 
         assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
 
