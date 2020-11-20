@@ -75,7 +75,7 @@ def test_pca_lin_VDP():
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
-    VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
+    VDP_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
     VDP_PCA_DELAY = 5
 
@@ -100,7 +100,7 @@ def test_delayed_pca_VDP():
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
-    VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
+    VDP_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
     #
     VDP_PCA_LIFE_SPAN = 3
