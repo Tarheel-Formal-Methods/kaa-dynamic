@@ -112,27 +112,6 @@ def get_init_box_borders(init_box):
     return border_points
 
 """
-Calculate the enveloping box over the initial polyhedron
-@params model: input model
-@returns list of intervals representing edges of box.
-"""
-def calc_envelop_box(bund):
-
-    bund_sys = bund.getIntersect()
-    box_interval = []
-
-    for i in range(bund.dim):
-
-        y = [0 for _ in range(bund.dim)]
-        y[i] = 1
-        
-        maxCood = bund_sys.max_opt(y).fun
-        minCood = bund_sys.min_opt(y).fun
-        box_interval.append([minCood, maxCood])
-
-    return box_interval
-
-"""
 Calculates naive supremum bound on the difference between two Flowpipe objects
 @params flowpipe1: first Flowpipe object
         flowpipe2: second Flowpipe object

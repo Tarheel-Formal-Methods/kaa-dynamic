@@ -17,10 +17,34 @@ class FlowPipe:
         self.strat = strat
         self.vars = model.vars
         self.dim = model.dim
+        self.length = len(self.flowpipe)
 
     """
-    Calculates the flowpipe projection of reachable set against time t.
+    Returns a list of strategies which were acting during the reachable set
+    computation producing this flowpipe. The strategies are in acting order supplied into
+    MultiStrategy.
+    """
+    @property
+    def strats(self):
+        return [s for s in self.strat.strat_list ] if isinstance(self.strat, MultiStrategy) else [self.strat]
+
+    @property
+    def model_name(self):
+        return self.model.name
+
+    """
+    Returns array of volume data for each bundle in the flowpipe.
+    @returns array of volume data.
+    """
+    def get_volume_data(self):
+        vol_data = np.empty(self.length)
+        for idx, bund in enumerate(self.flowpipe):
+            vol_data[idx] = bund.getIntersect().volume
+
+        return vol_data
     
+    """
+    Calculates the flowpipe projection of reachable set against time t.
     @params var: The variable for the reachable set to be projected onto.
     @returns list of minimum and maximum points of projected set at each time step.
     """
@@ -49,21 +73,8 @@ class FlowPipe:
 
         return y_min, y_max
 
-    """
-    Returns a list of strategies which were acting during the reachable set
-    computation producing this flowpipe. The strategies are in acting order supplied into
-    MultiStrategy.
-    """
-    @property
-    def strats(self):
-        return [s for s in self.strat.strat_list ] if isinstance(self.strat, MultiStrategy) else [self.strat]
-
-    @property
-    def model_name(self):
-        return self.model.name
-
     def __len__(self):
-        return len(self.flowpipe)
+        return self.length
 
     def __iter__(self):
         return iter(self.flowpipe)

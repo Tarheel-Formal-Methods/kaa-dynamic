@@ -240,10 +240,43 @@ class Plot:
                 ax.scatter(inter_x, inter_y, s=0.1)
 
         for bund in flowpipe:
-
             if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
                 calc_vert_plot(bund.getIntersect(), 0)
             else:
                 for ptope_idx, ptope in enumerate(bund.ptopes):
                     calc_vert_plot(ptope, ptope_idx)
+
+    def plot_volume(self):
+        num_flowpipes = len(self.flowpipes)
+
+        figure = plt.figure(figsize=PlotSettings.fig_size)
+        ax = figure.add_subplot(1,1,1)
+        t = np.arange(0, self.num_steps, 1)
+
+        axis_patches = []
+        for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
+            vol_data = flowpipe.get_volume_data()
+            ax.plot(t, vol_data, color=f"C{flow_idx}")
+            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=flow_label))
+
+        ax.set_xlabel("Time steps")
+        ax.set_ylabel("Volume")
+        ax.set_title("Volume Plot for {}".format(self.model.name))
+
+        ax.legend(handles=axis_patches)
+
+        if PlotSettings.save_fig:
+            var_str = ''.join([str(self.model.vars[var_ind]).upper() for var_ind in [x,y]])
+            figure_name = "Kaa{}Volume{}.png".format(flowpipe.model.name, var_str)
+
+            figure.savefig(os.path.join(PlotSettings.default_fig_path, figure_name), format='png')
+        else:
+            plt.show()
+
+
+class TemplateAnimation:
+
+
+    def __init__(self, flowpipe):
+        self.flowpipe = flowpipe
