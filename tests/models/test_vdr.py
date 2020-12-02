@@ -78,12 +78,14 @@ def test_pca_lin_VDP():
     'PCA Strategy Parameters'
     VDP_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
     VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
+    VDP_LIN_DELAY = 2
     VDP_PCA_DELAY = 5
 
     model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \
+                              LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS+VDP_LIN_DELAY), \
                               PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS), \
                               PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY))
 

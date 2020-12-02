@@ -1,8 +1,9 @@
 import os
 import math
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
-import numpy as np
+import matplotlib.animation as animate
 from scipy.spatial import HalfspaceIntersection
 
 from kaa.settings import PlotSettings
@@ -115,7 +116,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=False, plotvertices=True, lims=None):
+    def plot2DPhase(self, x, y, separate=False, lims=None):
 
         assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
 
@@ -128,7 +129,7 @@ class Plot:
         vol_ax = figure.add_subplot(1,2,2)
 
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
-            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, phase_ax, separate, plotvertices)
+            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, phase_ax, separate)
             #self.__support_plot(flowpipe, flow_idx, flow_label, x, y, ax)
 
         self.__plot_trajs(x, y, phase_ax)
@@ -232,46 +233,45 @@ class Plot:
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate, plotvertices):
-
-        dim = self.model.dim
-        comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
-
-        def calc_vert_plot(sys, idx_offset):
-            
-            'Halfspace constraint matrix'
-            A = sys.A
-            b = sys.b
-
-            phase_intersect = np.hstack((A, - np.asarray([b]).T))
-            center_pt = np.asarray(sys.chebyshev_center.center)
-
-            'Run scipy.spatial.HalfspaceIntersection.'
-            hs = HalfspaceIntersection(phase_intersect, center_pt)
-            vertices = np.asarray(hs.intersections)
-
-            proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
-
-            'Sort by polar coordinates'
-            proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
-
-            ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{flow_idx + idx_offset}", alpha=0.4)
-            ax.add_patch(ptope)
-
-            if plotvertices:
-                inter_x, inter_y = zip(*proj_vertices)
-                ax.scatter(inter_x, inter_y, s=0.1)
+    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate):
 
         for bund in flowpipe:
             if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
-                calc_vert_plot(bund.getIntersect(), 0)
+                self.__plot_halfspace(x, y, ax, bund.getIntersect(), idx_offset=flow_idx)
             else:
                 for ptope_idx, ptope in enumerate(bund.ptopes):
-                    calc_vert_plot(ptope, ptope_idx)
+                    self.__plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
+                    
+    """
+    Plot linear system through scipy.HalfspaceIntersection
+    """
+    def __plot_halfspace(self, x, y, ax, sys, idx_offset=0):
 
+        dim = self.model.dim
+        comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
 
+        'Halfspace constraint matrix'
+        A = sys.A
+        b = sys.b
 
+        phase_intersect = np.hstack((A, - np.asarray([b]).T))
+        center_pt = np.asarray(sys.chebyshev_center.center)
+
+        'Run scipy.spatial.HalfspaceIntersection.'
+        hs = HalfspaceIntersection(phase_intersect, center_pt)
+        vertices = np.asarray(hs.intersections)
+
+        proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
+
+        'Sort by polar coordinates'
+        proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
+
+        ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=0.4)
+        ax.add_patch(ptope)
+
+        inter_x, inter_y = zip(*proj_vertices)
+        ax.scatter(inter_x, inter_y, s=0.1)
 
     """
     Plots volume estimation data from self.flowpipes into input Axis object
@@ -303,7 +303,6 @@ class Plot:
             figure.savefig(os.path.join(PlotSettings.default_fig_path, filename), format='png')
         else:
             plt.show()
-
 
     def __animate_flowpipe(self, x, y, flowpipe, strat):
         figure = plt.figure(figsize=PlotSettings.fig_size)

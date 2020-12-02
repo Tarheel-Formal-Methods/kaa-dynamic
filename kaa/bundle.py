@@ -115,7 +115,7 @@ class Bundle:
     @params temp_ind: index of row corresponding to desired parallelotope.i
     @returns Parallelotope object described by T[temp_ind]
     """
-    def getParallelotope(self, index):
+    def getParallelotope(self, temp_ind):
 
         L = self.L
         T = self.T
@@ -139,7 +139,7 @@ class Bundle:
 
         assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
-        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
+        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label))
         self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
         self.num_temp = len(self.labeled_T)
 
