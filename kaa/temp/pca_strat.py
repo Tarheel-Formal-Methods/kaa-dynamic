@@ -40,10 +40,6 @@ class AbstractPCAStrat(TempStrategy):
 
         return pca.components_, ptope_dirs
 
-    def __str__(self):
-        return "PCAStrat-" if self.strat_order is None else f"PCAStrat{self.strat_order}-"
-
-
 """
 Implementation of creating templates through PCA
 """
@@ -75,6 +71,9 @@ class PCAStrat(AbstractPCAStrat):
                 self.rm_ptope_from_bund(bund, last_ptope)
                 
             self.counter += 1
+            
+    def __str__(self):
+        return f"PCAStrat(Steps:{self.iter_steps})" if self.strat_order is None else f"PCAStrat{self.strat_order}(Steps:{self.iter_steps})"
 
 """
 Delayed PCA
@@ -114,4 +113,4 @@ class DelayedPCAStrat(AbstractPCAStrat):
         return new_ptope_label
         
     def __str__(self):
-        return "DelayedPCAStrat-" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}-"
+        return f"DelayedPCAStrat(Lifespan:{self.life_span})" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}(Lifespan:{self.life_span})"

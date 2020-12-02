@@ -32,6 +32,16 @@ class FlowPipe:
     def model_name(self):
         return self.model.name
 
+
+    def get_strat_flowpipe(self, strat):
+        strat_flowpipe = []
+
+        for bund in self.flowpipe:
+            ptope_strat_list = bund.get_ptopes_by_strat(strat)
+            strat_flowpipe.append(ptope_strat_list[0]) #Get first one for now
+
+        return strat_flowpipe
+
     """
     Returns array of volume data for each bundle in the flowpipe.
     @returns array of volume data.

@@ -4,6 +4,7 @@ from enum import Enum
 import warnings
 
 from kaa.parallelotope import Parallelotope
+from kaa.templates import TempStrategy
 from kaa.linearsystem import LinearSystem
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
@@ -34,6 +35,9 @@ class Bundle:
 
         self.num_dir = len(L)
         self.num_temp = len(T)
+        self.num_strat = 1
+
+        self.strat_temp_id = {}
 
     @property
     def T(self):
@@ -52,10 +56,10 @@ class Bundle:
     def L(self):
         return np.asarray(self.__get_row(self.labeled_L))
 
-    "Returns list of Parallelotope objects defining this bundle."
+    "Returns list of Parallelotope objects defining this bundle. WARNING: superfluous calls to getParallelotope for now"
     @property
     def ptopes(self):
-        return [self.getParallelotope(i) for i,_ in enumerate(self.T)]
+        return [self.getParallelotope(i) for i in range(self.num_temp)]
     
     """
     Returns linear constraints representing the polytope defined by bundle.
@@ -91,11 +95,27 @@ class Bundle:
             self.offl[row_ind] = bund_sys.max_opt(np.negative(row)).fun
 
     """
+    Returns list of Parallelotopes by the strategy they are associated with.
+    """
+    def get_ptopes_by_strat(self, strat):
+        assert isinstance(strat, TempStrategy), "input must be TempStrategy"
+
+        temp_id = self.strat_temp_id[index]
+
+        asso_temps = []
+        for temp_idx, (_,_, tid) in enumerate(self.labeled_T):
+            if tid == temp_id:
+                asso_temps.append(temp_idx)
+
+        return [self.getParallelotope(temp_idx) for temp_idx in asso_temps]
+
+
+    """
     Returns the Parallelotope object defined by a row in the template matrix.
     @params temp_ind: index of row corresponding to desired parallelotope.i
     @returns Parallelotope object described by T[temp_ind]
     """
-    def getParallelotope(self, temp_ind):
+    def getParallelotope(self, index):
 
         L = self.L
         T = self.T
@@ -119,7 +139,7 @@ class Bundle:
 
         assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
-        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label))
+        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
         self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
         self.num_temp = len(self.labeled_T)
 
@@ -176,6 +196,15 @@ class Bundle:
         self.offu = np.delete(self.offu, label_indices, axis=0)
         self.offl = np.delete(self.offl, label_indices, axis=0)
 
+
+    def __get_temp_id(self, asso_strat):
+
+        if asso_strat not in self.strat_temp_id:
+            self.num_strat += 1
+            self.strat_temp_id[asso_strat] = self.num_strat
+
+        return self.strat_temp_id[asso_strat]
+
     """
     Converts relative labels given by strategies to global labels understood by the Bundle object.
     All labels will generally be in the form of strategy_name + relative_label
@@ -223,7 +252,6 @@ class Bundle:
     @returns index which label points to.
     """
     def __get_dir_row_from_label(self, dir_label):
-        #print(dir_label, self.labeled_L)
         label_indices = self.__get_label_indices(self.labeled_L, dir_label)
         assert len(label_indices) == 1, f"Every index should have a unique label. Offending list: {label_indices}"
         return label_indices[0]

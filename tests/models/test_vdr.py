@@ -12,11 +12,11 @@ PlotSettings.save_fig = False
 
 
 def test_VDP():
-    NUM_STEPS = 70
+    NUM_STEPS = 1
 
     model = VanDerPol(delta=0.08)
 
-    vdp_sapo = PhasePlotExperiment(model)
+    vdp_sapo = PhasePlotExperiment([ExperimentInput(model, label="VDP Sapo")])
     vdp_sapo.execute(NUM_STEPS)
 
     vdp_sapo.plot_results(0,1)
@@ -85,8 +85,7 @@ def test_pca_lin_VDP():
 
     lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \
                               PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS), \
-                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY), \
-                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+2*VDP_PCA_DELAY))
+                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY))
 
     inputs = [ExperimentInput(model, label="VDP Sapo"), ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")]
     vdp_pca = PhasePlotExperiment(inputs)

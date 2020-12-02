@@ -5,10 +5,11 @@ from kaa.experiutil import get_init_box_borders
 
 class ExperimentInput:
 
-    def __init__(self, model, strat=None, label=None):
+    def __init__(self, model, strat=None, label=None, key_words=None):
         self.model = model
         self.strat = strat
         self.label = label
+        self.key_words = key_words
 
 class Experiment:
 
@@ -19,6 +20,9 @@ class Experiment:
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0].model
 
+    """
+    Execute the reachable set simulations and add the flowpipes to the Plot.
+    """
     def execute(self, num_steps):
         border_sim_trajs = self.__simulate_border_points(num_steps)
 
@@ -34,16 +38,24 @@ class Experiment:
             mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
             self.plot.add(mod_flow, label=label)
 
+    """
+    Plot the results fed into the Plot object
+    """
     def plot_results(self, *var_tup):
         self.plot.plot(*var_tup)
-        self.plot.plot_volume()
 
+    """
+    Extract the initial box intervals from the model
+    """
     def __get_init_box(self):
         init_offu = self.model.bund.offu[:self.model.dim] #Assume first dim # of offsets are associated to initial box
         init_offl = self.model.bund.offl[:self.model.dim]
 
         return [ [-lower_off, upper_off] for lower_off, upper_off in zip(init_offl, init_offu) ]
 
+    """
+    Sample points from the edges of the box and propagate them for a number of steps.
+    """
     def __simulate_border_points(self, num_steps):
         init_box_inter = self.__get_init_box()
         border_points = get_init_box_borders(init_box_inter)
@@ -59,4 +71,3 @@ class PhasePlotExperiment(Experiment):
 
     def plot_results(self, *var_tup):
         self.plot.plot2DPhase(*var_tup)
-        self.plot.plot_volume()
