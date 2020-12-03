@@ -124,7 +124,7 @@ def test_ani_pca_VDP():
 
     NUM_STEPS = 70
 
-    #model = VanDerPol(delta=0.08)
+#model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
@@ -143,7 +143,39 @@ def test_ani_pca_VDP():
 
     vdp_pca = Animation(experi_input)
     vdp_pca.execute(NUM_STEPS)
+    vdp_pca.animate(0,1, pca_1)
+    vdp_pca.animate(0,1, pca_2)
     vdp_pca.animate(0,1, pca_3)
 
     Timer.generate_stats()
 
+
+def test_ani_pca_lin_VDP():
+
+    NUM_STEPS = 70
+    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
+    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    VDP_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
+    VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
+    VDP_LIN_DELAY = 2
+    VDP_PCA_DELAY = 5
+
+    model = VanDerPol(delta=0.08)
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+
+    lin_1 = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS)
+    lin_2 = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS+VDP_LIN_DELAY)
+    pca_1 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS)
+    pca_2 =  PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY)
+
+    lin_strat = MultiStrategy(lin_1, lin_2, pca_1, pca_2)
+
+    inputs = ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")
+    vdp_pca = Animation(inputs)
+    vdp_pca.execute(NUM_STEPS)
+    vdp_pca.animate(0,1, lin_1)
+    vdp_pca.animate(0,1, lin_2)
+    vdp_pca.animate(0,1, pca_2)
+
+    Timer.generate_stats()
