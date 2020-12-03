@@ -36,8 +36,10 @@ class FlowPipe:
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
 
-        for bund in self.flowpipe:
+        for bund_idx, bund in enumerate(self.flowpipe):
             ptope_strat_list = bund.get_ptopes_by_strat(strat)
+
+            #assert len(ptope_strat_list) != 0, f"Input Strategy must act on bundle object at index {bund_idx}"
             strat_flowpipe.append(ptope_strat_list[0]) #Get first one for now
 
         return strat_flowpipe

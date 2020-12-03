@@ -1,15 +1,14 @@
 from kaa.reach import ReachSet
-from kaa.plotutil import Plot
+from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj
 from kaa.experiutil import get_init_box_borders
 
 class ExperimentInput:
 
-    def __init__(self, model, strat=None, label=None, key_words=None):
+    def __init__(self, model, strat=None, label=None):
         self.model = model
         self.strat = strat
         self.label = label
-        self.key_words = key_words
 
 class Experiment:
 
@@ -71,3 +70,24 @@ class PhasePlotExperiment(Experiment):
 
     def plot_results(self, *var_tup):
         self.plot.plot2DPhase(*var_tup)
+
+
+class Animation:
+
+    def __init__(self, experi_input):
+        assert isinstance(experi_input, ExperimentInput), "One ExperimentInput is allowed for animation."
+        self.experi_input = experi_input
+
+    def execute(self, num_steps):
+
+        model = self.experi_input.model
+        strat = self.experi_input.strat
+        label = self.experi_input.label
+
+        mod_reach = ReachSet(model)
+        mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
+        self.animation = TempAnimation(mod_flow)
+
+    def animate(self, x, y, strat):
+        assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
+        self.animation.animate(x, y, strat)

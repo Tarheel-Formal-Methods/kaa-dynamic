@@ -24,7 +24,7 @@ class Bundle:
 
         'Label the initial directions and templates with Default moniker.'
         self.labeled_L = [ (dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L) ]
-        self.labeled_T = np.asarray([(row, "DefaultTemp") for row in self.__convert_to_labeled_T(T)])
+        self.labeled_T = np.asarray([(row, "DefaultTemp", 1) for row in self.__convert_to_labeled_T(T)])
 
         self.offu = offu
         self.offl = offl
@@ -100,7 +100,10 @@ class Bundle:
     def get_ptopes_by_strat(self, strat):
         assert isinstance(strat, TempStrategy), "input must be TempStrategy"
 
-        temp_id = self.strat_temp_id[index]
+        if str(strat) not in self.strat_temp_id:
+            return [None]
+
+        temp_id = self.strat_temp_id[str(strat)]
 
         asso_temps = []
         for temp_idx, (_,_, tid) in enumerate(self.labeled_T):
@@ -139,7 +142,7 @@ class Bundle:
 
         assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
-        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label))
+        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
         self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
         self.num_temp = len(self.labeled_T)
 
@@ -199,11 +202,11 @@ class Bundle:
 
     def __get_temp_id(self, asso_strat):
 
-        if asso_strat not in self.strat_temp_id:
+        if str(asso_strat) not in self.strat_temp_id:
             self.num_strat += 1
-            self.strat_temp_id[asso_strat] = self.num_strat
+            self.strat_temp_id[str(asso_strat)] = self.num_strat
 
-        return self.strat_temp_id[asso_strat]
+        return self.strat_temp_id[str(asso_strat)]
 
     """
     Converts relative labels given by strategies to global labels understood by the Bundle object.

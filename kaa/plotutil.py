@@ -246,7 +246,7 @@ class Plot:
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
-    def __plot_halfspace(self, x, y, ax, sys, idx_offset=0):
+    def plot_halfspace(self, x, y, ax, sys, idx_offset=0):
 
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
@@ -304,8 +304,33 @@ class Plot:
         else:
             plt.show()
 
-    def __animate_flowpipe(self, x, y, flowpipe, strat):
+
+class TempAnimation(Plot):
+
+    def __init__(self, flowpipe):
+        self.flowpipe = flowpipe
+        self.model = flowpipe.model
+
+    def animate(self, x, y, strat):
+        x_var, y_var = self.model.vars[x], self.model.vars[y]
+
         figure = plt.figure(figsize=PlotSettings.fig_size)
         ax = figure.add_subplot(1,1,1)
         
-        strat_ptope_list = flowpipe.get_strat_flowpipe(strat)
+        ax.set_xlabel(f"{x_var}")
+        ax.set_ylabel(f"{y_var}")
+        ax.set_title("Phase Plot for {}".format(self.model.name))
+        
+        strat_ptope_list = self.flowpipe.get_strat_flowpipe(strat)
+
+        def update(i):
+            if strat_ptope_list[i] is not None:
+                self.plot_halfspace(x, y, ax, strat_ptope_list[i], idx_offset=0)
+
+        ani = animate.FuncAnimation(figure,update,frames=len(self.flowpipe))
+
+        Writer = animate.writers['ffmpeg']
+        writer = Writer(fps=5,bitrate=-1)
+
+        filename = f"{self.model.name}: {str(strat)}"
+        ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation

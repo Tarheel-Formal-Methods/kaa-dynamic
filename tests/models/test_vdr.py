@@ -3,7 +3,7 @@ from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat
 from kaa.temp.lin_app_strat import LinStrat
 from kaa.templates import MultiStrategy
-from kaa.experiment import PhasePlotExperiment, ExperimentInput
+from kaa.experiment import PhasePlotExperiment, ExperimentInput, Animation
 
 from kaa.settings import PlotSettings
 from kaa.timer import Timer
@@ -119,3 +119,31 @@ def test_delayed_pca_VDP():
     vdp_pca.plot_results(0,1)
 
     Timer.generate_stats()
+
+def test_ani_pca_VDP():
+
+    NUM_STEPS = 70
+
+    #model = VanDerPol(delta=0.08)
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+
+    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
+    VDP_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
+    VDP_PCA_DELAY = 5
+
+    pca_1 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS)
+    pca_2 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY)
+    pca_3 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+2*VDP_PCA_DELAY)
+
+    pca_strat = MultiStrategy(pca_1, pca_2, pca_3)
+
+    experi_input = ExperimentInput(unit_model, strat=pca_strat, label="VDP Kaa PCA")
+
+    vdp_pca = Animation(experi_input)
+    vdp_pca.execute(NUM_STEPS)
+    vdp_pca.animate(0,1, pca_3)
+
+    Timer.generate_stats()
+
