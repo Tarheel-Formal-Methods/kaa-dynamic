@@ -88,6 +88,6 @@ class Animation:
         mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
         self.animation = TempAnimation(mod_flow)
 
-    def animate(self, x, y, strat):
+    def animate(self, x, y, *strat):
         assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
-        self.animation.animate(x, y, strat)
+        self.animation.animate(x, y, *strat)

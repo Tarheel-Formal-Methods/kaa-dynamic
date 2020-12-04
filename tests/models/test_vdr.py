@@ -174,8 +174,8 @@ def test_ani_pca_lin_VDP():
     inputs = ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")
     vdp_pca = Animation(inputs)
     vdp_pca.execute(NUM_STEPS)
-    vdp_pca.animate(0,1, lin_1)
-    vdp_pca.animate(0,1, lin_2)
-    vdp_pca.animate(0,1, pca_2)
+    vdp_pca.animate(0,1, pca_1, lin_1)
+    #vdp_pca.animate(0,1, lin_2)
+    #vdp_pca.animate(0,1, pca_2)
 
     Timer.generate_stats()

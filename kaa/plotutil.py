@@ -311,7 +311,7 @@ class TempAnimation(Plot):
         self.flowpipe = flowpipe
         self.model = flowpipe.model
 
-    def animate(self, x, y, strat):
+    def animate(self, x, y, *strats):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
 
         figure = plt.figure(figsize=PlotSettings.fig_size)
@@ -320,17 +320,18 @@ class TempAnimation(Plot):
         ax.set_xlabel(f"{x_var}")
         ax.set_ylabel(f"{y_var}")
         ax.set_title("Phase Plot for {}".format(self.model.name))
-        
-        strat_ptope_list = self.flowpipe.get_strat_flowpipe(strat)
+
+        strat_ptope_list = list(zip(*[self.flowpipe.get_strat_flowpipe(strat) for strat in strats ]))
 
         def update(i):
-            if strat_ptope_list[i] is not None:
-                self.plot_halfspace(x, y, ax, strat_ptope_list[i], idx_offset=0)
+            if None not in strat_ptope_list[i]:
+                for ptope_idx, ptope in enumerate(strat_ptope_list[i]):
+                    self.plot_halfspace(x, y, ax, ptope, idx_offset=ptope_idx)
 
-        ani = animate.FuncAnimation(figure,update,frames=len(self.flowpipe))
+        ani = animate.FuncAnimation(figure, update, frames=len(self.flowpipe))
 
         Writer = animate.writers['ffmpeg']
         writer = Writer(fps=5,bitrate=-1)
 
-        filename = f"{self.model.name}: {str(strat)}"
+        filename = f"{self.model.name}: {' vs '.join(map(str, strats))}"
         ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
