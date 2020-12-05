@@ -167,14 +167,14 @@ def test_ani_pca_lin_VDP():
     lin_1 = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS)
     lin_2 = LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS+VDP_LIN_DELAY)
     pca_1 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS)
-    pca_2 =  PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY)
+    pca_2 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY)
 
     lin_strat = MultiStrategy(lin_1, lin_2, pca_1, pca_2)
 
     inputs = ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")
     vdp_pca = Animation(inputs)
     vdp_pca.execute(NUM_STEPS)
-    vdp_pca.animate(0,1, pca_1, lin_1)
+    vdp_pca.animate(0,1, lin_1, lin_2)
     #vdp_pca.animate(0,1, lin_2)
     #vdp_pca.animate(0,1, pca_2)
 
