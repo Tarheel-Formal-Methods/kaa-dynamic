@@ -12,8 +12,8 @@ Object encapsulating routines calculating properties of parallelotopes.
 """
 class Parallelotope(LinearSystem):
 
-    def __init__(self, A, b, vars):
-        super().__init__(A, b, vars)
+    def __init__(self, model, A, b):
+        super().__init__(model, A, b)
         self.u_A = A[:self.dim]
         self.u_b = b[:self.dim]
 

@@ -77,7 +77,7 @@ class Bundle:
             b[ind] = self.offu[ind]
             b[ind + self.num_dir] = self.offl[ind]
 
-        return LinearSystem(A, b, self.vars)
+        return LinearSystem(self.model, A, b)
 
 
     """
@@ -132,7 +132,7 @@ class Bundle:
             b[fac_ind] = self.offu[facet]
             b[fac_ind + self.dim] = self.offl[facet]
 
-        return Parallelotope(A, b, self.vars)
+        return Parallelotope(self.model, A, b)
 
     """
     Add a matrix of templates to the end of templates matrix.

@@ -3,7 +3,6 @@ from itertools import product
 from random import uniform
 
 from kaa.templates import TempStrategy
-from kaa.experiutil import generate_traj
 
 """
 Abstract linear approximation strategy.
@@ -47,7 +46,7 @@ class AbstractLinStrat(TempStrategy):
 
     def __approx_A(self, bund, num_traj):
 
-        trajs = generate_traj(bund, num_traj, self.iter_steps)
+        trajs = bund.getIntersect().generate_traj(num_traj, self.iter_steps)
         coeff_mat = np.zeros((self.dim*num_traj,self.dim**2), dtype='float')
 
         'Initialize the A matrix containing linear constraints.'
@@ -80,7 +79,6 @@ class AbstractLinStrat(TempStrategy):
         return np.append(accum_mat, [norm_ortho_dir], axis=0)
 
     def __find_closest_dirs(self, dir_mat):
-
         closest_pair = None
         closest_dot_prod = 0
 
@@ -127,9 +125,6 @@ class LinStrat(AbstractLinStrat):
 
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
-
-            #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}"
-
             lin_dir, lin_dir_labels = self.generate_lin_dir(bund)
 
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
@@ -139,9 +134,7 @@ class LinStrat(AbstractLinStrat):
         return bund
 
     def close_strat(self, bund):
-
         if not self.counter % self.iter_steps:
-
             if self.counter:
                 last_ptope =  self.lin_app_ptope_queue.pop(0)
                 self.rm_ptope_from_bund(bund, last_ptope)
@@ -161,7 +154,6 @@ class DelayedLinStrat(AbstractLinStrat):
         self.__add_new_ptope(bund)
 
     def close_strat(self, bund):
-
         'Remove dead templates'
         for ptope_label, life in self.pca_ptope_life:
             if life == 0:
@@ -175,7 +167,6 @@ class DelayedLinStrat(AbstractLinStrat):
         self.counter += 1
 
     def __add_new_ptope(self, bund):
-
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
         self.pca_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list

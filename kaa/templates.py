@@ -122,11 +122,21 @@ class MultiStrategy(TempStrategy):
         return self.strat_list
 
     def open_strat(self, bund):
-
         for strat in self.strat_list:
             strat.open_strat(bund)
 
     def close_strat(self, bund):
-
         for strat in self.strat_list:
             strat.close_strat(bund)
+
+"""
+Wrapper over matrix of pre-generated dirs.
+"""
+class GeneratedDirs:
+
+    def __init__(self, model, dir_mat):
+        self.dim = model.dim
+        self.dir_mat = dir_mat
+
+    def get_dirs_at_step(self, step_num):
+        return self.dir_mat[step_num:step_num+self.dim,]

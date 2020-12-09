@@ -22,6 +22,7 @@ class KaaSettings:
     'Number of samples to be used for volume estimation'
     VolumeSamples = 500
 
+
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
     plot_font = 15

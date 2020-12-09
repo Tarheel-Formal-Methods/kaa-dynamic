@@ -7,7 +7,7 @@ import matplotlib.animation as animate
 from scipy.spatial import HalfspaceIntersection
 
 from kaa.settings import PlotSettings
-from kaa.trajectory import Traj
+from kaa.trajectory import TrajCollection, Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.parallelotope import LinearSystem
@@ -20,7 +20,6 @@ Object containing matplotlib figure and relevant settings and data along one axi
 class Plot:
 
     def __init__(self):
-
         self.flowpipes = []
         self.trajs = []
         self.model = None
@@ -30,8 +29,7 @@ class Plot:
     @params plottable: Traj or Flowpipe object to plot.
     """
     def add(self, plottable, label=None):
-
-        if isinstance(plottable, Traj):
+        if isinstance(plottable, TrajCollection):
             self.__add_traj(plottable)
         elif isinstance(plottable, FlowPipe):
             self.__add_flowpipe(plottable, label=label)
@@ -42,15 +40,14 @@ class Plot:
     Adds trajectory to be plotted.
     @params traj: Traj object to plot.
     """
-    def __add_traj(self, traj):
-
-        assert isinstance(traj, Traj), "Only Traj objects can be added through Plot.__add_flowpipe"
+    def __add_traj(self, traj_col):
+        assert isinstance(traj_col, TrajCollection), "Only TrajCollection objects can be added through Plot.__add_flowpipe"
         #if self.model is not None:
         #    assert self.model.name == traj.model_name, "Trajectories and Plot must describe the same system."
 
-        self.trajs.append(traj)
-        self.model = traj.model if self.model is None else self.model
-        self.num_steps = max(self.num_steps, len(traj))
+        self.trajs = traj_col
+        self.model = traj_col.model if self.model is None else self.model
+        self.num_steps = max(self.num_steps, traj_col.max_traj_len)
         
     """
     Adds flowpipe to be plotted.
@@ -73,7 +70,6 @@ class Plot:
              path: optional variable designated the path to store the generated matplotlib figure.
     """
     def plot(self, *var_tup, path=PlotSettings.default_fig_path, overlap=True):
-
         assert self.model is not None, "No data has been added to the Plot object."
         num_var = len(var_tup)
         num_flowpipes = len(self.flowpipes)
@@ -92,7 +88,7 @@ class Plot:
             t = np.arange(0, self.num_steps, 1)
 
             self.__plot_trajs(ax[ax_idx]) #fix this
-
+            
             for flow_idx, (label, flowpipe) in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.get2DProj(var_ind)
                 flowpipe_label = name if label is None else label
@@ -117,7 +113,6 @@ class Plot:
             y: index of variable to be plotted as y-axis of desired phase
     """
     def plot2DPhase(self, x, y, separate=False, lims=None):
-
         assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
 
         Timer.start('Phase')
@@ -202,7 +197,6 @@ class Plot:
 
 
     def __support_plot(self, flowpipe, flow_idx, flow_label, x, y, ax):
-
         dim = self.model.dim
 
         'Define the following projected normal vectors.'
@@ -213,7 +207,7 @@ class Plot:
         for bund in flowpipe:
             bund_sys = bund.getIntersect()
 
-            supp_points = np.asarray([ bund_sys.max_opt(vec).x  for vec in norm_vecs ])
+            supp_points = np.asarray([bund_sys.max_opt(vec).x  for vec in norm_vecs])
             x_points = supp_points[:,x]
             y_points = supp_points[:,y]
 
@@ -234,11 +228,10 @@ class Plot:
     @params: flowpipe: FlowPipe object to plot.
     """
     def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate):
-
         for bund in flowpipe:
             if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
-                self.__plot_halfspace(x, y, ax, bund.getIntersect(), idx_offset=flow_idx)
+                self.plot_halfspace(x, y, ax, bund.getIntersect(), idx_offset=flow_idx)
             else:
                 for ptope_idx, ptope in enumerate(bund.ptopes):
                     self.__plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
@@ -264,7 +257,7 @@ class Plot:
 
         proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
 
-        'Sort by polar coordinates'
+        'Sort by polar coordinates to ensure proper plotting of boundary'
         proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
 
         ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=0.4)
@@ -304,7 +297,6 @@ class Plot:
         else:
             plt.show()
 
-
 class TempAnimation(Plot):
 
     def __init__(self, flowpipe):
@@ -320,8 +312,9 @@ class TempAnimation(Plot):
         ax.set_xlabel(f"{x_var}")
         ax.set_ylabel(f"{y_var}")
         ax.set_title("Phase Plot for {}".format(self.model.name))
+        self.__draw_animation_legend(ax, *strats)
 
-        strat_ptope_list = list(zip(*[self.flowpipe.get_strat_flowpipe(strat) for strat in strats ]))
+        strat_ptope_list = list(zip(*[self.flowpipe.get_strat_flowpipe(strat) for strat in strats]))
 
         def update(i):
             if None not in strat_ptope_list[i]:
@@ -331,7 +324,14 @@ class TempAnimation(Plot):
         ani = animate.FuncAnimation(figure, update, frames=len(self.flowpipe))
 
         Writer = animate.writers['ffmpeg']
-        writer = Writer(fps=5,bitrate=-1)
+        writer = Writer(fps=7,bitrate=-1)
 
         filename = f"{self.model.name}: {' vs '.join(map(str, strats))}"
         ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
+
+    def __draw_animation_legend(self, ax, *strats):
+        axis_patches = []
+        for strat_idx, strat in enumerate(strats):
+            axis_patches.append(pat.Patch(color=f"C{strat_idx}", label=str(strat)))
+            
+        ax.legend(handles=axis_patches)

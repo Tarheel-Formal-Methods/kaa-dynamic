@@ -1,9 +1,10 @@
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 
-from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat
+from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import LinStrat
 from kaa.templates import MultiStrategy
-from kaa.experiment import PhasePlotExperiment, ExperimentInput, Animation
+from kaa.experiment import PhasePlotExperiment, ExperimentInput, Animation, VolumeExperimentBatch
+
 
 from kaa.settings import PlotSettings
 from kaa.timer import Timer
@@ -25,7 +26,7 @@ def test_VDP():
 
 def test_pca_VDP():
 
-    NUM_STEPS = 70
+    NUM_STEPS = 3
     
     model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
@@ -33,13 +34,13 @@ def test_pca_VDP():
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
     VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
-    VDP_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
+    VDP_PCA_NUM_TRAJ = 50 #Number of sample trajectories we should use for the PCA routine.
     VDP_PCA_DELAY = 5
 
-
-    pca_strat = MultiStrategy(PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS), \
-                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY), \
-                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+2*VDP_PCA_DELAY))
+    pca_dirs = GeneratedPCADirs(model, VDP_PCA_NUM_TRAJ, NUM_STEPS)
+    pca_strat = MultiStrategy(PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS, pca_dirs=pca_dirs), \
+                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY, pca_dirs=pca_dirs), \
+                              PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+2*VDP_PCA_DELAY, pca_dirs=pca_dirs))
 
     inputs = [ExperimentInput(model, label="VDP Sapo"), ExperimentInput(unit_model, strat=pca_strat, label="VDP Kaa PCA")]
     

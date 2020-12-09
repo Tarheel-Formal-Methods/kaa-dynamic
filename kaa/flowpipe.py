@@ -26,12 +26,18 @@ class FlowPipe:
     """
     @property
     def strats(self):
-        return [s for s in self.strat.strat_list ] if isinstance(self.strat, MultiStrategy) else [self.strat]
+        return self.strat.strat_list if isinstance(self.strat, MultiStrategy) else [self.strat]
 
     @property
     def model_name(self):
         return self.model.name
 
+    """
+    Returns accumlation sum of the bundle volumes
+    """
+    @property
+    def total_volume(self):
+        return np.sum(self.get_volume_data())
 
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []

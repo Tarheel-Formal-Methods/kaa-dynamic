@@ -6,7 +6,6 @@ Wrapper around list for representing arbitrary trajectories of a system.
 class Traj:
 
     def __init__(self, model, initial_point, steps=0):
-
         self.model = model
         self.vars = model.vars
         self.traj_set = {}
@@ -24,7 +23,6 @@ class Traj:
     @params traj_point: point to add to the trajectory.
     """
     def add_point(self, traj_point):
-
         assert len(traj_point) == len(self.vars), "Trajectory dimensions should match system dimensions."
         
         for var_ind, var in enumerate(self.vars):
@@ -36,7 +34,6 @@ class Traj:
     @params time_steps: number of time steps to generate trajectory
     """
     def propagate(self, time_steps):
-
         df = self.model.f
 
         'Propagate the points according to the dynamics for designated number of time steps.'
@@ -90,3 +87,29 @@ class Traj:
 
     def __len__(self):
         return self.num_points
+
+class TrajCollection:
+
+    def __init__(self, traj_list):
+        assert isinstance(traj_list, list), "input must be list of Traj objects"
+        self.traj_list = traj_list
+
+    @property
+    def model(self):
+        return self.traj_list[0].model
+
+    @property
+    def end_points(self):
+        end_points_list = [traj.end_point for traj in self.traj_list]
+        return np.asarray(end_points_list)
+
+    @property
+    def max_traj_len(self):
+        return max([len(traj) for traj in self.traj_list])
+
+    def __getitem__(self, index):
+        traj_points_list = [traj[index] for traj in self.traj_list]
+        return np.asarray(traj_points_list)
+
+    def __iter__(self):
+        return iter(self.traj_list)

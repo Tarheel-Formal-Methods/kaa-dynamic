@@ -7,6 +7,7 @@ from functools import reduce
 from itertools import product
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
+from kaa.trajectory import Traj, TrajCollection
 
 class ChebyCenter:
 
@@ -16,11 +17,12 @@ class ChebyCenter:
 
 class LinearSystem:
 
-    def __init__(self, A, b, vars):
+    def __init__(self, model, A, b):
         self.A = A
         self.b = b
-        self.vars = vars
-        self.dim = len(vars)
+        self.model = model
+        self.vars = model.vars
+        self.dim = model.dim
 
     """
     Computes and returns the Chebyshev center of parallelotope.
@@ -120,3 +122,46 @@ class LinearSystem:
         assert len(box_intervals) == self.dim, "Number of intervals defining box must match dimension of system."
 
         return [ rand.uniform(start, end) for start, end in box_intervals ]
+
+    """
+    Generate random trajectories from polytope defined by parallelotope bundle.
+    @params model: Model
+            num_traj: umber of trajectories to generate.
+            time_steps: number of time steps to generate trajs.
+    @returns list of Traj objects representing num random trajectories.
+    """
+    def generate_traj(self, num_trajs, time_steps):
+        initial_points = self.gen_ran_pts_box(num_trajs)
+        trajs = [ Traj(self.model, point, steps=time_steps) for point in initial_points ]
+
+        """
+        if KaaSettings.use_parallel:
+            'Parallelize point propagation'
+            p = mp.Pool(processes=4)
+            prop_trajs = p.starmap(point_prop, [ (model, point, time_steps) for point in initial_points ])
+            p.close()
+            p.join()
+        """
+
+        return TrajCollection(trajs)
+
+    """
+    Generates random points contained within the tightest enveloping parallelotope of the Chevyshev sphere.
+    @params bund: Bundle object
+            num_trajs: number of trajs to generate
+            shrinkfactor: factor to shrink the radius of the sphere. This allows a box with smaller dimensions
+    @returns list of generated random points.
+    """
+    def gen_ran_pts_box(self, num_trajs, shrinkfactor=1):
+        chebycenter = self.chebyshev_center
+
+        center = chebycenter.center
+        radius = chebycenter.radius
+
+        box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
+
+        gen_points = []
+        for _ in range(num_trajs):
+            gen_points.append([rand.uniform(bound[0], bound[1]) for bound in box_intervals])
+
+        return gen_points
