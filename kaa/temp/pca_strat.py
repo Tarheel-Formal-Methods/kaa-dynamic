@@ -25,7 +25,6 @@ class AbstractPCAStrat(TempStrategy):
         pass
 
     def generate_pca_dir(self, bund):
-
         if self.pca_dirs is None:
             trajs = bund.getIntersect().generate_traj(self.num_trajs, self.traj_steps)
             traj_mat = trajs.end_points
@@ -35,7 +34,7 @@ class AbstractPCAStrat(TempStrategy):
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(self.counter)
+            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(self.counter+1)
 
         ptope_dir_labels = [str((self.counter, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
@@ -76,10 +75,10 @@ Delayed PCA
 """
 class DelayedPCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, traj_steps=5, num_trajs=100, life_span=3, pca_dirs=None):
+    def __init__(self, model, traj_steps=5, num_trajs=100, lifespan=3, pca_dirs=None):
         super().__init__(model, traj_steps, num_trajs, pca_dirs)
         self.pca_ptope_life = []
-        self.life_span = life_span
+        self.life_span = lifespan
 
     def open_strat(self, bund):
         self.__add_new_ptope(bund)

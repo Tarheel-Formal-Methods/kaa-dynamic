@@ -1,10 +1,11 @@
+from itertools import product
+
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 
 from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import LinStrat
 from kaa.templates import MultiStrategy
-from kaa.experiment import PhasePlotExperiment, ExperimentInput, Animation, VolumeExperimentBatch
-
+from kaa.experiment import PhasePlotExperiment, ExperimentInput, Animation, VolumeExperimentBatch, Experiment
 
 from kaa.settings import PlotSettings
 from kaa.timer import Timer
@@ -112,7 +113,7 @@ def test_delayed_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \
-                              DelayedPCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, life_span=VDP_PCA_LIFE_SPAN))
+                              DelayedPCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, lifespan=VDP_PCA_LIFE_SPAN))
 
     inputs = [ExperimentInput(model, label="VDP Sapo"), ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa Delay")]
     vdp_pca = PhasePlotExperiment(inputs)
@@ -180,3 +181,72 @@ def test_ani_pca_lin_VDP():
     #vdp_pca.animate(0,1, pca_2)
 
     Timer.generate_stats()
+
+def test_strat_comb_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+
+    NUM_STEPS = 70
+    VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
+    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    VDP_LIN_ITER_STEPS = 2
+    VDP_PCA_DELAY = 5
+
+    pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
+    pca_iter_steps = [VDP_PCA_ITER_STEPS, VDP_PCA_ITER_STEPS+VDP_PCA_DELAY]
+    lin_iter_steps = [VDP_LIN_ITER_STEPS, VDP_LIN_ITER_STEPS+VDP_PCA_DELAY]
+    experi_list = []
+
+    for pca_step, lin_step in product(pca_iter_steps, lin_iter_steps): #unit_model tossed around too many times.
+        strat = MultiStrategy(PCAStrat(unit_model, iter_steps=pca_step, pca_dirs=pca_dirs),\
+                              LinStrat(unit_model, iter_steps=lin_step))
+        
+        experi_input = ExperimentInput(unit_model, strat)
+        experi = Experiment([experi_input])
+        experi_list.append(experi)
+
+    strat = MultiStrategy(PCAStrat(unit_model, iter_steps=VDP_PCA_ITER_STEPS, pca_dirs=pca_dirs),\
+                          PCAStrat(unit_model, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY, pca_dirs=pca_dirs))
+
+    experi = Experiment([ExperimentInput(unit_model, strat)])
+    experi_list.append(experi)
+
+    strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS),\
+                          LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS+VDP_PCA_DELAY))
+
+    experi = Experiment([ExperimentInput(unit_model, strat)])
+    experi_list.append(experi)
+
+    vol_experi_batch = VolumeExperimentBatch(experi_list)
+    vol_experi_batch.execute(NUM_STEPS)
+    vol_experi_batch.plot_results()
+
+
+def test_pca_life_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+
+    NUM_STEPS = 70
+    VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
+    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    VDP_LIN_ITER_STEPS = 2
+    VDP_PCA_DELAY = 5
+
+    LIFE_MAX = 30
+    LIFE_INCREMENT = 5
+
+    pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
+    experi_list = []
+
+    for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #unit_model tossed around too many times.
+        strat = DelayedPCAStrat(unit_model, lifespan=lifespan, pca_dirs=pca_dirs)
+        
+        experi_input = ExperimentInput(unit_model, strat)
+        experi = Experiment([experi_input])
+        experi_list.append(experi)
+
+    vol_experi_batch = VolumeExperimentBatch(experi_list)
+    vol_experi_batch.execute(NUM_STEPS)
+    vol_experi_batch.plot_results()

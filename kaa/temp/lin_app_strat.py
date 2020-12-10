@@ -175,3 +175,4 @@ class DelayedLinStrat(AbstractLinStrat):
 
     def __str__(self):
         return "DelayedPCAStrat-" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}-"
+

@@ -129,6 +129,9 @@ class MultiStrategy(TempStrategy):
         for strat in self.strat_list:
             strat.close_strat(bund)
 
+    def __str__(self):
+        return ' and '.join([str(strat) for strat in self.strat_list])
+
 """
 Wrapper over matrix of pre-generated dirs.
 """

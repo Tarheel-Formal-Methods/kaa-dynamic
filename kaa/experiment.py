@@ -107,15 +107,18 @@ class VolumeExperimentBatch:
             experi.execute(num_steps)
 
     def plot_results(self):
-        experi_labels = [f"Box and {str(experi.inputs[0].strat)}" for experi in self.experiments] #Abstract this out
-        experi_vol = [exper.get_total_volume_results[0] for experi in self.experiments]
+        experi_labels = []
+        for experi in self.experiments:
+            experi_labels.append(f"Box and {str(experi.inputs[0].strat)}") #Only one input to each Experiment. Case checking and sanitation latet.
+
+        #Abstract this out
+        experi_vol = [experi.get_total_vol_results() for experi in self.experiments]
 
         tab_header = dict(values=['Strategy', 'Total Volume'],
                       align='left')
         tab_cells = dict(values=[experi_labels, experi_vol],
                       align='left')
 
-        volume_data = go.Table(header=tab_header, cells=tab_cells)
-        fig = go.Figure(data)
-        fig.update_layout(width=500, height=300)
+        vol_data = go.Table(header=tab_header, cells=tab_cells)
+        fig = go.Figure(vol_data)
         fig.show()
