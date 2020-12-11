@@ -4,6 +4,62 @@ from random import uniform
 
 from kaa.templates import TempStrategy
 
+
+def __approx_lin_trans(dom_ran_tup, dim):
+    coeff_mat = np.zeros((dim*num_traj, dim**2), dtype='float')
+
+    'Initialize the A matrix containing linear constraints.'
+    for t_idx, t in enumerate(dom_ran_tup):
+        start_point = t[0]
+        for i in range(dim):
+            for j in range(dim):
+                coeff_mat[i+dim*t_idx][i*dim+j] = start_point[j]
+
+    b_mat_vec = np.asarray([t[1] for t in dom_ran_tup], dtype='float')
+    b_mat = b_mat_vec.flatten()
+
+    m = np.linalg.lstsq(coeff_mat, b_mat, rcond=None)[0]
+    return m.reshape((dim,dim))
+
+
+def __merge_closest_dirs(dir_mat, closest_dirs, dim):
+    first_dir, second_dir = (0,1)
+    merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
+    ortho_dir = [uniform(-1,1) for _ in range(dim)]
+
+    accum_mat = np.delete(dir_mat, [0,1], axis=0)
+    accum_mat = np.append(accum_mat, [merged_dir], axis=0)
+    
+    'Orthogonalize generated vector through Gram-Schmidt'
+    for row in accum_mat:
+        ortho_dir -= np.dot(ortho_dir, row) * row
+
+    norm_ortho_dir = ortho_dir / np.linalg.norm(ortho_dir)
+    return np.append(accum_mat, [norm_ortho_dir], axis=0)
+
+def __find_closest_dirs(dir_mat):
+    closest_pair = None
+    closest_dot_prod = 0
+
+    for (first_idx, first_dir), (second_idx, second_dir) in product(enumerate(dir_mat), repeat=2):
+        curr_product = np.dot(first_dir, second_dir)
+
+        #print(curr_product)
+        if curr_product > closest_dot_prod and first_idx != second_idx:
+            closest_pair = (first_idx, second_idx)
+            closest_dot_prod = curr_product
+            
+    return closest_pair
+
+def __normalize_mat(mat):
+    return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
+
+def __initialize_unit_mat(dim):
+    mat = np.empty((dim, dim))
+    for i in range(dim):
+        mat[i][i] = 1
+    return mat
+
 """
 Abstract linear approximation strategy.
 """
@@ -11,10 +67,7 @@ class AbstractLinStrat(TempStrategy):
 
     def __init__(self, model, cond_threshold):
         super().__init__(model)
-
-        self.unit_dir_mat = np.zeros((self.dim, self.dim))
-        self.__initialize_unit_mat()
-
+        self.unit_dir_mat = __initialize_unit_mat(self.dim)
         self.cond_threshold = cond_threshold
         self.lin_app_ptope_queue = []
 
@@ -25,7 +78,7 @@ class AbstractLinStrat(TempStrategy):
         pass
 
     def generate_lin_dir(self, bund):
-        approx_A = self.__approx_A(bund, self.dim)
+        approx_A = self.__approx_A(bund)
         inv_A = np.linalg.inv(approx_A)
         lin_dir = np.dot(self.unit_dir_mat, inv_A)
         
@@ -33,72 +86,20 @@ class AbstractLinStrat(TempStrategy):
         #print(f"COND NUM: {cond_num}")
 
         if cond_num > self.cond_threshold:
-            norm_lin_dir = self.__normalize_mat(lin_dir)
+            norm_lin_dir = __normalize_mat(lin_dir)
             #print(f"NORM_LIN_DIR: {norm_lin_dir}")
 
-            closest_dirs = self.__find_closest_dirs(norm_lin_dir)
-            lin_dir = self.__merge_closest_dirs(norm_lin_dir, closest_dirs)
+            closest_dirs = __find_closest_dirs(norm_lin_dir)
+            lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
             #print(f"LIN DIR: {lin_dir}")
 
-        lin_dir_labels = [ str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir) ]
-
+        lin_dir_labels = [str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir)]
         return lin_dir, lin_dir_labels
 
-    def __approx_A(self, bund, num_traj):
-
-        trajs = bund.getIntersect().generate_traj(num_traj, self.iter_steps)
-        coeff_mat = np.zeros((self.dim*num_traj,self.dim**2), dtype='float')
-
-        'Initialize the A matrix containing linear constraints.'
-        for t_idx, t in enumerate(trajs):
-            for i in range(self.dim):
-                for j in range(self.dim):
-                    coeff_mat[i+self.dim*t_idx][i*self.dim+j] = t.start_point[j]
-
-        b_mat_vec = np.asarray([t.end_point for t in trajs], dtype='float')
-        b_mat = b_mat_vec.flatten()
-
-        m = np.linalg.lstsq(coeff_mat, b_mat, rcond=None)[0]
-        return m.reshape((self.dim,self.dim))
-
-
-    def __merge_closest_dirs(self, dir_mat, closest_dirs):
-        first_dir, second_dir = (0,1)
-        merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
-        ortho_dir = [ uniform(-1,1) for _ in range(self.dim) ]
-
-        accum_mat = np.delete(dir_mat, [0,1], axis=0)
-        accum_mat = np.append(accum_mat, [merged_dir], axis=0)
-
-
-        'Orthogonalize generated vector through Gram-Schmidt'
-        for row in accum_mat:
-            ortho_dir -= np.dot(ortho_dir, row) * row
-
-        norm_ortho_dir = ortho_dir / np.linalg.norm(ortho_dir)
-        return np.append(accum_mat, [norm_ortho_dir], axis=0)
-
-    def __find_closest_dirs(self, dir_mat):
-        closest_pair = None
-        closest_dot_prod = 0
-
-        for (first_idx, first_dir), (second_idx, second_dir) in product(enumerate(dir_mat), repeat=2):
-            curr_product = np.dot(first_dir, second_dir)
-
-            #print(curr_product)
-            if curr_product > closest_dot_prod and first_idx != second_idx:
-                closest_pair = (first_idx, second_idx)
-                closest_dot_prod = curr_product
-
-        return closest_pair
-
-    def __normalize_mat(self, mat):
-        return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
-
-
-    def __initialize_unit_mat(self):
-        for i in range(self.dim):
-            self.unit_dir_mat[i][i] = 1
+    def __approx_A(self, bund):
+        trajs = bund.getIntersect().generate_traj(2*self.dim, self.iter_steps)
+        start_end_tup = [(t.start_point, t.end_point) for t in trajs]
+        return __approx_lin_trans(start_end_tup, self.dim)
 
     def __str__(self):
         return "LinApp(Steps:{})".format(self.iter_steps)
@@ -119,7 +120,6 @@ class LinStrat(AbstractLinStrat):
 
     def __init__(self, model, iter_steps=2, cond_threshold=7):
         super().__init__(model, cond_threshold)
-
         self.iter_steps = iter_steps
         self.lin_app_ptope_queue = []
 
@@ -176,3 +176,37 @@ class DelayedLinStrat(AbstractLinStrat):
     def __str__(self):
         return "DelayedPCAStrat-" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}-"
 
+class GeneratedLinDirs(GeneratedDirs):
+
+    def __init__(self, model, num_steps):
+        self.unit_dir_mat = __initialize_unit_mat(model.dim)
+        super().__init__(model, self.__generate_lin_dir(model, num_steps))
+
+    def __generate_lin_dir(self, model, num_steps):
+        bund = model.bund
+        dim = model.dim
+
+        generated_lin_dir_mat = np.empty((dim*num_steps, dim))
+        trajs = bund.getIntersect().generate_traj(2*dim, num_steps) #trajs is TrajCollecton object'
+
+        for step in range(num_steps):
+            start_end_tup = [(t[step], t[step+1]) for t in trajs]
+            
+            approx_A = __approx_lin_trans(start_end_tup, dim)
+            inv_A = np.linalg.inv(approx_A)
+            lin_dir = np.dot(self.unit_dir_mat, inv_A)
+
+            cond_num = np.linalg.cond(lin_dir)
+            #print(f"COND NUM: {cond_num}")
+
+            if cond_num > self.cond_threshold:
+                norm_lin_dir = __normalize_mat(lin_dir)
+                #print(f"NORM_LIN_DIR: {norm_lin_dir}")
+
+                closest_dirs = __find_closest_dirs(norm_lin_dir)
+                lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+
+                generated_lin_dir_mat = np.insert(generated_lin_dir_mat, step*dim, lin_dir, axis=0)
+                self.unit_dir_mat = lin_dir
+
+        return generated_lin_dir_mat

@@ -1,3 +1,4 @@
+from plotly.offline import iplot
 import plotly.graph_objects as go
 
 from kaa.reach import ReachSet
@@ -5,46 +6,43 @@ from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
 from kaa.experiutil import get_init_box_borders
 
-class ExperimentInput:
-
-    def __init__(self, model, strat=None, label=None):
-        self.model = model
-        self.strat = strat
-        self.label = label
-
 class Experiment:
 
-    def __init__(self, inputs, strat=None):
-        self.inputs = inputs if isinstance(inputs, list) else [inputs]
+    def __init__(self, *inputs, label=""):
+        self.inputs = inputs
         self.plot = Plot()
+        self.max_num_steps = 0
 
         'Assuming that all models use the same dynamics and same initial set for now'
-        self.model = inputs[0].model
+        self.model = inputs[0]['model']
+        self.label = label
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
     """
-    def execute(self, num_steps, plottrajs=True):
-        border_sim_trajs = self.__simulate_border_points(num_steps)
+    def execute(self):
         self.output_flowpipes = []
 
-        if plottrajs:
-            self.plot.add(border_sim_trajs)
-
         for experi_input in self.inputs:
-            model = experi_input.model
-            strat = experi_input.strat
-            label = experi_input.label
+            model = experi_input['model']
+            strat = experi_input['strat']
+            label = experi_input['label']
+            num_steps = experi_input['num_steps']
 
             mod_reach = ReachSet(model)
             mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
             self.plot.add(mod_flow, label=label)
             self.output_flowpipes.append(mod_flow)
+            self.max_num_steps = max(self.max_num_steps, num_steps)
 
     """
     Plot the results fed into the Plot object
     """
-    def plot_results(self, *var_tup):
+    def plot_results(self, *var_tup, plottrajs=True):
+        border_sim_trajs = self.__simulate_border_points(self.max_num_steps)
+        if plottrajs:
+           self.plot.add(border_sim_trajs)
+           
         self.plot.plot(*var_tup)
 
     def get_total_vol_results(self):
@@ -84,10 +82,11 @@ class Animation:
         assert isinstance(experi_input, ExperimentInput), "One ExperimentInput is allowed for animation."
         self.experi_input = experi_input
 
-    def execute(self, num_steps):
-        model = self.experi_input.model
-        strat = self.experi_input.strat
-        label = self.experi_input.label
+    def execute(self):
+        model = experi_input['model']
+        strat = experi_input['strat']
+        label = experi_input['label']
+        num_steps = experi_input['num_steps']
 
         mod_reach = ReachSet(model)
         mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
@@ -97,28 +96,42 @@ class Animation:
         assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
         self.animation.animate(x, y, *strat)
 
-class VolumeExperimentBatch:
+class ExperimentBatch:
 
-    def __init__(self, experiments):
+    def __init__(self, experiments=[], label=""):
+        assert isinstance(experiments, list), "experiments keyword must contain list of Experiment objects."
         self.experiments = experiments
+        self.label = label
 
-    def execute(self, num_steps):
+    def add_experi(self, experiment):
+        assert isinstance(experiment, Experiment), "Only takes Experiment objects."
+        self.experiments.append(experiment)
+
+    def execute(self):
+        assert len(self.experiments) != 0, "Must add Experiments to ExperimentBatch before executing the batch."
         for experi in self.experiments:
-            experi.execute(num_steps)
+            print(f"\n Executing Experiment {experi.label} \n")
+            experi.execute()
 
-    def plot_results(self):
-        experi_labels = []
-        for experi in self.experiments:
-            experi_labels.append(f"Box and {str(experi.inputs[0].strat)}") #Only one input to each Experiment. Case checking and sanitation latet.
+    def get_vol_data(self):
+        return [experi.get_total_vol_results() for experi in self.experiments]
 
-        #Abstract this out
-        experi_vol = [experi.get_total_vol_results() for experi in self.experiments]
+    def get_strat_labels(self):
+        return [str(experi.inputs[0]['strat']) for experi in self.experiments]
+        
+def exec_plot_vol_results(*experi_bat):
 
+    experi_tables = []
+    for experi_bat_idx, experi_bat in enumerate(experi_bat):
+        experi_bat.execute()
+        
         tab_header = dict(values=['Strategy', 'Total Volume'],
-                      align='left')
-        tab_cells = dict(values=[experi_labels, experi_vol],
-                      align='left')
+                  align='left')
+        tab_cells = dict(values=[experi_bat.get_strat_labels(),experi_bat.get_vol_data()],
+                  align='left')
 
-        vol_data = go.Table(header=tab_header, cells=tab_cells)
-        fig = go.Figure(vol_data)
-        fig.show()
+        experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
+        experi_tables.append(experi_vol_table)
+
+    fig = go.Figure(data=experi_tables)
+    iplot(fig)

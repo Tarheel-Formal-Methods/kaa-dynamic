@@ -122,8 +122,8 @@ class GeneratedPCADirs(GeneratedDirs):
             pca = PCA(n_components=dim)
             pca.fit(trajs[num_steps]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 
-            pca_dirs_mat = pca.components_
+            pca_dirs = pca.components_
             #print(pca_dirs_mat)
-            generated_pca_dir_mat = np.insert(generated_pca_dir_mat, step*dim, pca_dirs_mat, axis=0)
+            generated_pca_dir_mat = np.insert(generated_pca_dir_mat, step*dim, pca_dirs, axis=0)
 
         return generated_pca_dir_mat
