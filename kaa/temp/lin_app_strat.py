@@ -2,63 +2,7 @@ import numpy as np
 from itertools import product
 from random import uniform
 
-from kaa.templates import TempStrategy
-
-
-def __approx_lin_trans(dom_ran_tup, dim):
-    coeff_mat = np.zeros((dim*num_traj, dim**2), dtype='float')
-
-    'Initialize the A matrix containing linear constraints.'
-    for t_idx, t in enumerate(dom_ran_tup):
-        start_point = t[0]
-        for i in range(dim):
-            for j in range(dim):
-                coeff_mat[i+dim*t_idx][i*dim+j] = start_point[j]
-
-    b_mat_vec = np.asarray([t[1] for t in dom_ran_tup], dtype='float')
-    b_mat = b_mat_vec.flatten()
-
-    m = np.linalg.lstsq(coeff_mat, b_mat, rcond=None)[0]
-    return m.reshape((dim,dim))
-
-
-def __merge_closest_dirs(dir_mat, closest_dirs, dim):
-    first_dir, second_dir = (0,1)
-    merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
-    ortho_dir = [uniform(-1,1) for _ in range(dim)]
-
-    accum_mat = np.delete(dir_mat, [0,1], axis=0)
-    accum_mat = np.append(accum_mat, [merged_dir], axis=0)
-    
-    'Orthogonalize generated vector through Gram-Schmidt'
-    for row in accum_mat:
-        ortho_dir -= np.dot(ortho_dir, row) * row
-
-    norm_ortho_dir = ortho_dir / np.linalg.norm(ortho_dir)
-    return np.append(accum_mat, [norm_ortho_dir], axis=0)
-
-def __find_closest_dirs(dir_mat):
-    closest_pair = None
-    closest_dot_prod = 0
-
-    for (first_idx, first_dir), (second_idx, second_dir) in product(enumerate(dir_mat), repeat=2):
-        curr_product = np.dot(first_dir, second_dir)
-
-        #print(curr_product)
-        if curr_product > closest_dot_prod and first_idx != second_idx:
-            closest_pair = (first_idx, second_idx)
-            closest_dot_prod = curr_product
-            
-    return closest_pair
-
-def __normalize_mat(mat):
-    return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
-
-def __initialize_unit_mat(dim):
-    mat = np.empty((dim, dim))
-    for i in range(dim):
-        mat[i][i] = 1
-    return mat
+from kaa.templates import TempStrategy, GeneratedDirs
 
 """
 Abstract linear approximation strategy.
@@ -83,15 +27,11 @@ class AbstractLinStrat(TempStrategy):
         lin_dir = np.dot(self.unit_dir_mat, inv_A)
         
         cond_num = np.linalg.cond(lin_dir)
-        #print(f"COND NUM: {cond_num}")
 
         if cond_num > self.cond_threshold:
             norm_lin_dir = __normalize_mat(lin_dir)
-            #print(f"NORM_LIN_DIR: {norm_lin_dir}")
-
             closest_dirs = __find_closest_dirs(norm_lin_dir)
             lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
-            #print(f"LIN DIR: {lin_dir}")
 
         lin_dir_labels = [str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir)]
         return lin_dir, lin_dir_labels
@@ -126,8 +66,8 @@ class LinStrat(AbstractLinStrat):
     def open_strat(self, bund):
         if not self.counter % self.iter_steps:
             lin_dir, lin_dir_labels = self.generate_lin_dir(bund)
-
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
+            
             self.lin_app_ptope_queue.append(ptope_label)
             self.unit_dir_mat = lin_dir
 
@@ -140,7 +80,6 @@ class LinStrat(AbstractLinStrat):
                 self.rm_ptope_from_bund(bund, last_ptope)
 
         self.counter += 1
-
 
 class DelayedLinStrat(AbstractLinStrat):
 
@@ -160,10 +99,6 @@ class DelayedLinStrat(AbstractLinStrat):
                 self.rm_ptope_from_bund(bund, ptope_label)
 
         self.pca_ptope_life = [(label, life-1) for label, life in self.pca_ptope_life if life > 0]
-
-        #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
-        #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
-
         self.counter += 1
 
     def __add_new_ptope(self, bund):
@@ -197,12 +132,9 @@ class GeneratedLinDirs(GeneratedDirs):
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
             cond_num = np.linalg.cond(lin_dir)
-            #print(f"COND NUM: {cond_num}")
 
             if cond_num > self.cond_threshold:
                 norm_lin_dir = __normalize_mat(lin_dir)
-                #print(f"NORM_LIN_DIR: {norm_lin_dir}")
-
                 closest_dirs = __find_closest_dirs(norm_lin_dir)
                 lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
 
@@ -210,3 +142,83 @@ class GeneratedLinDirs(GeneratedDirs):
                 self.unit_dir_mat = lin_dir
 
         return generated_lin_dir_mat
+"""
+Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.
+Uses np.linalg.lstsq to accomplish this.
+@params: dom_ran_tup: tuple of points in system such that the first index is the point x
+                      and second index is Ax for some desired linear transformation A
+         dim: dimension of system
+@returns best-fit linear transformation matrix.
+"""
+def __approx_lin_trans(dom_ran_tup, dim):
+    coeff_mat = np.zeros((dim*num_traj, dim**2), dtype='float')
+
+    'Initialize the A matrix containing linear constraints.'
+    for t_idx, t in enumerate(dom_ran_tup):
+        start_point = t[0]
+        for i in range(dim):
+            for j in range(dim):
+                coeff_mat[i+dim*t_idx][i*dim+j] = start_point[j]
+
+    b_mat_vec = np.asarray([t[1] for t in dom_ran_tup], dtype='float')
+    b_mat = b_mat_vec.flatten()
+
+    m = np.linalg.lstsq(coeff_mat, b_mat, rcond=None)[0]
+    return m.reshape((dim,dim))
+
+"""
+Takes the directions which are most similar to each other, as determined by the inner product, and
+merges the two by taking the average of the two vectors. The additional missing vector is replaced by one
+which is orthogonal to resulting set of vectors.
+@params dir_mat: matrix of direction vectors as rows.
+        closest_dirs: tuple of row indices in dir_mat indictaing two closest direction vectors
+        dim: dimension of system.
+@returns new directions matrix with merged directions
+"""
+def __merge_closest_dirs(dir_mat, closest_dirs, dim):
+    first_dir, second_dir = (0,1)
+    merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
+    ortho_dir = [uniform(-1,1) for _ in range(dim)]
+
+    accum_mat = np.delete(dir_mat, [0,1], axis=0)
+    accum_mat = np.append(accum_mat, [merged_dir], axis=0)
+
+    'Orthogonalize generated vector through Gram-Schmidt'
+    for row in accum_mat:
+        ortho_dir -= np.dot(ortho_dir, row) * row
+
+    norm_ortho_dir = ortho_dir / np.linalg.norm(ortho_dir)
+    return np.append(accum_mat, [norm_ortho_dir], axis=0)
+
+"""
+Finds the two closest direction vectors by taking pairwise inner product between all vectors.
+Returns the indices of the two closest ones.
+@params dir_mat: directions matrix
+@returns tuple of indices of closest pair
+"""
+def __find_closest_dirs(dir_mat):
+    closest_pair = None
+    closest_dot_prod = 0
+
+    for (first_idx, first_dir), (second_idx, second_dir) in product(enumerate(dir_mat), repeat=2):
+        curr_product = np.dot(first_dir, second_dir)
+
+        if curr_product > closest_dot_prod and first_idx != second_idx:
+            closest_pair = (first_idx, second_idx)
+            closest_dot_prod = curr_product
+
+    return closest_pair
+
+"""
+Normalizes the row of input matrix
+@params mat: matrix
+@returns normalized matrix.
+"""
+def __normalize_mat(mat):
+    return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
+
+def __initialize_unit_mat(dim):
+    mat = np.empty((dim, dim))
+    for i in range(dim):
+        mat[i][i] = 1
+    return mat

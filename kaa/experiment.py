@@ -96,6 +96,9 @@ class Animation:
         assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
         self.animation.animate(x, y, *strat)
 
+"""
+Wraps around a batch of Experiments for coalesed output retrival. 
+"""
 class ExperimentBatch:
 
     def __init__(self, experiments=[], label=""):
@@ -112,9 +115,12 @@ class ExperimentBatch:
         for experi in self.experiments:
             print(f"\n Executing Experiment {experi.label} \n")
             experi.execute()
-
+            
+    """
+    Returns total volume results from consitutent experiments in order which they were added in ExperimentBatch
+    """
     def get_vol_data(self):
-        return [experi.get_total_vol_results() for experi in self.experiments]
+        return [(str(experi.inputs[0]['strat']), experi.get_total_vol_results()) for experi in self.experiments]
 
     def get_strat_labels(self):
         return [str(experi.inputs[0]['strat']) for experi in self.experiments]
@@ -124,10 +130,11 @@ def exec_plot_vol_results(*experi_bat):
     experi_tables = []
     for experi_bat_idx, experi_bat in enumerate(experi_bat):
         experi_bat.execute()
-        
+
+        vol_data = np.transpose(experi_bat.get_vol_data())
         tab_header = dict(values=['Strategy', 'Total Volume'],
                   align='left')
-        tab_cells = dict(values=[experi_bat.get_strat_labels(),experi_bat.get_vol_data()],
+        tab_cells = dict(values=[vol_data[0], vol_data[1]],
                   align='left')
 
         experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
