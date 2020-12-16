@@ -234,7 +234,7 @@ class Plot:
                 self.plot_halfspace(x, y, ax, bund.getIntersect(), idx_offset=flow_idx)
             else:
                 for ptope_idx, ptope in enumerate(bund.ptopes):
-                    self.__plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
+                    self.plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
                     
     """
     Plot linear system through scipy.HalfspaceIntersection

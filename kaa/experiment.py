@@ -1,5 +1,6 @@
 from plotly.offline import iplot
 import plotly.graph_objects as go
+import numpy as np
 
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
@@ -73,8 +74,8 @@ class PhasePlotExperiment(Experiment):
     def __init__(self, inputs):
         super().__init__(inputs)
 
-    def plot_results(self, *var_tup):
-        self.plot.plot2DPhase(*var_tup)
+    def plot_results(self, *var_tup, separate=False):
+        self.plot.plot2DPhase(*var_tup, separate=separate)
 
 class Animation:
 

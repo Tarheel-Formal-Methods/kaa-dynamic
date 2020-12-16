@@ -33,18 +33,18 @@ class ReachSet:
         strat = tempstrat if tempstrat is not None else DefaultStrat(self.model)
         flowpipe = [initial_set]
 
-        for ind in range(time_steps):
+        for step in range(time_steps):
             
             Timer.start('Reachable Set Computation')
 
-            starting_bund = copy.deepcopy(flowpipe[ind])
+            starting_bund = copy.deepcopy(flowpipe[step])
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
-            strat.open_strat(starting_bund)
+            strat.open_strat(starting_bund, step)
             trans_bund = transformer.transform(starting_bund)
-            strat.close_strat(trans_bund)
+            strat.close_strat(trans_bund, step)
             
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
@@ -53,7 +53,7 @@ class ReachSet:
 
             'TODO: Revamp Kaa.log to be output sink handling all output formatting.'
             if not KaaSettings.SuppressOutput:
-                print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(ind), bolden(reach_time)))
+                print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(step), bolden(reach_time)))
                 
             flowpipe.append(trans_bund)
 

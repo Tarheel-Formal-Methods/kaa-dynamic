@@ -18,13 +18,13 @@ class AbstractPCAStrat(TempStrategy):
         self.num_trajs = num_trajs
         self.pca_dirs = pca_dirs
 
-    def open_strat(self, bund):
+    def open_strat(self, bund, step_num):
         pass
 
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         pass
 
-    def generate_pca_dir(self, bund):
+    def generate_pca_dir(self, bund, step_num):
         if self.pca_dirs is None:
             trajs = bund.getIntersect().generate_traj(self.num_trajs, self.traj_steps)
             traj_mat = trajs.end_points
@@ -34,9 +34,9 @@ class AbstractPCAStrat(TempStrategy):
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(self.counter+1)
+            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num+1)
 
-        ptope_dir_labels = [str((self.counter, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
+        ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
 
 """
@@ -49,23 +49,21 @@ class PCAStrat(AbstractPCAStrat):
         self.iter_steps = iter_steps
         self.pca_ptope_queue = []
 
-    def open_strat(self, bund):
+    def open_strat(self, bund, step_num):
 
-        if not self.counter % self.iter_steps:
+        if not step_num % self.iter_steps:
             #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
-            pca_comps, pca_comp_labels  = self.generate_pca_dir(bund)
+            pca_comps, pca_comp_labels  = self.generate_pca_dir(bund, step_num)
 
             'Add the components to the bundle.'
             ptope_label = self.add_ptope_to_bund(bund, pca_comps, pca_comp_labels)
             self.pca_ptope_queue.append(ptope_label)
 
-    def close_strat(self, bund):
-        if not self.counter % self.iter_steps:
-            if self.counter:
+    def close_strat(self, bund, step_num):
+        if not step_num % self.iter_steps:
+            if step_num:
                 last_ptope = self.pca_ptope_queue.pop(0)
                 self.rm_ptope_from_bund(bund, last_ptope)
-                
-            self.counter += 1
             
     def __str__(self):
         return f"PCAStrat(Steps:{self.iter_steps})" if self.strat_order is None else f"PCAStrat{self.strat_order}(Steps:{self.iter_steps})"
@@ -73,17 +71,19 @@ class PCAStrat(AbstractPCAStrat):
 """
 Delayed PCA
 """
-class DelayedPCAStrat(AbstractPCAStrat):
+class SlidingPCAStrat(AbstractPCAStrat):
 
     def __init__(self, model, traj_steps=5, num_trajs=100, lifespan=3, pca_dirs=None):
         super().__init__(model, traj_steps, num_trajs, pca_dirs)
         self.pca_ptope_life = []
         self.life_span = lifespan
 
-    def open_strat(self, bund):
-        self.__add_new_ptope(bund)
+    def open_strat(self, bund, step_num):
+        self.__add_new_ptope(bund, step_num)
+        #print("Before:  L: {} \n T: {}".format(bund.L, bund.T))
+        #print("Before: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
 
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label, life in self.pca_ptope_life:
             if life == 0:
@@ -94,10 +94,8 @@ class DelayedPCAStrat(AbstractPCAStrat):
         #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
         #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
 
-        self.counter += 1
-
-    def __add_new_ptope(self, bund):
-        new_pca_dirs, new_dir_labels = self.generate_pca_dir(bund)
+    def __add_new_ptope(self, bund, step_num):
+        new_pca_dirs, new_dir_labels = self.generate_pca_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_pca_dirs, new_dir_labels)
         self.pca_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list
 
@@ -123,7 +121,6 @@ class GeneratedPCADirs(GeneratedDirs):
             pca.fit(trajs[num_steps]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 
             pca_dirs = pca.components_
-            #print(pca_dirs_mat)
-            generated_pca_dir_mat = np.insert(generated_pca_dir_mat, step*dim, pca_dirs, axis=0)
+            generated_pca_dir_mat[step*dim:(step+1)*dim,] = pca_dirs
 
         return generated_pca_dir_mat

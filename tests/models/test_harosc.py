@@ -1,15 +1,10 @@
-from kaa.reach import ReachSet
-from kaa.plotutil import Plot
 from models.harosc import HarOsc
-from kaa.temp.pca_strat import PCAStrat
-from kaa.temp.lin_app_strat import LinStrat
+from kaa.temp.pca_strat import *
+from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
+from kaa.experiment import Experiment, PhasePlotExperiment
 
 from kaa.settings import PlotSettings
-from kaa.trajectory import Traj
-from kaa.timer import Timer
-from kaa.bundle import BundleMode
-
 from itertools import product
 
 PlotSettings.save_fig = False
@@ -79,7 +74,7 @@ def test_pca_lin_HarOsc():
     mod_reach = ReachSet(model)
     #mod_flow = mod_reach.computeReachSet()
 
-    sir_plot = Plot()dd
+    sir_plot = Plot()
 
     SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
@@ -93,4 +88,26 @@ def test_pca_lin_HarOsc():
 
     'Generaste the trajectories and add them to the plot.'
     sir_plot.add(mod_pca_flow, "HarOsc PCA")
-    sir_plot.plot2DPhase(0,1, separate=True, plotvertices=True)dd
+    sir_plot.plot2DPhase(0,1)
+
+def test_sliding_pca_HarOsc():
+    unit_model = HarOsc()
+
+    NUM_STEPS = 5
+    VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
+    print(pca_dirs.dir_mat)
+    experi_strat = SlidingPCAStrat(unit_model, lifespan=3, pca_dirs=pca_dirs)
+    experi_input = dict(model=unit_model,
+                        strat=experi_strat,
+                        label="",
+                        num_steps=NUM_STEPS)
+    
+    experi = PhasePlotExperiment(experi_input)
+    experi.execute()
+    #print(pca_dirs.dir_mat)
+    #print(len(pca_dirs.dir_mat))
+    experi.plot_results(0,1, separate=True)
+
+    Timer.generate_stats()

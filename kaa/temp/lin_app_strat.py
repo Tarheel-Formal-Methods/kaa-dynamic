@@ -9,10 +9,11 @@ Abstract linear approximation strategy.
 """
 class AbstractLinStrat(TempStrategy):
 
-    def __init__(self, model, cond_threshold):
+    def __init__(self, model, cond_threshold, lin_dirs):
         super().__init__(model)
-        self.unit_dir_mat = __initialize_unit_mat(self.dim)
+        self.unit_dir_mat = initialize_unit_mat(self.dim)
         self.cond_threshold = cond_threshold
+        self.lin_dirs = lin_dirs
         self.lin_app_ptope_queue = []
 
     def open_strat(self, bund):
@@ -21,51 +22,59 @@ class AbstractLinStrat(TempStrategy):
     def close_strat(self, bund):
         pass
 
-    def generate_lin_dir(self, bund):
-        approx_A = self.__approx_A(bund)
-        inv_A = np.linalg.inv(approx_A)
-        lin_dir = np.dot(self.unit_dir_mat, inv_A)
-        
-        cond_num = np.linalg.cond(lin_dir)
+    """
+    Generates the linear app. directions for input bundle.
+    @params bund: Bundle object
+            step_num: step number of computation
+    @returns tuple of matrix containing linear app. directions and
+             labels for each of those directions.
+    """
+    def generate_lin_dir(self, bund, step_num):
 
-        if cond_num > self.cond_threshold:
-            norm_lin_dir = __normalize_mat(lin_dir)
-            closest_dirs = __find_closest_dirs(norm_lin_dir)
-            lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+        if self.lin_dirs is None:
+            approx_A = self.__approx_A(bund)
+            inv_A = np.linalg.inv(approx_A)
+            lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
 
-        lin_dir_labels = [str((self.counter, dir_idx)) for dir_idx, _ in enumerate(lin_dir)]
-        return lin_dir, lin_dir_labels
+            cond_num = np.linalg.cond(lin_dir_mat)
 
+            if cond_num > self.cond_threshold:
+                norm_lin_dir = normalize_mat(lin_dir_mat)
+                closest_dirs = find_closest_dirs(norm_lin_dir)
+                lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+        else:
+            lin_dir_mat = self.lin_dirs.get_dirs_at_step(step_num+1)
+
+        lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
+        return lin_dir_mat, lin_dir_labels
+
+    """
+    Approximates the closest linear transformation from a sample of trajectories starting from the
+    within the bundle and ending some steps propagated forward.
+    @params bund: Bundle object.
+    @returns best-fit linear transformation matrix.
+    """
     def __approx_A(self, bund):
         trajs = bund.getIntersect().generate_traj(2*self.dim, self.iter_steps)
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
-        return __approx_lin_trans(start_end_tup, self.dim)
+        return approx_lin_trans(start_end_tup, self.dim)
 
     def __str__(self):
         return "LinApp(Steps:{})".format(self.iter_steps)
-
-"""
-    def calc_jacobian(self, point):
-        dyns = sp.Matrix(model.f)
-        dyns_jac = dyns.jacobian(model.vars)
-
-        jac_func = sp.lambdify(model.vars, dyns_jac, modules='numpy')
-        return jac_func(*point)
-"""
 
 """
 Local linear approximation strategy.
 """
 class LinStrat(AbstractLinStrat):
 
-    def __init__(self, model, iter_steps=2, cond_threshold=7):
-        super().__init__(model, cond_threshold)
+    def __init__(self, model, iter_steps=2, cond_threshold=7, lin_dirs=None):
+        super().__init__(model, cond_threshold, lin_dirs)
         self.iter_steps = iter_steps
         self.lin_app_ptope_queue = []
 
-    def open_strat(self, bund):
-        if not self.counter % self.iter_steps:
-            lin_dir, lin_dir_labels = self.generate_lin_dir(bund)
+    def open_strat(self, bund, step_num):
+        if not step_num % self.iter_steps:
+            lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num)
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
             
             self.lin_app_ptope_queue.append(ptope_label)
@@ -73,36 +82,33 @@ class LinStrat(AbstractLinStrat):
 
         return bund
 
-    def close_strat(self, bund):
-        if not self.counter % self.iter_steps:
-            if self.counter:
+    def close_strat(self, bund, step_num):
+        if not step_num % self.iter_steps:
+            if step_num:
                 last_ptope =  self.lin_app_ptope_queue.pop(0)
                 self.rm_ptope_from_bund(bund, last_ptope)
 
-        self.counter += 1
+class SlidingLinStrat(AbstractLinStrat):
 
-class DelayedLinStrat(AbstractLinStrat):
-
-    def __init__(self, model, traj_steps=5, num_trajs=100, life_span=1):
+    def __init__(self, model, traj_step=5, life_span=1, lin_dirs=None):
         super().__init__(model, traj_steps, num_trajs)
 
         self.lin_ptope_life = []
         self.life_span = life_span
 
-    def open_strat(self, bund):
-        self.__add_new_ptope(bund)
+    def open_strat(self, bund, step_num):
+        self.__add_new_ptope(bund, step_num)
 
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label, life in self.pca_ptope_life:
             if life == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
 
         self.pca_ptope_life = [(label, life-1) for label, life in self.pca_ptope_life if life > 0]
-        self.counter += 1
 
-    def __add_new_ptope(self, bund):
-        new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund)
+    def __add_new_ptope(self, bund, step_num):
+        new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
         self.pca_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list
 
@@ -113,10 +119,20 @@ class DelayedLinStrat(AbstractLinStrat):
 
 class GeneratedLinDirs(GeneratedDirs):
 
-    def __init__(self, model, num_steps):
-        self.unit_dir_mat = __initialize_unit_mat(model.dim)
+    def __init__(self, model, num_steps, cond_threshold=7):
+        self.unit_dir_mat = initialize_unit_mat(model.dim)
+        self.cond_threshold = cond_threshold
         super().__init__(model, self.__generate_lin_dir(model, num_steps))
 
+    """
+    Generates the linear approximation directions based on trajectories taken starting from
+    initial box.
+    @params: model: Model object
+             num_steps: number of steps to pre-generate directions. These directions
+                        will be used in the reachable set computation involving the input model
+                        object.
+    @returns matrix of generated directions
+    """
     def __generate_lin_dir(self, model, num_steps):
         bund = model.bund
         dim = model.dim
@@ -127,21 +143,23 @@ class GeneratedLinDirs(GeneratedDirs):
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step+1]) for t in trajs]
             
-            approx_A = __approx_lin_trans(start_end_tup, dim)
+            approx_A = approx_lin_trans(start_end_tup, dim)
             inv_A = np.linalg.inv(approx_A)
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
             cond_num = np.linalg.cond(lin_dir)
-
+ 
             if cond_num > self.cond_threshold:
-                norm_lin_dir = __normalize_mat(lin_dir)
-                closest_dirs = __find_closest_dirs(norm_lin_dir)
-                lin_dir = __merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+                norm_lin_dir = normalize_mat(lin_dir)
+                closest_dirs = find_closest_dirs(norm_lin_dir)
+                lin_dir = merge_closest_dirs(norm_lin_dir, closest_dirs, dim)
 
-                generated_lin_dir_mat = np.insert(generated_lin_dir_mat, step*dim, lin_dir, axis=0)
-                self.unit_dir_mat = lin_dir
+            generated_lin_dir_mat[step*dim:(step+1)*dim,] = lin_dir
+            self.unit_dir_mat = lin_dir
 
         return generated_lin_dir_mat
+
+    
 """
 Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.
 Uses np.linalg.lstsq to accomplish this.
@@ -150,7 +168,8 @@ Uses np.linalg.lstsq to accomplish this.
          dim: dimension of system
 @returns best-fit linear transformation matrix.
 """
-def __approx_lin_trans(dom_ran_tup, dim):
+def approx_lin_trans(dom_ran_tup, dim):
+    num_traj = 2*dim
     coeff_mat = np.zeros((dim*num_traj, dim**2), dtype='float')
 
     'Initialize the A matrix containing linear constraints.'
@@ -175,7 +194,7 @@ which is orthogonal to resulting set of vectors.
         dim: dimension of system.
 @returns new directions matrix with merged directions
 """
-def __merge_closest_dirs(dir_mat, closest_dirs, dim):
+def merge_closest_dirs(dir_mat, closest_dirs, dim):
     first_dir, second_dir = (0,1)
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
     ortho_dir = [uniform(-1,1) for _ in range(dim)]
@@ -196,7 +215,7 @@ Returns the indices of the two closest ones.
 @params dir_mat: directions matrix
 @returns tuple of indices of closest pair
 """
-def __find_closest_dirs(dir_mat):
+def find_closest_dirs(dir_mat):
     closest_pair = None
     closest_dot_prod = 0
 
@@ -214,10 +233,10 @@ Normalizes the row of input matrix
 @params mat: matrix
 @returns normalized matrix.
 """
-def __normalize_mat(mat):
+def normalize_mat(mat):
     return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
 
-def __initialize_unit_mat(dim):
+def initialize_unit_mat(dim):
     mat = np.empty((dim, dim))
     for i in range(dim):
         mat[i][i] = 1

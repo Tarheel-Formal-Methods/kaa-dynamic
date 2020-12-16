@@ -2,8 +2,8 @@ from itertools import product
 
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 
-from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat, GeneratedPCADirs
-from kaa.temp.lin_app_strat import LinStrat
+from kaa.temp.pca_strat import *
+from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experiment import *
 
@@ -172,12 +172,15 @@ def test_ani_pca_lin_VDP():
     pca_2 = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY)
 
     lin_strat = MultiStrategy(lin_1, lin_2, pca_1, pca_2)
-
-    inputs = ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")
+    inputs =  dict(model=unit_model,
+                   strat=experi_strat,
+                   label="",
+                   num_steps=NUM_STEPS)
+    
     vdp_pca = Animation(inputs)
-    vdp_pca.execute(NUM_STEPS)
+    vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
-    #vdp_pca.animate(0,1, lin_2)
+    #vdp_pca.animate(0,1, lin_2)``
     #vdp_pca.animate(0,1, pca_2)
 
     Timer.generate_stats()
@@ -194,9 +197,22 @@ def test_strat_comb_VDP():
     VDP_PCA_DELAY = 2
 
     pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
+    lin_dirs = GeneratedLinDirs(unit_model, NUM_STEPS+1)
     pca_iter_steps = [VDP_PCA_ITER_STEPS, VDP_PCA_ITER_STEPS+VDP_PCA_DELAY]
     lin_iter_steps = [VDP_LIN_ITER_STEPS, VDP_PCA_ITER_STEPS+VDP_PCA_DELAY]
 
+    batch3 = ExperimentBatch()
+    for pca_step, lin_step in product(pca_iter_steps, lin_iter_steps): #unit_model tossed around too many times.
+        pca_strat = PCAStrat(unit_model, iter_steps=pca_step, pca_dirs=pca_dirs)
+        lin_strat = LinStrat(unit_model, iter_steps=lin_step, lin_dirs=lin_dirs)
+        experi_input = dict(model=unit_model,
+                            strat=MultiStrategy(pca_strat, lin_strat),
+                            label="",
+                            num_steps=NUM_STEPS)
+
+        experi = Experiment(experi_input, label=f"Box for {pca_step} steps")
+        batch3.add_experi(experi)
+    
     batch1 = ExperimentBatch()
     for pca_step in range(1,6,2): #unit_model tossed around too many times.
         experi_strat = PCAStrat(unit_model, iter_steps=pca_step, pca_dirs=pca_dirs)
@@ -218,7 +234,7 @@ def test_strat_comb_VDP():
         experi = Experiment(experi_input, label=f"LinApp with Box for {pca_step} steps")
         batch2.add_experi(experi)
 
-    exec_plot_vol_results(batch1, batch2)
+    exec_plot_vol_results(batch1, batch2, batch3)
 
 
 def test_pca_life_VDP():
@@ -239,7 +255,7 @@ def test_pca_life_VDP():
     experi_list = []
 
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #unit_model tossed around too many times.
-        strat = DelayedPCAStrat(unit_model, lifespan=lifespan, pca_dirs=pca_dirs)
+        strat = SlidingPCAStrat(unit_model, lifespan=lifespan, pca_dirs=pca_dirs)
         
         experi_input = ExperimentInput(unit_model, strat)
         experi = Experiment([experi_input])

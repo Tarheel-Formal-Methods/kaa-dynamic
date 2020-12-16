@@ -15,20 +15,19 @@ class TempStrategy(ABC):
         self.ptope_hash = {}
         self.ptope_counter = 0
         self.strat_order = stratorder
-        self.counter = 0
         
     """
     Method called before the transformation operation and maximization over parallotopes are performed.
     """
     @abstractmethod
-    def open_strat(self, bund):
+    def open_strat(self, bund, step_num):
         pass
 
     """
     Method called after the transformation operation is performed.
     """
     @abstractmethod
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         pass
 
     """
@@ -89,10 +88,10 @@ class StaticStrat(TempStrategy):
     def __init__(self, model):
         super().__init__(model)
 
-    def open_strat(self, bund):
+    def open_strat(self, bund, step_num):
         return bund
 
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         return bund
 
 """
@@ -121,13 +120,13 @@ class MultiStrategy(TempStrategy):
     def strats(self):
         return self.strat_list
 
-    def open_strat(self, bund):
+    def open_strat(self, bund, step_num):
         for strat in self.strat_list:
-            strat.open_strat(bund)
+            strat.open_strat(bund, step_num)
 
-    def close_strat(self, bund):
+    def close_strat(self, bund, step_num):
         for strat in self.strat_list:
-            strat.close_strat(bund)
+            strat.close_strat(bund, step_num)
 
     def __str__(self):
         return ' and '.join([str(strat) for strat in self.strat_list])
