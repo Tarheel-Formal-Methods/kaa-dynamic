@@ -1,13 +1,13 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
 from models.sir import SIR, SIR_UnitBox
-from kaa.temp.pca_strat import DelayedPCAStrat
-from kaa.temp.lin_app_strat import LinStrat
+from kaa.temp.pca_strat import *
+from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
 
 from kaa.timer import Timer
 from kaa.trajectory import Traj
-from kaa.experiutil import generate_traj
+from kaa.experiutil import *
 
 from kaa.bundle import BundleMode
 
@@ -66,3 +66,8 @@ def test_sir_lin_pca_strat():
     sir_plot.plot2DPhase(0,2,separate=False, plotvertices=True)
 
     Timer.generate_stats()
+
+
+def test_strat_comb_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    test_strat_comb(unit_model, (1,3,5), 70)

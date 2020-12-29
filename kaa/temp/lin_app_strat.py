@@ -1,8 +1,11 @@
 import numpy as np
 from itertools import product
-from random import uniform
+import random as rand
 
 from kaa.templates import TempStrategy, GeneratedDirs
+from kaa.settings import KaaSettings
+
+randgen = rand.Random(KaaSettings.RandSeed)
 
 """
 Abstract linear approximation strategy.
@@ -90,32 +93,31 @@ class LinStrat(AbstractLinStrat):
 
 class SlidingLinStrat(AbstractLinStrat):
 
-    def __init__(self, model, traj_step=5, life_span=1, lin_dirs=None):
-        super().__init__(model, traj_steps, num_trajs)
-
+    def __init__(self, model, lifespan=1, cond_threshold=7, lin_dirs=None):
+        super().__init__(model, cond_threshold, lin_dirs)
         self.lin_ptope_life = []
-        self.life_span = life_span
+        self.lifespan = lifespan
 
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label, life in self.pca_ptope_life:
+        for ptope_label, life in self.lin_ptope_life:
             if life == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
 
-        self.pca_ptope_life = [(label, life-1) for label, life in self.pca_ptope_life if life > 0]
+        self.lin_ptope_life = [(label, life-1) for label, life in self.lin_ptope_life if life > 0]
 
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.pca_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 
     def __str__(self):
-        return "DelayedPCAStrat-" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}-"
+        return "SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
 
 class GeneratedLinDirs(GeneratedDirs):
 
@@ -197,7 +199,7 @@ which is orthogonal to resulting set of vectors.
 def merge_closest_dirs(dir_mat, closest_dirs, dim):
     first_dir, second_dir = (0,1)
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
-    ortho_dir = [uniform(-1,1) for _ in range(dim)]
+    ortho_dir = [randgen.uniform(-1,1) for _ in range(dim)]
 
     accum_mat = np.delete(dir_mat, [0,1], axis=0)
     accum_mat = np.append(accum_mat, [merged_dir], axis=0)

@@ -68,7 +68,6 @@ def test_lin_HarOsc():
 def test_pca_lin_HarOsc():
 
     NUM_STEPS = 4
-
     model = HarOsc()
     #trajs = generate_traj(model, 10, 200)
     mod_reach = ReachSet(model)
@@ -97,17 +96,23 @@ def test_sliding_pca_HarOsc():
     VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     SIR_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
-    print(pca_dirs.dir_mat)
-    experi_strat = SlidingPCAStrat(unit_model, lifespan=3, pca_dirs=pca_dirs)
-    experi_input = dict(model=unit_model,
-                        strat=experi_strat,
+    #print(pca_dirs.dir_mat)
+    experi_strat1 = SlidingPCAStrat(unit_model, lifespan=3, pca_dirs=pca_dirs)
+    experi_input1 = dict(model=unit_model,
+                        strat=experi_strat1,
+                        label="",
+                        num_steps=NUM_STEPS)
+
+    experi_strat2 = SlidingPCAStrat(unit_model, lifespan=3, pca_dirs=pca_dirs)
+    experi_input2 = dict(model=unit_model,
+                        strat=experi_strat2,
                         label="",
                         num_steps=NUM_STEPS)
     
-    experi = PhasePlotExperiment(experi_input)
+    experi = PhasePlotExperiment(experi_input1, experi_input2)
     experi.execute()
     #print(pca_dirs.dir_mat)
     #print(len(pca_dirs.dir_mat))
-    experi.plot_results(0,1, separate=True)
+    experi.plot_results(0,1, separate=False)
 
     Timer.generate_stats()

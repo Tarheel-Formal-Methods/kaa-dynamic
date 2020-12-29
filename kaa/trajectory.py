@@ -40,9 +40,8 @@ class Traj:
         prev_point = self.end_point
 
         for _ in range(time_steps):
-            
-            var_sub = [ (var, prev_point[var_idx]) for var_idx, var in enumerate(self.vars)]
-            next_point = [ f.subs(var_sub) for f in df ]
+            var_sub = [(var, prev_point[var_idx]) for var_idx, var in enumerate(self.vars)]
+            next_point = [f.subs(var_sub) for f in df]
             self.add_point(next_point)
 
             prev_point = next_point
@@ -81,7 +80,6 @@ class Traj:
     def model_name(self):
         return self.model.name
     
-
     def __getitem__(self, index):
         return [ (self.traj_set[var])[index] for var in self.vars ]
 
@@ -96,7 +94,12 @@ class TrajCollection:
 
     @property
     def model(self):
-        return self.traj_list[0].model
+        return self.traj_list[0]
+
+    @property
+    def start_points(self):
+        start_points_list = [traj.start_point for traj in self.traj_list]
+        return np.asarray(start_points_list)
 
     @property
     def end_points(self):

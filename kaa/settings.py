@@ -20,7 +20,10 @@ class KaaSettings:
     SuppressOutput = False
 
     'Number of samples to be used for volume estimation'
-    VolumeSamples = 500
+    VolumeSamples = 10000
+
+    'seed for random.seed'
+    RandSeed = 897987178
 
 
 class PlotSettings:

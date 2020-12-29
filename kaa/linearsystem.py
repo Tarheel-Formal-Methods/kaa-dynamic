@@ -2,12 +2,13 @@ import random as rand
 import numpy as np
 import multiprocessing as mp
 
-from operator import mul
+from operator import mul, add
 from functools import reduce
 from itertools import product
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.trajectory import Traj, TrajCollection
+from kaa.settings import KaaSettings
 
 class ChebyCenter:
 
@@ -23,6 +24,7 @@ class LinearSystem:
         self.model = model
         self.vars = model.vars
         self.dim = model.dim
+        self.randgen = rand.Random(KaaSettings.RandSeed)
 
     """
     Computes and returns the Chebyshev center of parallelotope.
@@ -30,7 +32,6 @@ class LinearSystem:
     """
     @property
     def chebyshev_center(self):
-
         'Initialize objective function for Chebyshev intersection LP routine.'
         c = [0 for _ in range(self.dim + 1)]
         c[-1] = 1
@@ -49,14 +50,11 @@ class LinearSystem:
     @property
     def volume(self):
         envelop_box = self.__calc_envelop_box()
-        num_contained_points = 0
         num_samples = KaaSettings.VolumeSamples
 
-        for _ in range(num_samples):
-            point = self.__sample_box_point(envelop_box)
-
-            if self.check_membership(point):
-                num_contained_points += 1
+        check_point_membership = lambda point: 1 if self.check_membership(point) else 0
+        point_value = map(check_point_membership, [self.__sample_box_point(envelop_box) for _  in range(num_samples)])
+        num_contained_points = reduce(add, point_value)
 
         return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
 
@@ -85,7 +83,6 @@ class LinearSystem:
     """
     def check_membership(self, point):
         assert len(point) == self.dim, "Point must be of the same dimension as system."
-        
         for row_idx, row in enumerate(self.A):
             if np.dot(row, point) > self.b[row_idx]:
                 return False
@@ -97,15 +94,15 @@ class LinearSystem:
     @returns list of intervals representing edges of box.
     """
     def __calc_envelop_box(self):
-        box_interval = []
+        box_interval = np.empty((self.dim,2))
+    
         for i in range(self.dim):
-
-            y = [0 for _ in range(self.dim)]
+            y = np.zeros(self.dim)
             y[i] = 1
 
             maxCood = self.max_opt(y).fun
             minCood = self.min_opt(y).fun
-            box_interval.append([minCood, maxCood])
+            box_interval[i] = [minCood, maxCood]
 
         return box_interval
 
@@ -120,8 +117,7 @@ class LinearSystem:
     """
     def __sample_box_point(self, box_intervals):
         assert len(box_intervals) == self.dim, "Number of intervals defining box must match dimension of system."
-
-        return [ rand.uniform(start, end) for start, end in box_intervals ]
+        return [self.randgen.uniform(start, end) for start, end in box_intervals]
 
     """
     Generate random trajectories from polytope defined by parallelotope bundle.
@@ -130,9 +126,10 @@ class LinearSystem:
             time_steps: number of time steps to generate trajs.
     @returns list of Traj objects representing num random trajectories.
     """
-    def generate_traj(self, num_trajs, time_steps):
+    def generate_traj(self, num_trajs, time_steps, sample=False):
+        #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
         initial_points = self.gen_ran_pts_box(num_trajs)
-        trajs = [ Traj(self.model, point, steps=time_steps) for point in initial_points ]
+        trajs = [Traj(self.model, point, steps=time_steps) for point in initial_points]
 
         """
         if KaaSettings.use_parallel:
@@ -157,11 +154,10 @@ class LinearSystem:
 
         center = chebycenter.center
         radius = chebycenter.radius
-
         box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
 
         gen_points = []
         for _ in range(num_trajs):
-            gen_points.append([rand.uniform(bound[0], bound[1]) for bound in box_intervals])
+            gen_points.append([self.randgen.uniform(bound[0], bound[1]) for bound in box_intervals])
 
         return gen_points

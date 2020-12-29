@@ -5,7 +5,6 @@ import numpy as np
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
-from kaa.experiutil import get_init_box_borders
 
 class Experiment:
 
@@ -69,6 +68,9 @@ class Experiment:
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
         return TrajCollection(trajs)
 
+    def __str__(self):
+        return self.label
+
 class PhasePlotExperiment(Experiment):
 
     def __init__(self, inputs):
@@ -80,14 +82,14 @@ class PhasePlotExperiment(Experiment):
 class Animation:
 
     def __init__(self, experi_input):
-        assert isinstance(experi_input, ExperimentInput), "One ExperimentInput is allowed for animation."
+        #assert isinstance(experi_input, ExperimentInput), "One ExperimentInput is allowed for animation."
         self.experi_input = experi_input
 
     def execute(self):
-        model = experi_input['model']
-        strat = experi_input['strat']
-        label = experi_input['label']
-        num_steps = experi_input['num_steps']
+        model = self.experi_input['model']
+        strat = self.experi_input['strat']
+        label = self.experi_input['label']
+        num_steps = self.experi_input['num_steps']
 
         mod_reach = ReachSet(model)
         mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
@@ -102,9 +104,8 @@ Wraps around a batch of Experiments for coalesed output retrival.
 """
 class ExperimentBatch:
 
-    def __init__(self, experiments=[], label=""):
-        assert isinstance(experiments, list), "experiments keyword must contain list of Experiment objects."
-        self.experiments = experiments
+    def __init__(self, label=""):
+        self.experiments = []
         self.label = label
 
     def add_experi(self, experiment):
@@ -130,8 +131,8 @@ def exec_plot_vol_results(*experi_bat):
 
     experi_tables = []
     for experi_bat_idx, experi_bat in enumerate(experi_bat):
+        print(f"BATCH NUMBER:{experi_bat_idx}")
         experi_bat.execute()
-
         vol_data = np.transpose(experi_bat.get_vol_data())
         tab_header = dict(values=['Strategy', 'Total Volume'],
                   align='left')
@@ -143,3 +144,21 @@ def exec_plot_vol_results(*experi_bat):
 
     fig = go.Figure(data=experi_tables)
     iplot(fig)
+
+"""
+Find corner vertices for an initial box along with midpoints between the corners.
+@params init_box : intervals of the box given as a list of lists where each member's left,right value
+                   are the start,end points respectively for the intervals of the box.
+@returns list of border points.
+"""
+def get_init_box_borders(init_box):
+
+    midpoints = [ start + (end - start) / 2 for start, end in init_box  ]
+    border_points = list(product(*init_box))
+
+    for point_idx, point in enumerate(midpoints):
+        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box) ]
+
+        border_points += list(product(*half_points))
+
+    return border_points

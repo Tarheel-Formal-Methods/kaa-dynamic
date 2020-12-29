@@ -90,7 +90,6 @@ class Bundle:
         L = self.L
 
         for row_ind, row in enumerate(L):
-
             self.offu[row_ind] = bund_sys.max_opt(row).fun
             self.offl[row_ind] = bund_sys.max_opt(np.negative(row)).fun
 
@@ -119,7 +118,6 @@ class Bundle:
     @returns Parallelotope object described by T[temp_ind]
     """
     def getParallelotope(self, temp_ind):
-
         L = self.L
         T = self.T
         A = np.empty([2*self.dim,self.dim])
@@ -139,7 +137,6 @@ class Bundle:
     @params temp_row_mat: Matrix of new template entries.
     """
     def add_temp(self, asso_strat, row_labels, temp_label):
-
         assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
         new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
@@ -151,7 +148,6 @@ class Bundle:
     @params temp_idx: list of indices specifying row indices in template matrix
     """
     def remove_temp(self, asso_strat, temp_label):
-
         label_indices = self.__get_label_indices(self.labeled_T, self.__get_global_labels(asso_strat, temp_label))
         self.labeled_T = np.delete(self.labeled_T, label_indices, axis=0)
         #print(f"labeled_T: {self.labeled_T}")
@@ -164,9 +160,7 @@ class Bundle:
 
     """
     def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
-
         assert len(dir_row_mat) == len(dir_labels), "Number of input direction rows must be one-to-one with the labels"
-
         bund_sys = self.getIntersect()
         prev_len = self.num_dir
 
@@ -317,14 +311,12 @@ class BundleTransformer:
     @returns canonized transformed bundle.
     """
     def transform(self, bund):
-
         L = bund.L
         T = bund.T
         new_offu = np.full(bund.num_dir, np.inf)
         new_offl = np.full(bund.num_dir, np.inf)
 
         for row_ind, row in enumerate(T):
-            
             'Find the generator of the parallelotope.'
             ptope = bund.getParallelotope(row_ind)
             #print(f"Ptope {row_ind}\n")
@@ -361,14 +353,12 @@ class BundleTransformer:
         genFun = ptope.getGeneratorRep()
 
         'Create subsitutions tuples.'
-        var_sub = []
-        for var_ind, var in enumerate(self.vars):
-            var_sub.append((var, genFun[var_ind]))
+        var_sub = [(var, genFun[var_ind]) for var_ind, var in enumerate(self.vars)]
 
         #print(f"Variable Sub for {dir_vec}: {var_sub}")
         
         Timer.start('Functional Composition')
-        fog = [ func.subs(var_sub, simultaneous=True) for func in self.f ]
+        fog = [func.subs(var_sub, simultaneous=True) for func in self.f]
         Timer.stop('Functional Composition')
 
         'Perform functional composition with exact transformation from unitbox to parallelotope.'

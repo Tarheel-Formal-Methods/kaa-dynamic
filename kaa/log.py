@@ -34,3 +34,8 @@ def write_log(*args):
     debug_cat = args[-1]
     with open('log.txt','a') as f:
         f.write('\n' + spaces(debug_cat.value) + _Debug_Strings[debug_cat].format(*args) + '\n')
+
+
+
+
+#def dump_flowpipe_to_file(flowpipe):

@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from kaa.timer import Timer
@@ -11,13 +10,12 @@ Object encapsulating flowpipe data. A flowpipe in this case will be a sequence o
 class FlowPipe:
 
     def __init__(self, flowpipe, model, strat):
-
         self.flowpipe = flowpipe
         self.model = model
         self.strat = strat
         self.vars = model.vars
         self.dim = model.dim
-        self.length = len(self.flowpipe)
+        self.length = len(flowpipe)
 
     """
     Returns a list of strategies which were acting during the reachable set
@@ -39,12 +37,14 @@ class FlowPipe:
     def total_volume(self):
         return np.sum(self.get_volume_data())
 
+    """
+
+    """
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
 
         for bund_idx, bund in enumerate(self.flowpipe):
             ptope_strat_list = bund.get_ptopes_by_strat(strat)
-
             #assert len(ptope_strat_list) != 0, f"Input Strategy must act on bundle object at index {bund_idx}"
             strat_flowpipe.append(ptope_strat_list[0]) #Get first one for now
 
@@ -67,26 +67,21 @@ class FlowPipe:
     @returns list of minimum and maximum points of projected set at each time step.
     """
     def get2DProj(self, var_ind):
-        pipe_len = len(self.flowpipe)
-
         Timer.start('Proj')
         curr_var = self.vars[var_ind]
 
         'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
-        y_min, y_max = np.empty(pipe_len), np.empty(pipe_len)
+        y_min, y_max = np.empty(self.length), np.empty(self.length)
 
         'Initialize objective function'
-        y_obj = [0 for _ in self.vars]
+        y_obj = np.zeros(len(self.dim))
         y_obj[var_ind] = 1
 
         'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'
         for bund_ind, bund in enumerate(self.flowpipe):
-
             bund_sys = bund.getIntersect()
-
             y_min[bund_ind] = bund_sys.max_opt(y_obj).fun
             y_max[bund_ind] = bund_sys.min_opt(y_obj).fun
-
         Timer.stop("Proj")
 
         return y_min, y_max

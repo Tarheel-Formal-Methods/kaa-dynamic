@@ -48,7 +48,7 @@ class VanDerPol(Model):
 
 class VanDerPol_UnitBox(Model):
 
-    def __init__(self, delta=0.02):
+    def __init__(self, delta=0.02, compose=0):
 
         x, y = sp.Symbol('x'), sp.Symbol('y')
         dx = x + y*delta
@@ -75,4 +75,4 @@ class VanDerPol_UnitBox(Model):
         offu[0] = 0.03; offl[0] = 0;
         offu[1] = 2; offl[1] = -1.94;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="VDP")
+        super().__init__(dyns, vars, T, L, offu, offl, name="VDP", compose=compose)

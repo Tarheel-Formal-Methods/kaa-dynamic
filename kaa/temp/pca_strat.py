@@ -11,8 +11,7 @@ Abstract PCA class containing all of the tools PCA strats need.
 class AbstractPCAStrat(TempStrategy):
 
     def __init__(self, model, traj_steps, num_trajs, pca_dirs):
-        assert isinstance(pca_dirs, GeneratedPCADirs), "PCA Strategies may only take pre-generated PCA directions."
-
+        assert pca_dirs is None or isinstance(pca_dirs, GeneratedPCADirs), "PCA Strategies may only take pre-generated PCA directions."
         super().__init__(model)
         self.traj_steps = traj_steps
         self.num_trajs = num_trajs
@@ -26,7 +25,7 @@ class AbstractPCAStrat(TempStrategy):
 
     def generate_pca_dir(self, bund, step_num):
         if self.pca_dirs is None:
-            trajs = bund.getIntersect().generate_traj(self.num_trajs, self.traj_steps)
+            trajs = bund.getIntersect().generate_traj(self.num_trajs, self.traj_steps, sample=False)
             traj_mat = trajs.end_points
 
             pca = PCA(n_components=self.dim)
@@ -34,7 +33,7 @@ class AbstractPCAStrat(TempStrategy):
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num+1)
+            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num+self.traj_steps)
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
@@ -44,13 +43,12 @@ Implementation of creating templates through PCA
 """
 class PCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, traj_steps=5, num_trajs=100, iter_steps=1, pca_dirs=None):
+    def __init__(self, model, traj_steps=1, num_trajs=300, iter_steps=1, pca_dirs=None):
         super().__init__(model, traj_steps, num_trajs, pca_dirs)
         self.iter_steps = iter_steps
         self.pca_ptope_queue = []
 
     def open_strat(self, bund, step_num):
-
         if not step_num % self.iter_steps:
             #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
             pca_comps, pca_comp_labels  = self.generate_pca_dir(bund, step_num)
@@ -73,7 +71,7 @@ Delayed PCA
 """
 class SlidingPCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, traj_steps=5, num_trajs=100, lifespan=3, pca_dirs=None):
+    def __init__(self, model, traj_steps=1, num_trajs=300, lifespan=3, pca_dirs=None):
         super().__init__(model, traj_steps, num_trajs, pca_dirs)
         self.pca_ptope_life = []
         self.life_span = lifespan
@@ -102,7 +100,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
         return new_ptope_label
         
     def __str__(self):
-        return f"DelayedPCAStrat(Lifespan:{self.life_span})" if self.strat_order is None else f"DelayedPCAStrat{self.strat_order}(Lifespan:{self.life_span})"
+        return f"SlidingPCAStrat(Lifespan:{self.life_span})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}(Lifespan:{self.life_span})"
 
 class GeneratedPCADirs(GeneratedDirs):
 
@@ -114,13 +112,17 @@ class GeneratedPCADirs(GeneratedDirs):
         dim = model.dim
 
         generated_pca_dir_mat = np.empty((dim*num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(num_trajs, num_steps) #trajs is TrajCollecton object'
+        trajs = bund.getIntersect().generate_traj(num_trajs, num_steps, sample=False) #trajs is TrajCollecton object'
 
+       #print(f"START: {trajs.start_points}")
+        
         for step in range(num_steps):
             pca = PCA(n_components=dim)
-            pca.fit(trajs[num_steps]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
+            pca.fit(trajs[step]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 
             pca_dirs = pca.components_
             generated_pca_dir_mat[step*dim:(step+1)*dim,] = pca_dirs
 
+        #print(f"END: {trajs.end_points}")
+        #exit()
         return generated_pca_dir_mat

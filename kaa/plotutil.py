@@ -262,7 +262,7 @@ class Plot:
 
         ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=0.4)
         ax.add_patch(ptope)
-
+  
         inter_x, inter_y = zip(*proj_vertices)
         ax.scatter(inter_x, inter_y, s=0.1)
 
@@ -278,7 +278,7 @@ class Plot:
         for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
             vol_data = flowpipe.get_volume_data()
             ax.plot(t, vol_data, color=f"C{flow_idx}")
-            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=flow_label))
+            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flow_label} (Total Volume: {flowpipe.total_volume})"))
 
         ax.set_xlabel("Time steps")
         ax.set_ylabel("Volume")
