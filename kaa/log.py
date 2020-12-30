@@ -30,12 +30,8 @@ Debug.PROJ_MINMAX: 'STEP {0}: \n  MIN: {1}   MAX: {2}'
 }
 
 def write_log(*args):
-
     debug_cat = args[-1]
     with open('log.txt','a') as f:
         f.write('\n' + spaces(debug_cat.value) + _Debug_Strings[debug_cat].format(*args) + '\n')
-
-
-
 
 #def dump_flowpipe_to_file(flowpipe):

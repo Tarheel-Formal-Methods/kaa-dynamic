@@ -112,12 +112,12 @@ class SlidingLinStrat(AbstractLinStrat):
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.lin_ptope_life.append((new_ptope_label, self.life_span)) #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life.append((new_ptope_label, self.lifespan)) #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 
     def __str__(self):
-        return "SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
+        return f"SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
 
 class GeneratedLinDirs(GeneratedDirs):
 

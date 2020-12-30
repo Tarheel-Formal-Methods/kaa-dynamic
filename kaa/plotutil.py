@@ -23,7 +23,7 @@ class Plot:
         self.flowpipes = []
         self.trajs = []
         self.model = None
-        self.num_steps = 0
+        self.num_steps = -1
     """
     Add plottable object.
     @params plottable: Traj or Flowpipe object to plot.
@@ -32,7 +32,7 @@ class Plot:
         if isinstance(plottable, TrajCollection):
             self.__add_traj(plottable)
         elif isinstance(plottable, FlowPipe):
-            self.__add_flowpipe(plottable, label=label)
+            self.__add_flowpipe(plottable)
         else:
             raise RuntimeError("Object is not of a plottable type.")
         
@@ -54,13 +54,13 @@ class Plot:
     @params flowpipe: Flowpipe object to plot.
             label: optional string argument to label the Flowpipe object in the matplotlib figure.
     """
-    def __add_flowpipe(self, flowpipe, label=None):
+    def __add_flowpipe(self, flowpipe):
 
         assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
         #if self.model is not None:
         #      assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
 
-        self.flowpipes.append((label, flowpipe))
+        self.flowpipes.append(flowpipe)
         self.model = flowpipe.model if self.model is None else self.model
         self.num_steps = max(self.num_steps, len(flowpipe))
 
@@ -89,9 +89,9 @@ class Plot:
 
             self.__plot_trajs(ax[ax_idx]) #fix this
             
-            for flow_idx, (label, flowpipe) in enumerate(self.flowpipes):
+            for flow_idx, flowpipe in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.get2DProj(var_ind)
-                flowpipe_label = name if label is None else label
+                flowpipe_label = flowpipe.label
 
                 curr_ax = ax[ax_idx] if overlap else ax[flow_idx][ax_idx]
                 curr_ax.fill_between(t, flow_min, flow_max, label=flowpipe_label, color="C{}".format(flow_idx), alpha=0.5)
@@ -123,9 +123,9 @@ class Plot:
         phase_ax = figure.add_subplot(1,2,1)
         vol_ax = figure.add_subplot(1,2,2)
 
-        for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
-            self.__halfspace_inter_plot(flowpipe, flow_idx, flow_label, x, y, phase_ax, separate)
-            #self.__support_plot(flowpipe, flow_idx, flow_label, x, y, ax)
+        for flow_idx, flowpipe in enumerate(self.flowpipes):
+            self.__halfspace_inter_plot(flowpipe, flow_idx, x, y, phase_ax, separate)
+            #self.__support_plot(flowpipe, flow_idx,  x, y, ax)
 
         self.__plot_trajs(x, y, phase_ax)
         self.__phase_plot_legend(x, y, phase_ax, lims)
@@ -144,7 +144,7 @@ class Plot:
     @returns string
     """
     def __create_strat_str(self):
-        return ' vs '.join([str(pipe) for _ , pipe in self.flowpipes])
+        return ' vs '.join([str(pipe) for pipe in self.flowpipes])
 
     """
     Creates simple string of variable names uppercased and concatenated.
@@ -169,7 +169,7 @@ class Plot:
         phase_ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
 
         axis_patches = []
-        for flow_idx, (_, flowpipe) in enumerate(self.flowpipes):
+        for flow_idx, flowpipe in enumerate(self.flowpipes):
             for strat_idx, strat in enumerate(flowpipe.strats):
                 axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
 
@@ -196,7 +196,7 @@ class Plot:
             ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=0.5)
 
 
-    def __support_plot(self, flowpipe, flow_idx, flow_label, x, y, ax):
+    def __support_plot(self, flowpipe, flow_idx, x, y, ax):
         dim = self.model.dim
 
         'Define the following projected normal vectors.'
@@ -211,7 +211,7 @@ class Plot:
             x_points = supp_points[:,x]
             y_points = supp_points[:,y]
 
-            ax.scatter(x_points, y_points, label=flow_label, color="r")
+            ax.scatter(x_points, y_points, label=flowpipe.label, color="r")
 
             'Add to trajectories.'
             for p_idx, (x1, y1) in enumerate(zip(x_points, y_points)):
@@ -227,7 +227,7 @@ class Plot:
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(self, flowpipe, flow_idx, flow_label, x, y, ax, separate):
+    def __halfspace_inter_plot(self, flowpipe, flow_idx, x, y, ax, separate):
         for bund in flowpipe:
             if not separate:
                 'Temp patch. Revise to start using LinearSystems for future work.'
@@ -275,10 +275,10 @@ class Plot:
         t = np.arange(0, self.num_steps, 1)
 
         axis_patches = []
-        for flow_idx, (flow_label, flowpipe) in enumerate(self.flowpipes):
+        for flow_idx, flowpipe in enumerate(self.flowpipes):
             vol_data = flowpipe.get_volume_data()
             ax.plot(t, vol_data, color=f"C{flow_idx}")
-            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flow_label} (Total Volume: {flowpipe.total_volume})"))
+            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Total Volume: {flowpipe.total_volume})"))
 
         ax.set_xlabel("Time steps")
         ax.set_ylabel("Volume")

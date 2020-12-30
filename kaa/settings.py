@@ -11,7 +11,7 @@ class KaaSettings:
     use_parallel = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
-    OptProd = BernsteinProd
+    OptProd = KodiakProd
 
     'The default template loading/unloading strategy to use during reachable set computations'
     DefaultStrat = StaticStrat

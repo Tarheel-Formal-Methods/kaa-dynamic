@@ -1,3 +1,5 @@
+import cProfile
+
 from plotly.offline import iplot
 import plotly.graph_objects as go
 import numpy as np
@@ -22,16 +24,16 @@ class Experiment:
     """
     def execute(self):
         self.output_flowpipes = []
-
         for experi_input in self.inputs:
             model = experi_input['model']
             strat = experi_input['strat']
-            label = experi_input['label']
+            flow_label = experi_input['label']
             num_steps = experi_input['num_steps']
 
             mod_reach = ReachSet(model)
-            mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
-            self.plot.add(mod_flow, label=label)
+            mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
+            #cProfile.runctx('mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)',None, locals())
+            self.plot.add(mod_flow)
             self.output_flowpipes.append(mod_flow)
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
@@ -42,9 +44,11 @@ class Experiment:
         border_sim_trajs = self.__simulate_border_points(self.max_num_steps)
         if plottrajs:
            self.plot.add(border_sim_trajs)
-           
         self.plot.plot(*var_tup)
 
+    """
+    Extract total volume from each experiment given as input.
+    """
     def get_total_vol_results(self):
         assert self.output_flowpipes is not None, "Execute Experiment with ExperimentInputs before retrieving volume data."
         return [flowpipe.total_volume for flowpipe in self.output_flowpipes]
@@ -63,7 +67,7 @@ class Experiment:
     """
     def __simulate_border_points(self, num_steps):
         init_box_inter = self.__get_init_box()
-        border_points = get_init_box_borders(init_box_inter)
+        border_points = __get_init_box_borders(init_box_inter)
 
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
         return TrajCollection(trajs)
@@ -73,8 +77,8 @@ class Experiment:
 
 class PhasePlotExperiment(Experiment):
 
-    def __init__(self, inputs):
-        super().__init__(inputs)
+    def __init__(self, *inputs):
+        super().__init__(*inputs)
 
     def plot_results(self, *var_tup, separate=False):
         self.plot.plot2DPhase(*var_tup, separate=separate)
@@ -128,10 +132,8 @@ class ExperimentBatch:
         return [str(experi.inputs[0]['strat']) for experi in self.experiments]
         
 def exec_plot_vol_results(*experi_bat):
-
     experi_tables = []
     for experi_bat_idx, experi_bat in enumerate(experi_bat):
-        print(f"BATCH NUMBER:{experi_bat_idx}")
         experi_bat.execute()
         vol_data = np.transpose(experi_bat.get_vol_data())
         tab_header = dict(values=['Strategy', 'Total Volume'],
@@ -151,14 +153,13 @@ Find corner vertices for an initial box along with midpoints between the corners
                    are the start,end points respectively for the intervals of the box.
 @returns list of border points.
 """
-def get_init_box_borders(init_box):
+def __get_init_box_borders(init_box):
 
     midpoints = [ start + (end - start) / 2 for start, end in init_box  ]
     border_points = list(product(*init_box))
 
     for point_idx, point in enumerate(midpoints):
-        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box) ]
-
+        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box)]
         border_points += list(product(*half_points))
 
     return border_points

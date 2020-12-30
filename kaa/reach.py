@@ -6,9 +6,7 @@ from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 
-
 DefaultStrat = KaaSettings.DefaultStrat
-
 bolden = lambda string: colored(string, 'white', attrs=['bold'])
 
 """
@@ -25,7 +23,7 @@ class ReachSet:
             TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
-    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.AFO):
+    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.AFO, label=""):
 
         initial_set = self.model.bund
         transformer = BundleTransformer(self.model, transmode)
@@ -57,4 +55,4 @@ class ReachSet:
                 
             flowpipe.append(trans_bund)
 
-        return FlowPipe(flowpipe, self.model, strat)
+        return FlowPipe(flowpipe, self.model, strat, label)

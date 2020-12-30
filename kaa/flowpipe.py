@@ -9,13 +9,14 @@ Object encapsulating flowpipe data. A flowpipe in this case will be a sequence o
 """
 class FlowPipe:
 
-    def __init__(self, flowpipe, model, strat):
+    def __init__(self, flowpipe, model, strat, label):
         self.flowpipe = flowpipe
         self.model = model
         self.strat = strat
         self.vars = model.vars
         self.dim = model.dim
         self.length = len(flowpipe)
+        self.label = label
 
     """
     Returns a list of strategies which were acting during the reachable set
@@ -37,12 +38,8 @@ class FlowPipe:
     def total_volume(self):
         return np.sum(self.get_volume_data())
 
-    """
-
-    """
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
-
         for bund_idx, bund in enumerate(self.flowpipe):
             ptope_strat_list = bund.get_ptopes_by_strat(strat)
             #assert len(ptope_strat_list) != 0, f"Input Strategy must act on bundle object at index {bund_idx}"
@@ -93,4 +90,4 @@ class FlowPipe:
         return iter(self.flowpipe)
 
     def __str__(self):
-        return "{} Len: {}".format(self.strat, len(self))
+        return self.label

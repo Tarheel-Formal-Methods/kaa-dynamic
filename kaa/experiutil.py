@@ -171,7 +171,7 @@ def test_pca_life(model, max_life, num_steps, life_incre=5):
 
     exec_plot_vol_results(batch)
 
-def test_lin_life(model, max_life, num_steps, life_incre=5):
+def test_lin_life(model, max_life, num_steps, life_incre=10):
     NUM_STEPS = num_steps
     VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life

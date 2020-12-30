@@ -5,6 +5,7 @@ from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experiment import *
+from kaa.experiutil import *
 
 from kaa.settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
@@ -12,7 +13,6 @@ from kaa.timer import Timer
 PlotSettings.save_fig = False
 def test_VDP():
     NUM_STEPS = 1
-
     model = VanDerPol(delta=0.08)
 
     vdp_sapo = PhasePlotExperiment([ExperimentInput(model, label="VDP Sapo")])
@@ -69,7 +69,7 @@ def test_lin_VDP():
 
 def test_pca_lin_VDP():
 
-    NUM_STEPS = 70
+    NUM_STEPS = 10
     VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     'PCA Strategy Parameters'
@@ -86,9 +86,18 @@ def test_pca_lin_VDP():
                               PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS), \
                               PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS+VDP_PCA_DELAY))
 
-    inputs = [ExperimentInput(model, label="VDP Sapo"), ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa")]
-    vdp_pca = PhasePlotExperiment(inputs)
-    vdp_pca.execute(NUM_STEPS)
+    experi_input1 = dict(model=model,
+                   strat = None,
+                   label="VDP Sapo",
+                   num_steps=NUM_STEPS)
+
+    experi_input2 = dict(model=unit_model,
+                   strat=lin_strat,
+                   label="",
+                   num_steps=NUM_STEPS)
+
+    vdp_pca = PhasePlotExperiment(experi_input2)
+    vdp_pca.execute()
     vdp_pca.plot_results(0,1)
 
     Timer.generate_stats()
@@ -121,7 +130,7 @@ def test_ani_pca_VDP():
 
     NUM_STEPS = 70
 
-#model = VanDerPol(delta=0.08)
+    #model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
@@ -171,9 +180,6 @@ def test_ani_pca_lin_VDP():
     vdp_pca = Animation(inputs)
     vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
-    #vdp_pca.animate(0,1, lin_2)``
-    #vdp_pca.animate(0,1, pca_2)
-
     Timer.generate_stats()
 
 def test_strat_comb_VDP():
