@@ -9,7 +9,6 @@ from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experiment import Experiment, ExperimentBatch, exec_plot_vol_results
-from kaa.trajectory import Traj
 from kaa.settings import KaaSettings
 
 """
@@ -160,7 +159,7 @@ def test_pca_life(model, max_life, num_steps, life_incre=5):
         experi = Experiment(experi_input)
         batch.add_experi(experi)
 
-    for lifespan in range(LIFE_MAX, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,

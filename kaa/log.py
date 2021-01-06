@@ -10,7 +10,7 @@ Basic logger utility module for debugging purposes.
 #
 spaces = lambda x: ''.join('  ' for _ in range(x))
 
-class Debug(Enum):
+class DebugCodes(Enum):
     STEP = auto()
     MINMAX = auto() #For min/max point for parallelotopes
     POLY = auto() #For min/max polynomals calculated for bernstein expansion
@@ -33,5 +33,15 @@ def write_log(*args):
     debug_cat = args[-1]
     with open('log.txt','a') as f:
         f.write('\n' + spaces(debug_cat.value) + _Debug_Strings[debug_cat].format(*args) + '\n')
+
+
+"""
+Logging class should have the following features
+- Dumping Directons/Ptope matrix into readable format
+- Dumping Strategy moves (Adding/Removing templates) into readable format
+- Which points were chosen during PCA/LinApp Strategy.
+- Which directions were computed as output from PCA/LinApp.
+"""
+
 
 #def dump_flowpipe_to_file(flowpipe):

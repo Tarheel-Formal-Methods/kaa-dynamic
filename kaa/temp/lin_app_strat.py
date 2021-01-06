@@ -5,8 +5,6 @@ import random as rand
 from kaa.templates import TempStrategy, GeneratedDirs
 from kaa.settings import KaaSettings
 
-randgen = rand.Random(KaaSettings.RandSeed)
-
 """
 Abstract linear approximation strategy.
 """
@@ -197,6 +195,7 @@ which is orthogonal to resulting set of vectors.
 @returns new directions matrix with merged directions
 """
 def merge_closest_dirs(dir_mat, closest_dirs, dim):
+    randgen = rand.Random(KaaSettings.RandSeed)
     first_dir, second_dir = (0,1)
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
     ortho_dir = [randgen.uniform(-1,1) for _ in range(dim)]

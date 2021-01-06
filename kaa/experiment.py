@@ -104,7 +104,8 @@ class Animation:
         self.animation.animate(x, y, *strat)
 
 """
-Wraps around a batch of Experiments for coalesed output retrival. 
+Wraps around a batch of Experiments for coalesed output retrival.
+TODO Get rid of this class. Redundent and can easily be factored into Experiment.
 """
 class ExperimentBatch:
 
@@ -155,7 +156,7 @@ Find corner vertices for an initial box along with midpoints between the corners
 """
 def __get_init_box_borders(init_box):
 
-    midpoints = [ start + (end - start) / 2 for start, end in init_box  ]
+    midpoints = [start + (end - start) / 2 for start, end in init_box]
     border_points = list(product(*init_box))
 
     for point_idx, point in enumerate(midpoints):

@@ -184,17 +184,26 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
+    trial_nums = 2
 
-    test_strat_comb(unit_model,(1,3,5), 70)
-    test_one_one_strat_pca(unit_model, 5, 70)
-    test_one_one_strat_lin(unit_model, 5, 70)
+    for i in range(trial_nums):
+        KaaSettings.RandSeed = 897987178 + i
+        test_strat_comb(unit_model,(1,3,5), 70)
+        #test_one_one_strat_pca(unit_model, 5, 70)
+        #test_one_one_strat_lin(unit_model, 5, 70)
 
 def test_pca_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
+    trial_nums = 2
 
-    test_pca_life(unit_model, 30, 70)
+    for i in range(trial_nums):
+        KaaSettings.RandSeed = 897987178 + i
+        test_pca_life(unit_model, 30, 70)
 
 def test_lin_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
+    trial_nums = 2
 
-    test_lin_life(unit_model, 30, 70)
+    for i in range(trial_nums):
+        KaaSettings.RandSeed = 897987178 + i
+        test_lin_life(unit_model, 30, 70)
