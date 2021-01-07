@@ -152,7 +152,7 @@ def test_pca_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGPCA
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
 
-    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT-1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
@@ -179,7 +179,7 @@ def test_lin_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
 
-    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT-1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan, lin_dirs=lin_dirs)
         experi_input = dict(model=model,
                             strat=experi_strat,

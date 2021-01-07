@@ -192,7 +192,7 @@ def test_pca_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     trial_nums = 10
 
-    for i in range(trial_nums):
+    for i in range(2,trial_nums):
         KaaSettings.RandSeed = 897987178 + i
         test_pca_life(unit_model, 20, 70, filename=f"SlidingPCA(Trial {i})")
 
@@ -200,6 +200,6 @@ def test_lin_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     trial_nums = 10
 
-    for i in range(4,trial_nums):
+    for i in range(5,trial_nums):
         KaaSettings.RandSeed = 897987178 + i
         test_lin_life(unit_model, 20, 70, filename=f"SlidingLin(Trial {i})")
