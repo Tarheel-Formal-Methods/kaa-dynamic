@@ -35,7 +35,7 @@ class Plot:
             self.__add_flowpipe(plottable)
         else:
             raise RuntimeError("Object is not of a plottable type.")
-        
+
     """
     Adds trajectory to be plotted.
     @params traj: Traj object to plot.
@@ -48,7 +48,7 @@ class Plot:
         self.trajs = traj_col
         self.model = traj_col.model if self.model is None else self.model
         self.num_steps = max(self.num_steps, traj_col.max_traj_len)
-        
+
     """
     Adds flowpipe to be plotted.
     @params flowpipe: Flowpipe object to plot.
@@ -88,21 +88,21 @@ class Plot:
             t = np.arange(0, self.num_steps, 1)
 
             self.__plot_trajs(ax[ax_idx]) #fix this
-            
+
             for flow_idx, flowpipe in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.get2DProj(var_ind)
                 flowpipe_label = flowpipe.label
 
                 curr_ax = ax[ax_idx] if overlap else ax[flow_idx][ax_idx]
                 curr_ax.fill_between(t, flow_min, flow_max, label=flowpipe_label, color="C{}".format(flow_idx), alpha=0.5)
-                
+
                 curr_ax.set_xlabel("t: time steps")
                 curr_ax.set_ylabel(f"Reachable Set for {var}")
                 curr_ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
                 curr_ax.legend()
 
         figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, self.__create_var_str(var_tup), self.__create_strat_str())
-        
+
         self.__plot_figure(figure, figure_name)
 
     """
@@ -235,7 +235,7 @@ class Plot:
             else:
                 for ptope_idx, ptope in enumerate(bund.ptopes):
                     self.plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
-                    
+
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
@@ -262,7 +262,7 @@ class Plot:
 
         ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=0.4)
         ax.add_patch(ptope)
-  
+
         inter_x, inter_y = zip(*proj_vertices)
         ax.scatter(inter_x, inter_y, s=0.1)
 
@@ -308,7 +308,7 @@ class TempAnimation(Plot):
 
         figure = plt.figure(figsize=PlotSettings.fig_size)
         ax = figure.add_subplot(1,1,1)
-        
+
         ax.set_xlabel(f"{x_var}")
         ax.set_ylabel(f"{y_var}")
         ax.set_title("Phase Plot for {}".format(self.model.name))
@@ -333,5 +333,5 @@ class TempAnimation(Plot):
         axis_patches = []
         for strat_idx, strat in enumerate(strats):
             axis_patches.append(pat.Patch(color=f"C{strat_idx}", label=str(strat)))
-            
+
         ax.legend(handles=axis_patches)

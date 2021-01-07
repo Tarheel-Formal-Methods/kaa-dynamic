@@ -34,7 +34,7 @@ class PlotSettings:
     save_fig = False
 
     'Path to save figures'
-    default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
+    default_fig_path = "/home/edward/work/kaa-dynamic/figures"
 
     'Figure dimensions'
     fig_size = (30,20)

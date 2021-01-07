@@ -64,7 +64,7 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
 
 
-def test_strat_comb(model, step_tup, num_steps):
+def test_strat_comb(model, step_tup, num_steps, filename="STRATCOMB"):
     NUM_STEPS = num_steps
     PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
@@ -77,21 +77,19 @@ def test_strat_comb(model, step_tup, num_steps):
     pca_iter_steps = step_tup
     lin_iter_steps = step_tup
 
-    batch = ExperimentBatch()
+    inputs = []
     for pca_step, lin_step in product(pca_iter_steps, lin_iter_steps): #model tossed around too many times.
         pca_strat = PCAStrat(model, iter_steps=pca_step, traj_steps=pca_step, pca_dirs=pca_dirs)
         lin_strat = LinStrat(model, iter_steps=lin_step, lin_dirs=lin_dirs)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
-                            label="",
+                            label=f"Combination with PCA Step {pca_step} and Lin Step {lin_step}",
                             num_steps=NUM_STEPS)
+        inputs.append(experi_input)
 
-        experi = Experiment(experi_input, label=f"Box for PCA: {pca_step} steps and Lin: {lin_step} steps")
-        batch.add_experi(experi)
+    exec_plot_vol_results(Experiment(*inputs), filename)
 
-    exec_plot_vol_results(batch)
-
-def test_one_one_strat_pca(model, max_step, num_steps):
+def test_one_one_strat_pca(model, max_step, num_steps, filename="ONEONEPCA"):
     NUM_STEPS = num_steps
     PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
@@ -100,23 +98,21 @@ def test_one_one_strat_pca(model, max_step, num_steps):
 
     pca_dirs = GeneratedPCADirs(model, PCA_NUM_TRAJ, NUM_STEPS+MAX_STEP) #Way to deduce lengeth beforehand
     lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP)
-    pca_iter_steps = step_tup
-    lin_iter_steps = step_tup
 
-    batch = ExperimentBatch()
+    inputs = []
     for pca_step in range(2,6): #model tossed around too many times.
         pca_strat1 = PCAStrat(model, iter_steps=1, pca_dirs=pca_dirs)
         lin_strat1 = LinStrat(model, iter_steps=1, lin_dirs=lin_dirs)
         experi_strat1 = PCAStrat(model, iter_steps=pca_step, traj_steps=pca_step, pca_dirs=pca_dirs)
         experi_input1 = dict(model=model,
                             strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
-                            label="",
+                            label=f"PCA with Box and 1-1 Temp for {pca_step} steps",
                             num_steps=NUM_STEPS)
-        batch1.add_experi(Experiment(experi_input1, label=f"PCA with Box and 1-1 Temp for {pca_step} steps"))
+        inputs.append(experi_input1)
 
-    exec_plot_vol_results(batch)
+    exec_plot_vol_results(Experiment(*inputs), filename)
 
-def test_one_one_strat_lin(model, max_step, num_steps):
+def test_one_one_strat_lin(model, max_step, num_steps, filename="ONEONELIN"):
     NUM_STEPS = num_steps
     PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
@@ -125,76 +121,70 @@ def test_one_one_strat_lin(model, max_step, num_steps):
 
     pca_dirs = GeneratedPCADirs(model, PCA_NUM_TRAJ, NUM_STEPS+MAX_STEP) #Way to deduce lengeth beforehand
     lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP)
-    pca_iter_steps = step_tup
-    lin_iter_steps = step_tup
 
-    batch = ExperimentBatch()
+    inputs = []
     for lin_step in range(2,max_step+1): #model tossed around too many times.
         pca_strat1 = PCAStrat(model, iter_steps=1, pca_dirs=pca_dirs)
         lin_strat1 = LinStrat(model, iter_steps=1, lin_dirs=lin_dirs)
         experi_strat1 = LinStrat(model, iter_steps=lin_step, lin_dirs=lin_dirs)
         experi_input1 = dict(model=model,
                             strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
-                            label="",
+                            label=f"PCA with Box and 1-1 Temp for {lin_step} steps",
                             num_steps=NUM_STEPS)
-        batch1.add_experi(Experiment(experi_input1, label=f"PCA with Box and 1-1 Temp for {lin_step} steps"))
+        inputs.append(experi_input1)
 
-    exec_plot_vol_results(batch)
+    exec_plot_vol_results(Experiment(*inputs), filename)
 
-def test_pca_life(model, max_life, num_steps, life_incre=5):
+def test_pca_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
     VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
     LIFE_INCREMENT = life_incre
 
     pca_dirs = GeneratedPCADirs(model, VDP_PCA_NUM_TRAJ, NUM_STEPS+1) #Way to deduce lengeth beforehand
-    batch = ExperimentBatch()
+    inputs = []
 
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
-                            label="",
+                            label=f"SlidingPCA with Window Size:{lifespan}",
                             num_steps=NUM_STEPS)
-        experi = Experiment(experi_input)
-        batch.add_experi(experi)
+        inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
-                            label="",
+                            label=f"SlidingPCA with Window Size:{lifespan}",
                             num_steps=NUM_STEPS)
-        experi = Experiment(experi_input)
-        batch.add_experi(experi)
+        inputs.append(experi_input)
 
-    exec_plot_vol_results(batch)
+    exec_plot_vol_results(Experiment(*inputs), filename)
 
-def test_lin_life(model, max_life, num_steps, life_incre=10):
+def test_lin_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN"):
     NUM_STEPS = num_steps
     VDP_PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
     LIFE_INCREMENT = life_incre
 
     lin_dirs = GeneratedLinDirs(model, NUM_STEPS+1) #Way to deduce lengeth beforehand
-    batch = ExperimentBatch()
+    inputs = []
 
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan, lin_dirs=lin_dirs)
         experi_input = dict(model=model,
                             strat=experi_strat,
-                            label="",
+                            label=f"SlidingLin with Window Size:{lifespan}",
                             num_steps=NUM_STEPS)
-        experi = Experiment(experi_input)
-        batch.add_experi(experi)
+        inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan, lin_dirs=lin_dirs)
         experi_input = dict(model=model,
                             strat=experi_strat,
-                            label="",
+                            label=f"SlidingLin with Window Size:{lifespan}",
                             num_steps=NUM_STEPS)
-        experi = Experiment(experi_input)
-        batch.add_experi(experi)
+        inputs.append(experi_input)
 
-    exec_plot_vol_results(batch)
+    exec_plot_vol_results(Experiment(*inputs), filename)

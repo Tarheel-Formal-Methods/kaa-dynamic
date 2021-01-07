@@ -1,12 +1,12 @@
-import cProfile
-
-from plotly.offline import iplot
+from plotly.offline import plot
 import plotly.graph_objects as go
 import numpy as np
+import os
 
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
+from kaa.settings import PlotSettings
 
 class Experiment:
 
@@ -36,6 +36,22 @@ class Experiment:
             self.plot.add(mod_flow)
             self.output_flowpipes.append(mod_flow)
             self.max_num_steps = max(self.max_num_steps, num_steps)
+
+
+    def gather_vol_only(self):
+        vol_data = []
+        for experi_idx, experi_input in enumerate(self.inputs):
+            model = experi_input['model']
+            strat = experi_input['strat']
+            flow_label = experi_input['label']
+            num_steps = experi_input['num_steps']
+
+            mod_reach = ReachSet(model)
+            mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
+            vol_data.append((flow_label, mod_flow.total_volume))
+
+        return vol_data
+
 
     """
     Plot the results fed into the Plot object
@@ -111,6 +127,7 @@ class ExperimentBatch:
 
     def __init__(self, label=""):
         self.experiments = []
+        self.vol_data = []
         self.label = label
 
     def add_experi(self, experiment):
@@ -122,7 +139,7 @@ class ExperimentBatch:
         for experi in self.experiments:
             print(f"\n Executing Experiment {experi.label} \n")
             experi.execute()
-            
+
     """
     Returns total volume results from consitutent experiments in order which they were added in ExperimentBatch
     """
@@ -131,22 +148,19 @@ class ExperimentBatch:
 
     def get_strat_labels(self):
         return [str(experi.inputs[0]['strat']) for experi in self.experiments]
-        
-def exec_plot_vol_results(*experi_bat):
-    experi_tables = []
-    for experi_bat_idx, experi_bat in enumerate(experi_bat):
-        experi_bat.execute()
-        vol_data = np.transpose(experi_bat.get_vol_data())
-        tab_header = dict(values=['Strategy', 'Total Volume'],
+
+def exec_plot_vol_results(experi, filename):
+    labels, vol_data = zip(*experi.gather_vol_only())
+
+    tab_header = dict(values=['Strategy', 'Total Volume'],
                   align='left')
-        tab_cells = dict(values=[vol_data[0], vol_data[1]],
+    tab_cells = dict(values=[labels, vol_data],
                   align='left')
 
-        experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
-        experi_tables.append(experi_vol_table)
+    experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
 
-    fig = go.Figure(data=experi_tables)
-    iplot(fig)
+    fig = go.Figure(data=[experi_vol_table])
+    fig.write_image(os.path.join(PlotSettings.default_fig_path, filename), format='png')
 
 """
 Find corner vertices for an initial box along with midpoints between the corners.

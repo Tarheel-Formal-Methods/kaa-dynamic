@@ -23,9 +23,7 @@ def test_VDP():
 
 
 def test_pca_VDP():
-
     NUM_STEPS = 3
-    
     model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
@@ -38,8 +36,6 @@ def test_pca_VDP():
     pca_dirs = GeneratedPCADirs(model, VDP_PCA_NUM_TRAJ, NUM_STEPS)
     pca_strat = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS, pca_dirs=pca_dirs)
 
-
-    
     vdp_pca = PhasePlotExperiment(inputs)
     vdp_pca.execute(NUM_STEPS)
     vdp_pca.plot_results(0,1)
@@ -176,7 +172,7 @@ def test_ani_pca_lin_VDP():
                    strat=lin_strat,
                    label="",
                    num_steps=NUM_STEPS)
-    
+
     vdp_pca = Animation(inputs)
     vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
@@ -184,26 +180,26 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 2
+    trial_nums = 10
 
     for i in range(trial_nums):
         KaaSettings.RandSeed = 897987178 + i
-        test_strat_comb(unit_model,(1,3,5), 70)
-        #test_one_one_strat_pca(unit_model, 5, 70)
-        #test_one_one_strat_lin(unit_model, 5, 70)
+        #test_strat_comb(unit_model,(1,3,5), 70, filename=f"StratComb(Trial {i})")
+        test_one_one_strat_pca(unit_model, 5, 70, filename=f"OneOnePCA(Trial{i})")
+        test_one_one_strat_lin(unit_model, 5, 70, filename=f"OneOneLin(Trial{i})")
 
 def test_pca_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 2
+    trial_nums = 10
 
     for i in range(trial_nums):
         KaaSettings.RandSeed = 897987178 + i
-        test_pca_life(unit_model, 30, 70)
+        test_pca_life(unit_model, 20, 70, filename=f"SlidingPCA(Trial {i})")
 
 def test_lin_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 2
+    trial_nums = 5
 
-    for i in range(trial_nums):
+    for i in range(4,trial_nums):
         KaaSettings.RandSeed = 897987178 + i
-        test_lin_life(unit_model, 30, 70)
+        test_lin_life(unit_model, 20, 1)
