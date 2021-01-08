@@ -148,7 +148,6 @@ def test_ani_pca_VDP():
 
     Timer.generate_stats()
 
-
 def test_ani_pca_lin_VDP():
 
     NUM_STEPS = 70
@@ -180,13 +179,10 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 10
 
-    for i in range(trial_nums):
-        KaaSettings.RandSeed = 897987178 + i
-        #test_strat_comb(unit_model,(1,3,5), 70, filename=f"StratComb(Trial {i})")
-        test_one_one_strat_pca(unit_model, 5, 70, filename=f"OneOnePCA(Trial{i})")
-        test_one_one_strat_lin(unit_model, 5, 70, filename=f"OneOneLin(Trial{i})")
+    test_strat_comb(unit_model,(1,3,5), 10, num_trials=3)
+        #test_one_one_strat_pca(unit_model, 5, 1, filename=f"OneOnePCA(Trial{i})")
+        #test_one_one_strat_lin(unit_model, 5, 1, filename=f"OneOneLin(Trial{i})")
 
 def test_pca_life_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

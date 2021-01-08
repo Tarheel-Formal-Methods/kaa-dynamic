@@ -64,7 +64,7 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
 
 
-def test_strat_comb(model, step_tup, num_steps, filename="STRATCOMB"):
+def test_strat_comb(model, step_tup, num_steps, num_trials=1, filename="STRATCOMB"):
     NUM_STEPS = num_steps
     PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
@@ -83,11 +83,13 @@ def test_strat_comb(model, step_tup, num_steps, filename="STRATCOMB"):
         lin_strat = LinStrat(model, iter_steps=lin_step, lin_dirs=lin_dirs)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
-                            label=f"Combination with PCA Step {pca_step} and Lin Step {lin_step}",
+                            label=f"PCA Step {pca_step} and Lin Step {lin_step}",
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
 
-    exec_plot_vol_results(Experiment(*inputs), filename)
+    experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
+    experi.execute()
+    experi.generate_spreadsheet()
 
 def test_one_one_strat_pca(model, max_step, num_steps, filename="ONEONEPCA"):
     NUM_STEPS = num_steps

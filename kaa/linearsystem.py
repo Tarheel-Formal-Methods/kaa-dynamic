@@ -1,6 +1,7 @@
 import random as rand
 import numpy as np
 import multiprocessing as mp
+from scipy.spatial import HalfspaceIntersection, ConvexHull
 
 from operator import mul, add
 from functools import reduce
@@ -49,15 +50,29 @@ class LinearSystem:
     """
     @property
     def volume(self):
-        envelop_box = self.__calc_envelop_box()
-        num_samples = KaaSettings.VolumeSamples
+        if KaaSettings.RandVol:
+            envelop_box = self.__calc_envelop_box()
+            num_samples = KaaSettings.VolumeSamples
 
-        check_point_membership = lambda point: 1 if self.check_membership(point) else 0
-        point_value = map(check_point_membership, [self.__sample_box_point(envelop_box) for _  in range(num_samples)])
-        num_contained_points = reduce(add, point_value)
+            check_point_membership = lambda point: 1 if self.check_membership(point) else 0
+            point_value = map(check_point_membership, [self.__sample_box_point(envelop_box) for _  in range(num_samples)])
+            num_contained_points = reduce(add, point_value)
 
-        return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
+            return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
+        else:
+            return ConvexHull(self.vertices).volume
 
+    @property
+    def vertices(self):
+        phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
+        center_pt = np.asarray(self.chebyshev_center.center)
+
+        'Run scipy.spatial.HalfspaceIntersection.'
+        hs = HalfspaceIntersection(phase_intersect, center_pt)
+        vertices = np.asarray(hs.intersections)
+
+        return vertices
+    
     """
     Maxmize optimization function y over Ax \leq b
     @params y: linear function to optimize over
@@ -119,6 +134,16 @@ class LinearSystem:
         assert len(box_intervals) == self.dim, "Number of intervals defining box must match dimension of system."
         return [self.randgen.uniform(start, end) for start, end in box_intervals]
 
+    def create_traj(self, model, point, time_steps, output_queue):
+        output_queue.put(Traj(model, point, steps=time_steps))
+
+    def queue_to_list(self, mp_queue):
+        output_list = []
+        while(mp_queue.qsize() != 0):
+            output_list.append(mp_queue.get())
+
+        return output_list
+
     """
     Generate random trajectories from polytope defined by parallelotope bundle.
     @params model: Model
@@ -129,18 +154,16 @@ class LinearSystem:
     def generate_traj(self, num_trajs, time_steps, sample=False):
         #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
         initial_points = self.gen_ran_pts_box(num_trajs)
-        trajs = [Traj(self.model, point, steps=time_steps) for point in initial_points]
+        output_queue = mp.Manager().Queue()
+        input_params = [(self.model, point, time_steps, output_queue) for point in initial_points]
 
-        """
-        if KaaSettings.use_parallel:
-            'Parallelize point propagation'
-            p = mp.Pool(processes=4)
-            prop_trajs = p.starmap(point_prop, [ (model, point, time_steps) for point in initial_points ])
-            p.close()
-            p.join()
-        """
+        'Parallelize point propagation'
+        p = mp.Pool(processes=5)
+        p.starmap(self.create_traj, input_params)
+        p.close()
+        p.join()
 
-        return TrajCollection(trajs)
+        return TrajCollection(self.queue_to_list(output_queue))
 
     """
     Generates random points contained within the tightest enveloping parallelotope of the Chevyshev sphere.

@@ -25,6 +25,9 @@ class KaaSettings:
     'seed for random.seed'
     RandSeed = 897987178
 
+    'Use random sampling scheme for volume'
+    RandVol = False
+
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
@@ -34,7 +37,7 @@ class PlotSettings:
     save_fig = False
 
     'Path to save figures'
-    default_fig_path = "/home/edward/work/kaa-dynamic/figures"
+    default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
 
     'Figure dimensions'
     fig_size = (30,20)

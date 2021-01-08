@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 import matplotlib.animation as animate
-from scipy.spatial import HalfspaceIntersection
 
 from kaa.settings import PlotSettings
 from kaa.trajectory import TrajCollection, Traj
@@ -244,17 +243,7 @@ class Plot:
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
 
-        'Halfspace constraint matrix'
-        A = sys.A
-        b = sys.b
-
-        phase_intersect = np.hstack((A, - np.asarray([b]).T))
-        center_pt = np.asarray(sys.chebyshev_center.center)
-
-        'Run scipy.spatial.HalfspaceIntersection.'
-        hs = HalfspaceIntersection(phase_intersect, center_pt)
-        vertices = np.asarray(hs.intersections)
-
+        vertices = sys.vertices
         proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
 
         'Sort by polar coordinates to ensure proper plotting of boundary'

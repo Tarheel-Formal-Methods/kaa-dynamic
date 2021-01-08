@@ -1,4 +1,5 @@
 from plotly.offline import plot
+from openpyxl import Workbook
 import plotly.graph_objects as go
 import numpy as np
 import os
@@ -6,11 +7,11 @@ import os
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
-from kaa.settings import PlotSettings
+from kaa.settings import PlotSettings, KaaSettings
 
 class Experiment:
 
-    def __init__(self, *inputs, label=""):
+    def __init__(self, *inputs, label="Experiment", num_trials=1):
         self.inputs = inputs
         self.plot = Plot()
         self.max_num_steps = 0
@@ -18,11 +19,46 @@ class Experiment:
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0]['model']
         self.label = label
+        self.num_trials = num_trials
+        self.results = []
+
+    def execute(self, experi_type="Volume"):
+        if experi_type == "Volume":
+            for trial_num in range(self.num_trials):
+                KaaSettings.RandSeed += trial_num
+
+                flow_labels, flow_vols = zip(*self.gather_vol_data())
+                self.results.append(dict(
+                    trial_num=trial_num,
+                    flow_labels=flow_labels,
+                    flow_vols=flow_vols
+                ))
+
+    def generate_spreadsheet(self):
+        workbook = Workbook()
+        sheet = workbook.active
+
+        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(self.num_trials)] + ["Mean", "Stdev"])
+        'Initialize label-row dictionary'
+        row_dict = {label : row_idx + 2 for row_idx, label in enumerate(self.results[0]['flow_labels'])}
+        total_num_trials = len(self.results)
+
+        for result in self.results:
+            trial_num = result['trial_num']
+            for flow_label, flow_vol in zip(result['flow_labels'], result['flow_vols']):
+                row = str(row_dict[flow_label])
+                sheet['A' + row] = flow_label
+                sheet[chr(66 + trial_num) + row] = flow_vol
+                sheet[chr(66 + total_num_trials) + row] = f"=AVERAGE(B{row}:{chr(66 + total_num_trials - 1)}{row})"
+                sheet[chr(66 + total_num_trials + 1) + row] = f"=STDEV(B{row}:{chr(66 + total_num_trials - 1)}{row})"
+
+        workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
+        return workbook
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
     """
-    def execute(self):
+    def gather_plots(self):
         self.output_flowpipes = []
         for experi_input in self.inputs:
             model = experi_input['model']
@@ -38,7 +74,7 @@ class Experiment:
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
 
-    def gather_vol_only(self):
+    def gather_vol_data(self):
         vol_data = []
         for experi_idx, experi_input in enumerate(self.inputs):
             model = experi_input['model']
@@ -47,11 +83,14 @@ class Experiment:
             num_steps = experi_input['num_steps']
 
             mod_reach = ReachSet(model)
-            mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
-            vol_data.append((flow_label, mod_flow.total_volume))
+            try:
+                mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
+                vol_data.append((flow_label, mod_flow.total_volume))
+            except Exception as excep:
+                vol_data.append((flow_label, str(excep)))
 
+                
         return vol_data
-
 
     """
     Plot the results fed into the Plot object
@@ -149,19 +188,6 @@ class ExperimentBatch:
     def get_strat_labels(self):
         return [str(experi.inputs[0]['strat']) for experi in self.experiments]
 
-def exec_plot_vol_results(experi, filename):
-    labels, vol_data = zip(*experi.gather_vol_only())
-
-    tab_header = dict(values=['Strategy', 'Total Volume'],
-                  align='left')
-    tab_cells = dict(values=[labels, vol_data],
-                  align='left')
-
-    experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
-
-    fig = go.Figure(data=[experi_vol_table])
-    fig.write_image(os.path.join(PlotSettings.default_fig_path, filename), format='png')
-
 """
 Find corner vertices for an initial box along with midpoints between the corners.
 @params init_box : intervals of the box given as a list of lists where each member's left,right value
@@ -178,3 +204,16 @@ def __get_init_box_borders(init_box):
         border_points += list(product(*half_points))
 
     return border_points
+
+def exec_plot_vol_results(experi, filename):
+    labels, vol_data = zip(*experi.gather_vol_only())
+
+    tab_header = dict(values=['Strategy', 'Total Volume'],
+                  align='left')
+    tab_cells = dict(values=[labels, vol_data],
+                  align='left')
+
+    experi_vol_table = go.Table(header=tab_header, cells=tab_cells)
+
+    fig = go.Figure(data=[experi_vol_table])
+    fig.write_image(os.path.join(PlotSettings.default_fig_path, filename + 'png'), format='png')
