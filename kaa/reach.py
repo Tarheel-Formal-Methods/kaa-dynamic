@@ -17,7 +17,7 @@ class ReachSet:
     def __init__(self, model, strat=None, label=""):
         self.model = model
         self.strat = DefaultStrat(self.model) if strat is None else strat
-        self.flowpipe = Flowpipe(self.model, strat, label)
+        self.flowpipe = FlowPipe(self.model, strat, label)
 
     """
     Compute reachable set for the alloted number of time steps.
@@ -31,15 +31,15 @@ class ReachSet:
         
         for step in range(time_steps):
             Timer.start('Reachable Set Computation')
-            starting_bund = copy.deepcopy(flowpipe[start_offset + step])
+            starting_bund = copy.deepcopy(self.flowpipe[start_offset + step])
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
             try:
-                strat.open_strat(starting_bund, step)
+                self.strat.open_strat(starting_bund, step)
                 trans_bund = transformer.transform(starting_bund)
-                strat.close_strat(trans_bund, step)
+                self.strat.close_strat(trans_bund, step)
             except:
                 #if KaaSettings.SaveStateonError:
                 #    save_flowpipe_to_disk(self.flowpipe) #Implement this

@@ -10,12 +10,11 @@ Object encapsulating flowpipe data. A flowpipe in this case will be a sequence o
 class FlowPipe:
 
     def __init__(self, model, strat, label, flowpipe=None):
-        self.flowpipe = [self.model.bund] if flowpipe is None else flowpipe
+        self.flowpipe = [model.bund] if flowpipe is None else flowpipe
         self.model = model
         self.strat = strat
         self.vars = model.vars
         self.dim = model.dim
-        self.length = len(flowpipe)
         self.label = label
 
     """
@@ -38,6 +37,9 @@ class FlowPipe:
     def total_volume(self):
         return np.sum(self.get_volume_data())
 
+    """
+    Wrapper method around self.flowpipe.append function.
+    """
     def append(self, bund):
         self.flowpipe.append(bund)
 
@@ -55,7 +57,7 @@ class FlowPipe:
     @returns array of volume data.
     """
     def get_volume_data(self):
-        vol_data = np.empty(self.length)
+        vol_data = np.empty(len(self.flowpipe))
         for idx, bund in enumerate(self.flowpipe):
             vol_data[idx] = bund.getIntersect().volume
 
@@ -87,7 +89,7 @@ class FlowPipe:
         return y_min, y_max
 
     def __len__(self):
-        return self.length
+        return len(self.flowpipe)
 
     def __iter__(self):
         return iter(self.flowpipe)

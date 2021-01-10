@@ -104,7 +104,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
 class GeneratedPCADirs(GeneratedDirs):
 
-    def __init__(self, model, num_trajs, num_steps):
+    def __init__(self, model, num_steps, num_trajs):
         super().__init__(model, self.__generate_pca_dir(model, num_trajs, num_steps))
 
     def __generate_pca_dir(self, model, num_trajs, num_steps):

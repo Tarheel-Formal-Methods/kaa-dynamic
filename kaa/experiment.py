@@ -87,6 +87,7 @@ class Experiment:
                 mod_flow = mod_reach.computeReachSet(num_steps)
                 vol_data.append((flow_label, mod_flow.total_volume))
             except Exception as excep:
+                raise
                 vol_data.append((flow_label, str(excep)))
 
                 

@@ -199,3 +199,7 @@ def test_lin_life_VDP():
     for i in range(5,trial_nums):
         KaaSettings.RandSeed = 897987178 + i
         test_lin_life(unit_model, 20, 70, filename=f"SlidingLin(Trial {i})")
+
+def test_strat_comb_stdev_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_comb_stdev_reduction(unit_model, 2)

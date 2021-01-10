@@ -10,11 +10,12 @@ Abstract linear approximation strategy.
 """
 class AbstractLinStrat(TempStrategy):
 
-    def __init__(self, model, cond_threshold, lin_dirs):
+    def __init__(self, model, num_trajs, cond_threshold, lin_dirs):
         super().__init__(model)
         self.unit_dir_mat = initialize_unit_mat(self.dim)
         self.cond_threshold = cond_threshold
         self.lin_dirs = lin_dirs
+        self.num_trajs = num_trajs
         self.lin_app_ptope_queue = []
 
     def open_strat(self, bund):
@@ -56,9 +57,9 @@ class AbstractLinStrat(TempStrategy):
     @returns best-fit linear transformation matrix.
     """
     def __approx_A(self, bund):
-        trajs = bund.getIntersect().generate_traj(2*self.dim, self.iter_steps)
+        trajs = bund.getIntersect().generate_traj(self.num_trajs, self.iter_steps)
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
-        return approx_lin_trans(start_end_tup, self.dim)
+        return approx_lin_trans(start_end_tup, self.num_trajs, self.dim)
 
     def __str__(self):
         return "LinApp(Steps:{})".format(self.iter_steps)
@@ -68,8 +69,11 @@ Local linear approximation strategy.
 """
 class LinStrat(AbstractLinStrat):
 
-    def __init__(self, model, iter_steps=2, cond_threshold=7, lin_dirs=None):
-        super().__init__(model, cond_threshold, lin_dirs)
+    def __init__(self, model, iter_steps=2, num_trajs=-1, cond_threshold=7, lin_dirs=None):
+        'Set default num_traj value'
+        num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
+        super().__init__(model, num_trajs, cond_threshold, lin_dirs)
+        
         self.iter_steps = iter_steps
         self.lin_app_ptope_queue = []
 
@@ -119,9 +123,10 @@ class SlidingLinStrat(AbstractLinStrat):
 
 class GeneratedLinDirs(GeneratedDirs):
 
-    def __init__(self, model, num_steps, cond_threshold=7):
+    def __init__(self, model, num_steps, num_trajs, cond_threshold=7):
         self.unit_dir_mat = initialize_unit_mat(model.dim)
         self.cond_threshold = cond_threshold
+        self.num_trajs = num_trajs
         super().__init__(model, self.__generate_lin_dir(model, num_steps))
 
     """
@@ -138,12 +143,12 @@ class GeneratedLinDirs(GeneratedDirs):
         dim = model.dim
 
         generated_lin_dir_mat = np.empty((dim*num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(2*dim, num_steps) #trajs is TrajCollecton object'
+        trajs = bund.getIntersect().generate_traj(self.num_trajs, num_steps) #trajs is TrajCollecton object'
 
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step+1]) for t in trajs]
             
-            approx_A = approx_lin_trans(start_end_tup, dim)
+            approx_A = approx_lin_trans(start_end_tup, self.num_trajs, dim)
             inv_A = np.linalg.inv(approx_A)
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
@@ -168,9 +173,8 @@ Uses np.linalg.lstsq to accomplish this.
          dim: dimension of system
 @returns best-fit linear transformation matrix.
 """
-def approx_lin_trans(dom_ran_tup, dim):
-    num_traj = 2*dim
-    coeff_mat = np.zeros((dim*num_traj, dim**2), dtype='float')
+def approx_lin_trans(dom_ran_tup, num_trajs, dim):
+    coeff_mat = np.zeros((dim*num_trajs, dim**2), dtype='float')
 
     'Initialize the A matrix containing linear constraints.'
     for t_idx, t in enumerate(dom_ran_tup):

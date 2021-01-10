@@ -158,7 +158,7 @@ class LinearSystem:
         input_params = [(self.model, point, time_steps, output_queue) for point in initial_points]
 
         'Parallelize point propagation'
-        p = mp.Pool(processes=5)
+        p = mp.Pool(processes=6)
         p.starmap(self.create_traj, input_params)
         p.close()
         p.join()

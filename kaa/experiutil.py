@@ -190,3 +190,29 @@ def test_lin_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN
         inputs.append(experi_input)
 
     exec_plot_vol_results(Experiment(*inputs), filename)
+
+
+def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCOMBSTDEV"):
+    NUM_STEPS = num_steps
+    MAX_STEP = 1
+
+    PCA_ITER_STEPS = 1
+    LIN_ITER_STEPS = 1
+
+    inputs = []
+    for num_trajs in range(400,1000,100): #model tossed around too many times.
+        pca_dirs = GeneratedPCADirs(model, NUM_STEPS+MAX_STEP, num_trajs) #Way to deduce lengeth beforehand
+        lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP, num_trajs)
+
+        pca_strat = PCAStrat(model, iter_steps=PCA_ITER_STEPS, pca_dirs=pca_dirs)
+        lin_strat = LinStrat(model, iter_steps=LIN_ITER_STEPS, lin_dirs=lin_dirs)
+        experi_input = dict(model=model,
+                            strat=MultiStrategy(pca_strat, lin_strat),
+                            label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
+                            num_steps=NUM_STEPS)
+        
+        inputs.append(experi_input)
+
+    experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
+    experi.execute()
+    experi.generate_spreadsheet()
