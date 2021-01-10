@@ -14,8 +14,10 @@ Object handling all reachable flowpipe computations.
 """
 class ReachSet:
 
-    def __init__(self, model):
+    def __init__(self, model, strat=None, label=""):
         self.model = model
+        self.strat = DefaultStrat(self.model) if strat is None else strat
+        self.flowpipe = Flowpipe(self.model, strat, label)
 
     """
     Compute reachable set for the alloted number of time steps.
@@ -23,26 +25,26 @@ class ReachSet:
             TempStrat: template loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
-    def computeReachSet(self, time_steps, tempstrat=None, transmode=BundleMode.AFO, label=""):
-
-        initial_set = self.model.bund
+    def computeReachSet(self, time_steps, transmode=BundleMode.AFO):
         transformer = BundleTransformer(self.model, transmode)
-
-        strat = tempstrat if tempstrat is not None else DefaultStrat(self.model)
-        flowpipe = [initial_set]
-
+        start_offset = len(self.flowpipe) - 1
+        
         for step in range(time_steps):
-            
             Timer.start('Reachable Set Computation')
-
-            starting_bund = copy.deepcopy(flowpipe[step])
+            starting_bund = copy.deepcopy(flowpipe[start_offset + step])
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
-            strat.open_strat(starting_bund, step)
-            trans_bund = transformer.transform(starting_bund)
-            strat.close_strat(trans_bund, step)
+            try:
+                strat.open_strat(starting_bund, step)
+                trans_bund = transformer.transform(starting_bund)
+                strat.close_strat(trans_bund, step)
+            except:
+                #if KaaSettings.SaveStateonError:
+                #    save_flowpipe_to_disk(self.flowpipe) #Implement this
+                #else:
+                raise
             
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
@@ -53,6 +55,6 @@ class ReachSet:
             if not KaaSettings.SuppressOutput:
                 print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(step), bolden(reach_time)))
                 
-            flowpipe.append(trans_bund)
+            self.flowpipe.append(trans_bund)
 
-        return FlowPipe(flowpipe, self.model, strat, label)
+        return self.flowpipe

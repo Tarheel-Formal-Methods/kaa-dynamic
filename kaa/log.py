@@ -43,5 +43,4 @@ Logging class should have the following features
 - Which directions were computed as output from PCA/LinApp.
 """
 
-
-#def dump_flowpipe_to_file(flowpipe):
+#def save_flowpipe_to_disk(flowpipe):

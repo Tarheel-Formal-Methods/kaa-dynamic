@@ -9,8 +9,8 @@ Object encapsulating flowpipe data. A flowpipe in this case will be a sequence o
 """
 class FlowPipe:
 
-    def __init__(self, flowpipe, model, strat, label):
-        self.flowpipe = flowpipe
+    def __init__(self, model, strat, label, flowpipe=None):
+        self.flowpipe = [self.model.bund] if flowpipe is None else flowpipe
         self.model = model
         self.strat = strat
         self.vars = model.vars
@@ -37,6 +37,9 @@ class FlowPipe:
     @property
     def total_volume(self):
         return np.sum(self.get_volume_data())
+
+    def append(self, bund):
+        self.flowpipe.append(bund)
 
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
@@ -88,6 +91,9 @@ class FlowPipe:
 
     def __iter__(self):
         return iter(self.flowpipe)
+
+    def __getitem__(self, index):
+        return self.flowpipe[index]
 
     def __str__(self):
         return self.label

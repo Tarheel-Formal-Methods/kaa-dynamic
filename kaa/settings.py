@@ -28,6 +28,9 @@ class KaaSettings:
     'Use random sampling scheme for volume'
     RandVol = False
 
+    'Save the flowpipe when error appears during transformation'
+    SaveStateonError = True
+
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

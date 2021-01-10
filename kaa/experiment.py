@@ -66,8 +66,8 @@ class Experiment:
             flow_label = experi_input['label']
             num_steps = experi_input['num_steps']
 
-            mod_reach = ReachSet(model)
-            mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
+            mod_reach = ReachSet(model, strat=strat, label=flow_label)
+            mod_flow = mod_reach.computeReachSet(num_steps)
             #cProfile.runctx('mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)',None, locals())
             self.plot.add(mod_flow)
             self.output_flowpipes.append(mod_flow)
@@ -82,9 +82,9 @@ class Experiment:
             flow_label = experi_input['label']
             num_steps = experi_input['num_steps']
 
-            mod_reach = ReachSet(model)
+            mod_reach = ReachSet(model, strat=strat, label=flow_label)
             try:
-                mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat, label=flow_label)
+                mod_flow = mod_reach.computeReachSet(num_steps)
                 vol_data.append((flow_label, mod_flow.total_volume))
             except Exception as excep:
                 vol_data.append((flow_label, str(excep)))
@@ -150,8 +150,8 @@ class Animation:
         label = self.experi_input['label']
         num_steps = self.experi_input['num_steps']
 
-        mod_reach = ReachSet(model)
-        mod_flow = mod_reach.computeReachSet(num_steps, tempstrat=strat)
+        mod_reach = ReachSet(model, strat=strat)
+        mod_flow = mod_reach.computeReachSet(num_steps)
         self.animation = TempAnimation(mod_flow)
 
     def animate(self, x, y, *strat):
