@@ -19,85 +19,83 @@ def get_script_path(filename):
     return os.path.dirname(os.path.realpath(filename))
 
 class Kodiak:
-    'static class for interfacing with kodiak'
 
-    initialized = False
+    def __init__(self):
+        self.initialized = False
+        self.variables = {}
 
-    variables = {} # dict of added variables for error checking
-
-    @classmethod
-    def init(cls):
+    def init(self):
         'initialize the static members'
 
-        if not cls.initialized:
-            cls.initialized = True
+        if not self.initialized:
+            self.initialized = True
 
             lib_path = os.path.join(get_script_path(__file__), 'pykodiak.so')
-            cls.lib = ctypes.CDLL(lib_path)
+            self.lib = ctypes.CDLL(lib_path)
 
-            _init = cls.lib.init
+            _init = self.lib.init
             _init.restype = None
             _init.argtypes = []
 
-            cls._use_bernstein = cls.lib.useBernstein
-            cls._use_bernstein.restype = None
-            cls._use_bernstein.argtypes = [ctypes.c_int]
+            self._use_bernstein = self.lib.useBernstein
+            self._use_bernstein.restype = None
+            self._use_bernstein.argtypes = [ctypes.c_int]
 
-            cls._set_precision = cls.lib.setPrecision
-            cls._set_precision.restype = None
-            cls._set_precision.argtypes = [ctypes.c_int]
+            self._set_precision = self.lib.setPrecision
+            self._set_precision.restype = None
+            self._set_precision.argtypes = [ctypes.c_int]
 
-            cls._add_variable = cls.lib.addVariable
-            cls._add_variable.restype = None
-            cls._add_variable.argtypes = [ctypes.c_char_p]
+            self._add_variable = self.lib.addVariable
+            self._add_variable.restype = None
+            self._add_variable.argtypes = [ctypes.c_char_p]
 
-            cls._lookup_variable = cls.lib.lookupVariable
-            cls._lookup_variable.restype = ctypes.c_int
-            cls._lookup_variable.argtypes = [ctypes.c_char_p]
+            self._lookup_variable = self.lib.lookupVariable
+            self._lookup_variable.restype = ctypes.c_int
+            self._lookup_variable.argtypes = [ctypes.c_char_p]
 
-            cls._print_expression = cls.lib.printExpression
-            cls._print_expression.restype = None
-            cls._print_expression.argtypes = [ctypes.c_int]
+            self._print_expression = self.lib.printExpression
+            self._print_expression.restype = None
+            self._print_expression.argtypes = [ctypes.c_int]
 
-            cls._make_double = cls.lib.makeDouble
-            cls._make_double.restype = ctypes.c_int
-            cls._make_double.argtypes = [ctypes.c_double]
+            self._make_double = self.lib.makeDouble
+            self._make_double.restype = ctypes.c_int
+            self._make_double.argtypes = [ctypes.c_double]
 
-            cls._make_mult = cls.lib.makeMult
-            cls._make_mult.restype = ctypes.c_int
-            cls._make_mult.argtypes = [ctypes.c_int, ctypes.c_int]
+            self._make_mult = self.lib.makeMult
+            self._make_mult.restype = ctypes.c_int
+            self._make_mult.argtypes = [ctypes.c_int, ctypes.c_int]
 
-            cls._make_add = cls.lib.makeAdd
-            cls._make_add.restype = ctypes.c_int
-            cls._make_add.argtypes = [ctypes.c_int, ctypes.c_int]
+            self._make_add = self.lib.makeAdd
+            self._make_add.restype = ctypes.c_int
+            self._make_add.argtypes = [ctypes.c_int, ctypes.c_int]
 
-            cls._make_sq = cls.lib.makeSq
-            cls._make_sq.restype = ctypes.c_int
-            cls._make_sq.argtypes = [ctypes.c_int]
+            self._make_sq = self.lib.makeSq
+            self._make_sq.restype = ctypes.c_int
+            self._make_sq.argtypes = [ctypes.c_int]
 
-            cls._make_sqrt = cls.lib.makeSqrt
-            cls._make_sqrt.restype = ctypes.c_int
-            cls._make_sqrt.argtypes = [ctypes.c_int]
+            self._make_sqrt = self.lib.makeSqrt
+            self._make_sqrt.restype = ctypes.c_int
+            self._make_sqrt.argtypes = [ctypes.c_int]
 
-            cls._make_intpow = cls.lib.makeIntPow
-            cls._make_intpow.restype = ctypes.c_int
-            cls._make_intpow.argtypes = [ctypes.c_int, ctypes.c_int]
+            self._make_intpow = self.lib.makeIntPow
+            self._make_intpow.restype = ctypes.c_int
+            self._make_intpow.argtypes = [ctypes.c_int, ctypes.c_int]
 
-            cls._make_sin = cls.lib.makeSin
-            cls._make_sin.restype = ctypes.c_int
-            cls._make_sin.argtypes = [ctypes.c_int]
+            self._make_sin = self.lib.makeSin
+            self._make_sin.restype = ctypes.c_int
+            self._make_sin.argtypes = [ctypes.c_int]
 
-            cls._make_cos = cls.lib.makeCos
-            cls._make_cos.restype = ctypes.c_int
-            cls._make_cos.argtypes = [ctypes.c_int]
+            self._make_cos = self.lib.makeCos
+            self._make_cos.restype = ctypes.c_int
+            self._make_cos.argtypes = [ctypes.c_int]
 
-            cls._make_atan = cls.lib.makeAtan
-            cls._make_atan.restype = ctypes.c_int
-            cls._make_atan.argtypes = [ctypes.c_int]
+            self._make_atan = self.lib.makeAtan
+            self._make_atan.restype = ctypes.c_int
+            self._make_atan.argtypes = [ctypes.c_int]
 
-            cls._minmax_diff = cls.lib.minmax_diff
-            cls._minmax_diff.restype = None
-            cls._minmax_diff.argtypes = [ctypes.c_int, # nonlinear expression
+            self._minmax_diff = self.lib.minmax_diff
+            self._minmax_diff.restype = None
+            self._minmax_diff.argtypes = [ctypes.c_int, # nonlinear expression
                                          ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"), ctypes.c_int,
                                          ctypes.c_double, # bias
                                          ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"), ctypes.c_int,
@@ -105,28 +103,26 @@ class Kodiak:
                                          ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"), ctypes.c_int]
 
             #### initialize with default values ####
-            _init()
-            cls.reset()
+            self._init()
+            self.reset()
 
-    @classmethod
-    def reset(cls):
+    def reset(self):
         '''reset settings to default'''
 
-        cls.use_bernstein(True)
-        cls.set_precision(-6) # 10^-6 precision
+        self.use_bernstein(True)
+        self.set_precision(-6) # 10^-6 precision
 
-    @classmethod
-    def to_expression(cls, str_exp):
+    def to_expression(self, str_exp):
         'convert a string expression to an Kodiak expression object'
 
-        return cls.sympy_to_kodiak(parse_expr(str_exp))
+        return self.sympy_to_kodiak(parse_expr(str_exp))
 
-    @classmethod
-    def minmax_diff(cls, nonlinear_exp_index, linear_approx, linear_bias, bounds):
+
+    def minmax_diff(self, nonlinear_exp_index, linear_approx, linear_bias, bounds):
         ''''return the lower and upper bound of the passed-in nonlinear function minus the linear approximation,
         within the passed-in bounds'''
 
-        cls.init()
+        self.init()
 
         if not isinstance(linear_approx, np.ndarray):
             linear_approx = np.array(linear_approx, dtype=float)
@@ -140,129 +136,129 @@ class Kodiak:
 
         rv = np.array([0, 0, 0, 0], dtype=float)
 
-        cls._minmax_diff(nonlinear_exp_index, linear_approx, len(linear_approx), linear_bias,
+        self._minmax_diff(nonlinear_exp_index, linear_approx, len(linear_approx), linear_bias,
                          bounds, bounds.shape[0], bounds.shape[1], rv, rv.shape[0])
 
         #todo change back
         #return rv[0], rv[1]
         return rv[0], rv[1], rv[2], rv[3]
 
-    @classmethod
-    def use_bernstein(cls, use_bernstein):
+
+    def use_bernstein(self, use_bernstein):
         'should we use bernstein polynomials for optimization (false = interval arithmetic), default: True'
 
-        cls.init()
-        cls._use_bernstein(1 if use_bernstein else 0)
+        self.init()
+        self._use_bernstein(1 if use_bernstein else 0)
 
-    @classmethod
-    def set_precision(cls, precision):
+
+    def set_precision(self, precision):
         'set the prevision for the answer, more negative = more accurage, default: -9 (10^-9)'
 
-        cls.init()
-        cls._set_precision(precision)
+        self.init()
+        self._set_precision(precision)
 
-    @classmethod
-    def add_variable(cls, name):
+
+    def add_variable(self, name):
         'add an optimization variable (should be called in order)'
 
-        cls.init()
-        cls.variables[name] = len(cls.variables)
-        
-        n = name.encode('utf-8')
-        cls._add_variable(n)
+        self.init()
+        self.variables[name] = len(self.variables)
 
-    @classmethod
-    def lookup_variable(cls, name):
+        n = name.encode('utf-8')
+        self._add_variable(n)
+
+
+    def lookup_variable(self, name):
         'lookup the expression index for a variable previously-added with add_variable()'
 
-        cls.init()
+        self.init()
 
-        assert name in cls.variables, f"variable '{name}' must be added first with Kodiak.add_variable()"
+        assert name in self.variables, f"variable '{name}' must be added first with Kodiak.add_variable()"
 
         n = name.encode('utf-8')
-        return cls._lookup_variable(n)
+        return self._lookup_variable(n)
 
-    @classmethod
-    def print_expression(cls, i):
+
+    def print_expression(self, i):
         'print the expression with the given index to stdout'
 
-        cls.init()
-        cls._print_expression(i)
+        self.init()
+        self._print_expression(i)
 
-    @classmethod
-    def make_double(cls, d):
+
+    def make_double(self, d):
         'make and return an expression index for a double number'
 
-        cls.init()
-        return cls._make_double(d)
+        self.init()
+        return self._make_double(d)
 
-    @classmethod
-    def make_mult(cls, a, b):
+
+    def make_mult(self, a, b):
         'make and return an expression index for a multiplication of the two passed-in expression indices'
 
-        cls.init()
-        return cls._make_mult(a, b)
+        self.init()
+        return self._make_mult(a, b)
 
-    @classmethod
-    def make_add(cls, a, b):
+
+    def make_add(self, a, b):
         'make and return an expression index for an addition of the two passed-in expression indices'
 
-        cls.init()
-        return cls._make_add(a, b)
+        self.init()
+        return self._make_add(a, b)
 
-    @classmethod
-    def make_sq(cls, a):
+
+    def make_sq(self, a):
         'make and return an expression index for the square of the the passed-in expression index'
 
-        cls.init()
-        return cls._make_sq(a)
+        self.init()
+        return self._make_sq(a)
 
-    @classmethod
-    def make_sqrt(cls, a):
+
+    def make_sqrt(self, a):
         'make and return an expression index for the square of the the passed-in expression index'
 
-        cls.init()
-        return cls._make_sqrt(a)
+        self.init()
+        return self._make_sqrt(a)
 
-    @classmethod
-    def make_intpow(cls, a, intb):
+
+    def make_intpow(self, a, intb):
         '''make and return an expression index for passed-in expression index raised to the integer intb
         note: intb is an integer, not an expression index
         '''
 
-        cls.init()
-        return cls._make_intpow(a, intb)
+        self.init()
+        return self._make_intpow(a, intb)
 
-    @classmethod
-    def make_sin(cls, a):
+
+    def make_sin(self, a):
         'make and return an expression index for the sine of the the passed-in expression index'
 
-        cls.init()
-        return cls._make_sin(a)
+        self.init()
+        return self._make_sin(a)
 
-    @classmethod
-    def make_cos(cls, a):
+
+    def make_cos(self, a):
         'make and return an expression index for the cosine of the the passed-in expression index'
 
-        cls.init()
-        return cls._make_cos(a)
+        self.init()
+        return self._make_cos(a)
 
-    @classmethod
-    def make_atan(cls, a):
+
+    def make_atan(self, a):
         'make and return an expression index for the atan of the the passed-in expression index'
 
-        cls.init()
-        return cls._make_atan(a)
+        self.init()
+        return self._make_atan(a)
 
-    @classmethod
-    def sympy_to_kodiak(cls, sympy_exp):
+
+    def sympy_to_kodiak(self, sympy_exp):
         '''convert a sympy expression to Kodiak expression
 
         this function actually returns an int, which is the expression index in the c++ 'reals' vector that
         represents the (newly-constructed) expression
         '''
 
-        cls.init()
+        self.init()
 
         rv = None
         e = sympy_exp
@@ -271,52 +267,52 @@ class Kodiak:
             raise RuntimeError("Expected sympy Expr: " + repr(e))
 
         if isinstance(e, Symbol):
-            rv = cls.lookup_variable(e.name)
+            rv = self.lookup_variable(e.name)
 
             if rv is None:
                 raise RuntimeError("No var was corresponds to symbol '" + str(e) + "'")
         elif isinstance(e, Number):
-            rv = cls.make_double(float(e))
+            rv = self.make_double(float(e))
         elif isinstance(e, Mul):
-            rv = cls.sympy_to_kodiak(e.args[0])
+            rv = self.sympy_to_kodiak(e.args[0])
 
             for arg in e.args[1:]:
-                val = cls.sympy_to_kodiak(arg)
-                rv = cls.make_mult(rv, val)
+                val = self.sympy_to_kodiak(arg)
+                rv = self.make_mult(rv, val)
         elif isinstance(e, Add):
-            rv = cls.sympy_to_kodiak(e.args[0])
+            rv = self.sympy_to_kodiak(e.args[0])
 
             for arg in e.args[1:]:
-                val = cls.sympy_to_kodiak(arg)
-                rv = cls.make_add(rv, val)
+                val = self.sympy_to_kodiak(arg)
+                rv = self.make_add(rv, val)
         elif isinstance(e, Pow):
-            term = cls.sympy_to_kodiak(e.args[0])
+            term = self.sympy_to_kodiak(e.args[0])
             exponent = e.args[1]
 
             assert isinstance(exponent, Number), f"exponent must be a number: {e}, (type {type(e)})"
 
             if float(exponent) == 2:
                 # squared
-                rv = cls.make_sq(term)
+                rv = self.make_sq(term)
             elif float(exponent) == 0.5:
                 # sqrt
-                rv = cls.make_sqrt(term)
+                rv = self.make_sqrt(term)
             else:
                 assert float(exponent) == int(exponent), f"exponent must be an integer (or 0.5): {e}"
-                
+
                 # intpow
-                rv = cls.make_intpow(term, exponent)
+                rv = self.make_intpow(term, exponent)
 
             # non-integer powers are not supported in Kodiak
         elif isinstance(e, sin):
-            a = cls.sympy_to_kodiak(e.args[0])
-            rv = cls.make_sin(a)
+            a = self.sympy_to_kodiak(e.args[0])
+            rv = self.make_sin(a)
         elif isinstance(e, cos):
-            a = cls.sympy_to_kodiak(e.args[0])
-            rv = cls.make_cos(a)
+            a = self.sympy_to_kodiak(e.args[0])
+            rv = self.make_cos(a)
         elif isinstance(e, atan):
-            a = cls.sympy_to_kodiak(e.args[0])
-            rv = cls.make_atan(a)
+            a = self.sympy_to_kodiak(e.args[0])
+            rv = self.make_atan(a)
 
         # for all expression supported by Kodiak, see Real.hpp
 
