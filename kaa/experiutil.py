@@ -62,44 +62,34 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
     return np.amax(np.append(max_diff, min_diff))
 
-
-
 def test_strat_comb(model, step_tup, num_steps, num_trials=1, filename="STRATCOMB"):
     NUM_STEPS = num_steps
-    PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
-    LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
-    PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-
+    NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
 
-    pca_dirs = GeneratedPCADirs(model, PCA_NUM_TRAJ, NUM_STEPS+MAX_STEP) #Way to deduce lengeth beforehand
-    lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP)
     pca_iter_steps = step_tup
     lin_iter_steps = step_tup
 
     inputs = []
     for pca_step, lin_step in product(pca_iter_steps, lin_iter_steps): #model tossed around too many times.
-        pca_strat = PCAStrat(model, iter_steps=pca_step, traj_steps=pca_step, pca_dirs=pca_dirs)
-        lin_strat = LinStrat(model, iter_steps=lin_step, lin_dirs=lin_dirs)
+        pca_strat = PCAStrat(model, iter_steps=pca_step)
+        lin_strat = LinStrat(model, iter_steps=lin_step)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"PCA Step {pca_step} and Lin Step {lin_step}",
+                            num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
 
     experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
     experi.execute()
-    experi.generate_spreadsheet()
 
 def test_one_one_strat_pca(model, max_step, num_steps, filename="ONEONEPCA"):
     NUM_STEPS = num_steps
-    PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     MAX_STEP = max_step
-
-    pca_dirs = GeneratedPCADirs(model, PCA_NUM_TRAJ, NUM_STEPS+MAX_STEP) #Way to deduce lengeth beforehand
-    lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP)
 
     inputs = []
     for pca_step in range(2,6): #model tossed around too many times.
@@ -107,22 +97,23 @@ def test_one_one_strat_pca(model, max_step, num_steps, filename="ONEONEPCA"):
         lin_strat1 = LinStrat(model, iter_steps=1, lin_dirs=lin_dirs)
         experi_strat1 = PCAStrat(model, iter_steps=pca_step, traj_steps=pca_step, pca_dirs=pca_dirs)
         experi_input1 = dict(model=model,
-                            strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
-                            label=f"PCA with Box and 1-1 Temp for {pca_step} steps",
-                            num_steps=NUM_STEPS)
+                             strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
+                             label=f"PCA with Box and 1-1 Temp for {pca_step} steps",
+                             num_trajs=NUM_TRAJ,
+                             num_steps=NUM_STEPS)
         inputs.append(experi_input1)
 
     exec_plot_vol_results(Experiment(*inputs), filename)
 
 def test_one_one_strat_lin(model, max_step, num_steps, filename="ONEONELIN"):
     NUM_STEPS = num_steps
-    PCA_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    PCA_NUM_TRAJ = LIN_NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
     MAX_STEP = max_step
 
-    pca_dirs = GeneratedPCADirs(model, PCA_NUM_TRAJ, NUM_STEPS+MAX_STEP) #Way to deduce lengeth beforehand
-    lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP)
+    pca_dirs = GeneratedPCADirs(model, NUM_STEPS+MAX_STEP, PCA_NUM_TRAJ) #Way to deduce lengeth beforehand
+    lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP, LIN_NUM_TRAJ)
 
     inputs = []
     for lin_step in range(2,max_step+1): #model tossed around too many times.
@@ -135,7 +126,8 @@ def test_one_one_strat_lin(model, max_step, num_steps, filename="ONEONELIN"):
                             num_steps=NUM_STEPS)
         inputs.append(experi_input1)
 
-    exec_plot_vol_results(Experiment(*inputs), filename)
+    experi = Experiment(*inputs, label="1-1 Strat Base LinApp Trials")
+    experi.execute()
 
 def test_pca_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
@@ -195,24 +187,20 @@ def test_lin_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN
 def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCOMBSTDEV"):
     NUM_STEPS = num_steps
     MAX_STEP = 1
-
     PCA_ITER_STEPS = 1
     LIN_ITER_STEPS = 1
 
     inputs = []
     for num_trajs in range(400,1000,100): #model tossed around too many times.
-        pca_dirs = GeneratedPCADirs(model, NUM_STEPS+MAX_STEP, num_trajs) #Way to deduce lengeth beforehand
-        lin_dirs = GeneratedLinDirs(model, NUM_STEPS+MAX_STEP, num_trajs)
-
-        pca_strat = PCAStrat(model, iter_steps=PCA_ITER_STEPS, pca_dirs=pca_dirs)
-        lin_strat = LinStrat(model, iter_steps=LIN_ITER_STEPS, lin_dirs=lin_dirs)
+        pca_strat = PCAStrat(model, iter_steps=PCA_ITER_STEPS)
+        lin_strat = LinStrat(model, iter_steps=LIN_ITER_STEPS)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
+                            num_trajs=num_trajs,
                             num_steps=NUM_STEPS)
         
         inputs.append(experi_input)
 
     experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
     experi.execute()
-    experi.generate_spreadsheet()

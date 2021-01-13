@@ -31,6 +31,13 @@ class TempStrategy(ABC):
         pass
 
     """
+    Method to reset all local tabular atributes.
+    """
+    @abstractmethod
+    def reset(self):
+        pass
+
+    """
     Inserts list of direction labels associated to a ptope into the ptope dictonary.
     The method returns a label for the ptope if the name is not specified.
     @params dir_label_list: list of labels to direction composing the template.
@@ -128,6 +135,10 @@ class MultiStrategy(TempStrategy):
         for strat in self.strat_list:
             strat.close_strat(bund, step_num)
 
+    def reset(self):
+        for strat in self.strat_list:
+            strat.reset()
+
     def __str__(self):
         return ' and '.join([str(strat) for strat in self.strat_list])
 
@@ -137,6 +148,7 @@ Wrapper over matrix of pre-generated dirs.
 class GeneratedDirs:
 
     def __init__(self, model, dir_mat):
+        self.model = model
         self.dim = model.dim
         self.dir_mat = dir_mat
 

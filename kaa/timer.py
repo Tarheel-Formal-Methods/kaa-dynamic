@@ -55,7 +55,7 @@ class Timer:
             raise RuntimeError("Previous timer has not been stopped yet or timer has not been instantiated for Timer: {}.".format(label))
 
     @staticmethod
-    def flush_time_stack():
+    def flush_timer_stack():
         timer_stack = []
 
     @staticmethod

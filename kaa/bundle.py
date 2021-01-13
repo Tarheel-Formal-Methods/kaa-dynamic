@@ -210,7 +210,7 @@ class Bundle:
     @returns list of converted labels or label.
     """
     def __get_global_labels(self, asso_strat, labels):
-        return [ str(asso_strat) + label for label in labels ] if isinstance(labels, list) else str(asso_strat) + labels
+        return [str(asso_strat) + label for label in labels] if isinstance(labels, list) else str(asso_strat) + labels
 
     """
     Returns the indices which a list of indices or an index points towrads in the tuple matrix.
@@ -250,7 +250,7 @@ class Bundle:
     """
     def __get_dir_row_from_label(self, dir_label):
         label_indices = self.__get_label_indices(self.labeled_L, dir_label)
-        assert len(label_indices) == 1, f"Every index should have a unique label. Offending list: {label_indices}"
+        assert len(label_indices) == 1, f"Every index should have a unique label. \n Label: {dir_label} \n Offending list: {label_indices}  \n Bundle label dump: \n {self.labeled_L}"
         return label_indices[0]
 
     """
@@ -261,7 +261,6 @@ class Bundle:
     @returns list of lists containing labels pointing to direction matrix rows.
     """
     def __convert_to_labeled_T(self, T):
-
         labeled_T = []
         for temp_row in T:
             labeled_T.append([self.labeled_L[col][1] for col in temp_row.astype(int)])

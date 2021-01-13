@@ -16,7 +16,6 @@ class AbstractLinStrat(TempStrategy):
         self.cond_threshold = cond_threshold
         self.lin_dirs = lin_dirs
         self.num_trajs = num_trajs
-        self.lin_app_ptope_queue = []
 
     def open_strat(self, bund):
         pass
@@ -32,7 +31,6 @@ class AbstractLinStrat(TempStrategy):
              labels for each of those directions.
     """
     def generate_lin_dir(self, bund, step_num):
-
         if self.lin_dirs is None:
             approx_A = self.__approx_A(bund)
             inv_A = np.linalg.inv(approx_A)
@@ -69,35 +67,35 @@ Local linear approximation strategy.
 """
 class LinStrat(AbstractLinStrat):
 
-    def __init__(self, model, iter_steps=2, num_trajs=-1, cond_threshold=7, lin_dirs=None):
-        'Set default num_traj value'
+    def __init__(self, model, iter_steps=1, num_trajs=-1, cond_threshold=7, lin_dirs=None):
         num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
         super().__init__(model, num_trajs, cond_threshold, lin_dirs)
-        
         self.iter_steps = iter_steps
-        self.lin_app_ptope_queue = []
+        self.last_ptope = None
 
     def open_strat(self, bund, step_num):
         if not step_num % self.iter_steps:
             lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num)
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
             
-            self.lin_app_ptope_queue.append(ptope_label)
+            self.last_ptope = ptope_label
             self.unit_dir_mat = lin_dir
 
         return bund
 
     def close_strat(self, bund, step_num):
-        if not step_num % self.iter_steps:
-            if step_num:
-                last_ptope =  self.lin_app_ptope_queue.pop(0)
-                self.rm_ptope_from_bund(bund, last_ptope)
+        if not step_num % self.iter_steps and step_num > 0:
+                self.rm_ptope_from_bund(bund, self.last_ptope)
 
+    def reset(self):
+        self.last_ptope = None
+                
 class SlidingLinStrat(AbstractLinStrat):
 
-    def __init__(self, model, lifespan=1, cond_threshold=7, lin_dirs=None):
+    def __init__(self, model, lifespan=1, num_trajs=-1, cond_threshold=7, lin_dirs=None):
+        num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
         super().__init__(model, cond_threshold, lin_dirs)
-        self.lin_ptope_life = []
+        self.lin_ptope_life_data = {}
         self.lifespan = lifespan
 
     def open_strat(self, bund, step_num):
@@ -105,18 +103,22 @@ class SlidingLinStrat(AbstractLinStrat):
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label, life in self.lin_ptope_life:
-            if life == 0:
+        for ptope_label in self.lin_ptope_life_data:
+            if self.lin_ptope_life_data[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
-
-        self.lin_ptope_life = [(label, life-1) for label, life in self.lin_ptope_life if life > 0]
-
+                self.lin_ptope_life_data.pop(ptope_label)
+            else:
+                self.lin_ptope_life_data[ptope_label] -= 1
+                
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.lin_ptope_life.append((new_ptope_label, self.lifespan)) #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life_data[new_ptope_label] = self.life_span #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
+
+    def reset(self):
+        self.lin_ptope_life_data = {}
 
     def __str__(self):
         return f"SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
@@ -153,7 +155,6 @@ class GeneratedLinDirs(GeneratedDirs):
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
             cond_num = np.linalg.cond(lin_dir)
- 
             if cond_num > self.cond_threshold:
                 norm_lin_dir = normalize_mat(lin_dir)
                 closest_dirs = find_closest_dirs(norm_lin_dir)
@@ -163,7 +164,6 @@ class GeneratedLinDirs(GeneratedDirs):
             self.unit_dir_mat = lin_dir
 
         return generated_lin_dir_mat
-
     
 """
 Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.

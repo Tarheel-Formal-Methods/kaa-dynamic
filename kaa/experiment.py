@@ -8,6 +8,16 @@ from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import PlotSettings, KaaSettings
+from kaa.templates import MultiStrategy
+from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
+from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
+from kaa.timer import Timer
+
+class SpreadSheet:
+
+    def __init__(self, workbook, row_dict):
+        self.workbook = workbook
+        self.row_dict = row_dict
 
 class Experiment:
 
@@ -20,40 +30,94 @@ class Experiment:
         self.model = inputs[0]['model']
         self.label = label
         self.num_trials = num_trials
-        self.results = []
-
+   
+    """
+    Execute experiment and dump results into spreadsheet.
+    """
     def execute(self, experi_type="Volume"):
         if experi_type == "Volume":
-            for trial_num in range(self.num_trials):
-                KaaSettings.RandSeed += trial_num
+            spreadsheet = self.__generate_sheet()
 
-                flow_labels, flow_vols = zip(*self.gather_vol_data())
-                self.results.append(dict(
-                    trial_num=trial_num,
-                    flow_labels=flow_labels,
-                    flow_vols=flow_vols
-                ))
+            for experi_input in self.inputs:
+                experi_strat = experi_input['strat']
+                experi_num_steps = experi_input['num_steps']
+                experi_num_trajs = experi_input['num_trajs']
+                
+                self.__generate_dirs(experi_strat, experi_num_steps, experi_num_trajs)
 
-    def generate_spreadsheet(self):
-        workbook = Workbook()
+                for trial_num in range(self.num_trials):
+                    print(f"RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num}")
+                    flow_label, flow_vol = self.__gather_vol_data(experi_input)
+                    self.__save_data_into_sheet(spreadsheet, trial_num, flow_label, flow_vol)
+
+                    self.__update_seed()
+                    experi_strat.reset()
+                    self.__generate_dirs(experi_strat, experi_num_steps, experi_num_trajs)
+
+    """
+    Saves data into a desired cell in spreadsheet.
+    """
+    def __save_data_into_sheet(self, spreadsheet, trial_num, flow_label, data):
+        workbook = spreadsheet.workbook
+        row_dict = spreadsheet.row_dict
+
+        column_offset = trial_num
+        row_offset = row_dict[flow_label]
+
         sheet = workbook.active
+        sheet[chr(66 + column_offset) + str(row_offset)] = data
 
-        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(self.num_trials)] + ["Mean", "Stdev"])
-        'Initialize label-row dictionary'
-        row_dict = {label : row_idx + 2 for row_idx, label in enumerate(self.results[0]['flow_labels'])}
-        total_num_trials = len(self.results)
-
-        for result in self.results:
-            trial_num = result['trial_num']
-            for flow_label, flow_vol in zip(result['flow_labels'], result['flow_vols']):
-                row = str(row_dict[flow_label])
-                sheet['A' + row] = flow_label
-                sheet[chr(66 + trial_num) + row] = flow_vol
-                sheet[chr(66 + total_num_trials) + row] = f"=AVERAGE(B{row}:{chr(66 + total_num_trials - 1)}{row})"
-                sheet[chr(66 + total_num_trials + 1) + row] = f"=STDEV(B{row}:{chr(66 + total_num_trials - 1)}{row})"
+        if column_offset == self.num_trials - 1:
+            sheet[chr(66 + self.num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
+            sheet[chr(66 + self.num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
 
         workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
-        return workbook
+
+    """
+    Pre-generates directions based on the current global seed for Random.
+    """
+    def __generate_dirs(self, strat, num_steps, num_trajs):
+        if isinstance(strat, MultiStrategy):
+            for st in strat.strats:
+                self.__generate_dirs_by_strat(st, num_steps, num_trajs)
+        else:
+            self.__generate_dirs_by_strat(strat, num_steps, num_trajs)
+
+    """
+    Auxiliary method to generate directions based on strategy type.
+    """
+    def __generate_dirs_by_strat(self, strat, num_steps, num_trajs):
+        if isinstance(strat, AbstractPCAStrat):
+            strat.pca_dirs = GeneratedPCADirs(strat.model, num_steps, num_trajs)
+        elif isinstance(strat, AbstractLinStrat):
+            strat.lin_dirs = GeneratedLinDirs(strat.model, num_steps, num_trajs)
+        else:
+            raise RuntimeError("Strategies have to be a PCAStrat or a LinStrat")
+
+    """
+    Initializes openpyxl spreadsheet to dump resulting data.
+    """
+    def __generate_sheet(self):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(self.num_trials)] + ["Mean", "Stdev"])
+        
+        'Initialize label-row dictionary'
+        row_dict = {experi_input['label'] : row_idx + 2 for row_idx, experi_input in enumerate(self.inputs)}
+
+        for experi_input in self.inputs:
+            flow_label = experi_input['label']
+            row = row_dict[flow_label]
+            sheet['A' + str(row)] = flow_label
+
+        workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
+        return SpreadSheet(workbook, row_dict)
+
+    """
+    Update global random seed.
+    """
+    def __update_seed(self, offset=1):
+        KaaSettings.RandSeed += offset
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
@@ -74,24 +138,19 @@ class Experiment:
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
 
-    def gather_vol_data(self):
-        vol_data = []
-        for experi_idx, experi_input in enumerate(self.inputs):
-            model = experi_input['model']
-            strat = experi_input['strat']
-            flow_label = experi_input['label']
-            num_steps = experi_input['num_steps']
+    def __gather_vol_data(self, experi_input):
+        model = experi_input['model']
+        strat = experi_input['strat']
+        flow_label = experi_input['label']
+        num_steps = experi_input['num_steps']
 
-            mod_reach = ReachSet(model, strat=strat, label=flow_label)
-            try:
-                mod_flow = mod_reach.computeReachSet(num_steps)
-                vol_data.append((flow_label, mod_flow.total_volume))
-            except Exception as excep:
-                raise
-                vol_data.append((flow_label, str(excep)))
-
-                
-        return vol_data
+        mod_reach = ReachSet(model, strat=strat, label=flow_label)
+        try:
+            mod_flow = mod_reach.computeReachSet(num_steps)
+            return (flow_label, mod_flow.total_volume)
+        except Exception as excep:
+            raise
+            return (flow_label, str(excep))
 
     """
     Plot the results fed into the Plot object
