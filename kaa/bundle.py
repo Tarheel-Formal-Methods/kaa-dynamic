@@ -60,7 +60,7 @@ class Bundle:
     @property
     def ptopes(self):
         return [self.getParallelotope(i) for i in range(self.num_temp)]
-    
+
     """
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
@@ -170,23 +170,23 @@ class Bundle:
 
         new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
         new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
-        
+
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
         self.num_dir = len(self.labeled_L)
-        
+
     """
     Remove specified direction entries from directions matrix from their labels.
     @params temp_idx: list of indices specifying row indices in directions matrix
     """
     def remove_dirs(self, asso_strat, labels):
-    
+
         label_indices = self.__get_label_indices(self.labeled_L, self.__get_global_labels(asso_strat, labels))
 
         #print(f"RemoveDir: Labels: {global_labels}")
         #print(f"labeled_L: {self.labeled_L}")
         #print(f"Mask: {label_indices}")
-        
+
         self.labeled_L = np.delete(self.labeled_L, label_indices, axis=0)
         self.num_dir = len(self.labeled_L)
 
@@ -276,10 +276,10 @@ class Bundle:
         new_L = np.copy(self.L)
         new_offu = np.copy(self.offu)
         new_offl = np.copy(self.offl)
-        
+
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
     """
-    
+
 """
 Wrapper over bundle transformation modes.
 """
@@ -303,6 +303,21 @@ class BundleTransformer:
         self.vars = model.vars
         self.ofo_mode = mode
 
+
+    def bound_worker(self, row_ind, row, bund, L, output_queue):
+        'Find the generator of the parallelotope.'
+        ptope = bund.getParallelotope(row_ind)
+        #print(f"Ptope {row_ind}\n")
+
+        'Toggle iterators between OFO/AFO'
+        direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
+        #print(f"Num of directions: {bund.num_dir}")
+
+        for column in direct_iter:
+            curr_L = L[column]
+            ub, lb = self.__find_bounds(curr_L, ptope, bund)
+            output_queue.put((column, ub, lb))
+
     """
     Transforms the bundle according to the dynamics governing the system. (dictated by self.f)
 
@@ -315,21 +330,17 @@ class BundleTransformer:
         new_offu = np.full(bund.num_dir, np.inf)
         new_offl = np.full(bund.num_dir, np.inf)
 
-        for row_ind, row in enumerate(T):
-            'Find the generator of the parallelotope.'
-            ptope = bund.getParallelotope(row_ind)
-            #print(f"Ptope {row_ind}\n")
+        output_queue = mp.Manager().Queue()
+        input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]
 
-            'Toggle iterators between OFO/AFO'
-            direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
-            #print(f"Num of directions: {bund.num_dir}")
+        p = mp.Pool(processes=5)
+        p.starmap(self.bound_worker, input_params)
+        p.close()
+        p.join()
 
-            for column in direct_iter:
-                curr_L = L[column]
-                ub, lb = self.__find_bounds(curr_L, ptope, bund)
-
-                new_offu[column] = min(ub, new_offu[column])
-                new_offl[column] = min(lb, new_offl[column])
+        for column, ub, lb in queue_to_list(output_queue):
+            new_offu[column] = min(ub, new_offu[column])
+            new_offl[column] = min(lb, new_offl[column])
 
         bund.offu = new_offu
         bund.offl = new_offl
@@ -355,7 +366,7 @@ class BundleTransformer:
         var_sub = [(var, genFun[var_ind]) for var_ind, var in enumerate(self.vars)]
 
         #print(f"Variable Sub for {dir_vec}: {var_sub}")
-        
+
         Timer.start('Functional Composition')
         fog = [func.subs(var_sub, simultaneous=True) for func in self.f]
         Timer.stop('Functional Composition')
@@ -365,7 +376,6 @@ class BundleTransformer:
         for coeff_idx, coeff in enumerate(dir_vec):
             bound_polyu += coeff * fog[coeff_idx]
 
-        'Calculate min/max Bernstein coefficients.'
         Timer.start('Bound Computation')
         ub, lb = OptProd(bound_polyu, bund).getBounds()
         Timer.stop('Bound Computation')

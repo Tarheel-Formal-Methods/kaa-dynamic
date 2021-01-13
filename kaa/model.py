@@ -28,9 +28,5 @@ class Model:
         'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
 
-        if KaaSettings.OptProd is KodiakProd:
-            for var in self.vars:
-                Kodiak.add_variable(str(var))
-
     def __str__(self):
         return self.name
