@@ -125,7 +125,6 @@ def test_delayed_pca_VDP():
 def test_ani_pca_VDP():
 
     NUM_STEPS = 70
-
     #model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
@@ -179,26 +178,15 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_strat_comb(unit_model,(1,3,5), 10)
 
-    test_strat_comb(unit_model,(1,3,5), 10, num_trials=3)
-        #test_one_one_strat_pca(unit_model, 5, 1, filename=f"OneOnePCA(Trial{i})")
-        #test_one_one_strat_lin(unit_model, 5, 1, filename=f"OneOneLin(Trial{i})")
-
-def test_pca_life_VDP():
+def test_sliding_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 10
+    test_sliding_pca(unit_model, 20, 70)
 
-    for i in range(2,trial_nums):
-        KaaSettings.RandSeed = 897987178 + i
-        test_pca_life(unit_model, 20, 70, filename=f"SlidingPCA(Trial {i})")
-
-def test_lin_life_VDP():
+def test_sliding_lin_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    trial_nums = 10
-
-    for i in range(5,trial_nums):
-        KaaSettings.RandSeed = 897987178 + i
-        test_lin_life(unit_model, 20, 70, filename=f"SlidingLin(Trial {i})")
+    test_sliding_lin(unit_model, 20, 70)
 
 def test_strat_comb_stdev_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

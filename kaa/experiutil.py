@@ -125,7 +125,7 @@ def test_one_one_strat_lin(model, max_step, num_steps, num_trials=10, filename="
     experi = Experiment(*inputs, label="1-1 Strat Base LinApp Trials", num_trials=num_trials)
     experi.execute()
 
-def test_pca_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGPCA"):
+def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
@@ -153,7 +153,7 @@ def test_pca_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGPCA
     experi = Experiment(*inputs, label=f"SlidingPCA with NUM_TRAJ:{NUM_TRAJ}", num_trials=num_trials)
     experi.execute()
 
-def test_lin_life(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN"):
+def test_sliding_lin(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
