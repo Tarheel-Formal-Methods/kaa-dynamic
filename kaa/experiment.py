@@ -30,7 +30,7 @@ class Experiment:
         self.model = inputs[0]['model']
         self.label = label
         self.num_trials = num_trials
-   
+
     """
     Execute experiment and dump results into spreadsheet.
     """
@@ -42,7 +42,7 @@ class Experiment:
                 experi_strat = experi_input['strat']
                 experi_num_steps = experi_input['num_steps']
                 experi_num_trajs = experi_input['num_trajs']
-                
+
                 self.__generate_dirs(experi_strat, experi_num_steps, experi_num_trajs)
 
                 for trial_num in range(self.num_trials):
@@ -101,7 +101,7 @@ class Experiment:
         workbook = Workbook()
         sheet = workbook.active
         sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(self.num_trials)] + ["Mean", "Stdev"])
-        
+
         'Initialize label-row dictionary'
         row_dict = {experi_input['label'] : row_idx + 2 for row_idx, experi_input in enumerate(self.inputs)}
 

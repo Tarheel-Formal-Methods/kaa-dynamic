@@ -305,7 +305,14 @@ class BundleTransformer:
         self.vars = model.vars
         self.ofo_mode = mode
 
-
+    """
+    Worker for parallelized bundle transformation. Each template's transformed is mapped to one process.
+    @params: row_ind: index of row in T matrix
+             row: corresponding row in T containing row indices in directions matrix L
+             bund: Bundle object
+             L: directions matrix
+             output_queue: shared Manager.Queue object between processes
+    """
     def bound_worker(self, row_ind, row, bund, L, output_queue):
         'Find the generator of the parallelotope.'
         ptope = bund.getParallelotope(row_ind)
@@ -335,7 +342,7 @@ class BundleTransformer:
         output_queue = mp.Manager().Queue()
         input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]
 
-        p = mp.Pool(processes=5)
+        p = mp.Pool(processes=6)
         p.starmap(self.bound_worker, input_params)
         p.close()
         p.join()
