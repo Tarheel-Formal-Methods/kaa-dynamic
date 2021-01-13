@@ -190,4 +190,4 @@ def test_sliding_lin_VDP():
 
 def test_strat_comb_stdev_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_comb_stdev_reduction(unit_model, 2)
+    test_comb_stdev_reduction(unit_model, 70)

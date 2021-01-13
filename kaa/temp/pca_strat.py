@@ -62,7 +62,7 @@ class PCAStrat(AbstractPCAStrat):
 
     def reset(self):
         self.last_ptope = None
-        
+
     def __str__(self):
         return f"PCAStrat(Steps:{self.iter_steps})" if self.strat_order is None else f"PCAStrat{self.strat_order}(Steps:{self.iter_steps})"
 
@@ -83,12 +83,11 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label in self.pca_ptope_life_data:
+        for ptope_label in list(self.pca_ptope_life_data.keys()):
+            self.pca_ptope_life_data[ptope_label] -= 1
             if self.pca_ptope_life_data[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.pca_ptope_life_data.pop(ptope_label)
-            else:
-                self.pca_ptope_life_data[ptope_label] -= 1
 
         #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
         #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))

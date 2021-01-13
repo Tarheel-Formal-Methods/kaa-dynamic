@@ -77,7 +77,7 @@ class LinStrat(AbstractLinStrat):
         if not step_num % self.iter_steps:
             lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num)
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
-            
+
             self.last_ptope = ptope_label
             self.unit_dir_mat = lin_dir
 
@@ -89,7 +89,7 @@ class LinStrat(AbstractLinStrat):
 
     def reset(self):
         self.last_ptope = None
-                
+
 class SlidingLinStrat(AbstractLinStrat):
 
     def __init__(self, model, lifespan=1, num_trajs=-1, cond_threshold=7, lin_dirs=None):
@@ -103,13 +103,12 @@ class SlidingLinStrat(AbstractLinStrat):
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label in self.lin_ptope_life_data:
+        for ptope_label in list(self.lin_ptope_life_data.keys()):
+            self.lin_ptope_life_data[ptope_label] -= 1
             if self.lin_ptope_life_data[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.lin_ptope_life_data.pop(ptope_label)
-            else:
-                self.lin_ptope_life_data[ptope_label] -= 1
-                
+
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
@@ -149,7 +148,7 @@ class GeneratedLinDirs(GeneratedDirs):
 
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step+1]) for t in trajs]
-            
+
             approx_A = approx_lin_trans(start_end_tup, self.num_trajs, dim)
             inv_A = np.linalg.inv(approx_A)
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
@@ -164,7 +163,7 @@ class GeneratedLinDirs(GeneratedDirs):
             self.unit_dir_mat = lin_dir
 
         return generated_lin_dir_mat
-    
+
 """
 Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.
 Uses np.linalg.lstsq to accomplish this.

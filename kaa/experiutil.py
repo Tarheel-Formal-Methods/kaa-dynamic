@@ -189,7 +189,7 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCO
     LIN_ITER_STEPS = 1
 
     inputs = []
-    for num_trajs in range(400,1000,100): #model tossed around too many times.
+    for num_trajs in range(1000,4000,1000): #model tossed around too many times.
         pca_strat = PCAStrat(model, iter_steps=PCA_ITER_STEPS)
         lin_strat = LinStrat(model, iter_steps=LIN_ITER_STEPS)
         experi_input = dict(model=model,
