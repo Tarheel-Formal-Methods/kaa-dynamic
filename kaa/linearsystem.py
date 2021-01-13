@@ -72,7 +72,7 @@ class LinearSystem:
         vertices = np.asarray(hs.intersections)
 
         return vertices
-    
+
     """
     Maxmize optimization function y over Ax \leq b
     @params y: linear function to optimize over
@@ -110,7 +110,7 @@ class LinearSystem:
     """
     def __calc_envelop_box(self):
         box_interval = np.empty((self.dim,2))
-    
+
         for i in range(self.dim):
             y = np.zeros(self.dim)
             y[i] = 1

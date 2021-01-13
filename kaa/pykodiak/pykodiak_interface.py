@@ -33,9 +33,9 @@ class Kodiak:
             lib_path = os.path.join(get_script_path(__file__), 'pykodiak.so')
             self.lib = ctypes.CDLL(lib_path)
 
-            _init = self.lib.init
-            _init.restype = None
-            _init.argtypes = []
+            self._init = self.lib.init
+            self._init.restype = None
+            self._init.argtypes = []
 
             self._use_bernstein = self.lib.useBernstein
             self._use_bernstein.restype = None

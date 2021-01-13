@@ -1,7 +1,9 @@
 import numpy as np
 import sympy as sp
-from enum import Enum
+import multiprocessing as mp
 import warnings
+from enum import Enum
+
 
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
@@ -338,7 +340,7 @@ class BundleTransformer:
         p.close()
         p.join()
 
-        for column, ub, lb in queue_to_list(output_queue):
+        for column, ub, lb in self.queue_to_list(output_queue):
             new_offu[column] = min(ub, new_offu[column])
             new_offl[column] = min(lb, new_offl[column])
 
@@ -381,3 +383,10 @@ class BundleTransformer:
         Timer.stop('Bound Computation')
 
         return ub, -1 * lb
+
+    def queue_to_list(self, mp_queue):
+        output_list = []
+        while(mp_queue.qsize() != 0):
+            output_list.append(mp_queue.get())
+
+        return output_list

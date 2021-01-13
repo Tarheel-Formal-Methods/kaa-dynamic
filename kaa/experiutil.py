@@ -199,7 +199,7 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCO
                             label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
                             num_trajs=num_trajs,
                             num_steps=NUM_STEPS)
-        
+
         inputs.append(experi_input)
 
     experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
