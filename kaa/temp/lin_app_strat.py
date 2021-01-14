@@ -94,7 +94,7 @@ class SlidingLinStrat(AbstractLinStrat):
 
     def __init__(self, model, lifespan=1, num_trajs=-1, cond_threshold=7, lin_dirs=None):
         num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
-        super().__init__(model, cond_threshold, lin_dirs)
+        super().__init__(model, num_trajs, cond_threshold, lin_dirs)
         self.lin_ptope_life_data = {}
         self.lifespan = lifespan
 

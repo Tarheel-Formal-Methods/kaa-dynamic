@@ -35,7 +35,7 @@ class Parallelotope(LinearSystem):
         Timer.stop('Generator Procedure')
 
         return expr_list
-    
+
     """
     Calculate generators as substraction: vertices - base_vertex.
     We calculate the vertices by solving the following linear system for each vertex i:
@@ -56,7 +56,8 @@ class Parallelotope(LinearSystem):
     @returns generator vectors g_j
     """
     def _computeGenerators(self, base_vertex):
-        
+
+        """
         'Hacky way to toggle parallelism for experiments'
         if KaaSettings.use_parallel:
             p = mp.Pool(processes=4)
@@ -64,9 +65,10 @@ class Parallelotope(LinearSystem):
             p.close()
             p.join()
         else:
-            vertices = []
-            for i in range(self.dim):
-               vertices.append(self._gen_worker(i, self.u_b, self.u_A))
+        """
+        vertices = []
+        for i in range(self.dim):
+            vertices.append(self._gen_worker(i, self.u_b, self.u_A))
 
         vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
         #print("Vertex List For Paratope: {} \n".format(vertices))

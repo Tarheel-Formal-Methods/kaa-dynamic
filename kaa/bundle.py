@@ -342,10 +342,17 @@ class BundleTransformer:
         output_queue = mp.Manager().Queue()
         input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]
 
-        p = mp.Pool(processes=6)
-        p.starmap(self.bound_worker, input_params)
-        p.close()
-        p.join()
+        if KaaSettings.use_parallel:
+
+            p = mp.Pool(processes=6)
+            p.starmap(self.bound_worker, input_params)
+            p.close()
+            p.join()
+
+        else:
+            for param in input_params:
+                row_ind, row, bund, L, output_queue = param
+                self.bound_worker(row_ind, row, bund, L, output_queue)
 
         for column, ub, lb in self.queue_to_list(output_queue):
             new_offu[column] = min(ub, new_offu[column])

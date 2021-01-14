@@ -63,7 +63,7 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
 def test_strat_comb(model, step_tup, num_steps, num_trials=10, filename="STRATCOMB"):
     NUM_STEPS = num_steps
-    NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    NUM_TRAJ = 2000 #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
 
     pca_iter_steps = step_tup
@@ -127,9 +127,10 @@ def test_one_one_strat_lin(model, max_step, num_steps, num_trials=10, filename="
 
 def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
-    NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
+    NUM_TRAJ = 2000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
     LIFE_INCREMENT = life_incre
+
 
     inputs = []
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
@@ -140,8 +141,8 @@ def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, fi
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
-
-    for lifespan in range(LIFE_INCREMENT - 1, 0, -1): #model tossed around too many times.
+    """
+    for lifespan in range(1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
@@ -149,11 +150,12 @@ def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, fi
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
+    """
 
-    experi = Experiment(*inputs, label=f"SlidingPCA with NUM_TRAJ:{NUM_TRAJ}", num_trials=num_trials)
+    experi = Experiment(*inputs, label=f"UpperSlidingPCA with NUM_TRAJ:{NUM_TRAJ}", num_trials=num_trials)
     experi.execute()
 
-def test_sliding_lin(model, max_life, num_steps, life_incre=5, filename="SLIDINGLIN"):
+def test_sliding_lin(model, max_life, num_steps, num_trials=10, life_incre=5, filename="SLIDINGLIN"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
