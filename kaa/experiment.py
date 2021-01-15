@@ -24,7 +24,6 @@ class Experiment:
     def __init__(self, *inputs, label="Experiment", num_trials=1):
         self.inputs = inputs
         self.plot = Plot()
-        self.max_num_steps = 0
 
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0]['model']
@@ -36,23 +35,59 @@ class Experiment:
     """
     def execute(self, experi_type="Volume"):
         if experi_type == "Volume":
+            num_steps = max(*[input['num_steps'] for input in self.inputs])
+            num_trajs = max(*[input['num_trajs'] for input in self.inputs])
+
             spreadsheet = self.__generate_sheet()
+            gen_dirs = self.__generate_dirs(self.model, num_steps, num_trajs, self.num_trials)
 
             for experi_input in self.inputs:
                 experi_strat = experi_input['strat']
-                experi_num_steps = experi_input['num_steps']
-                experi_num_trajs = experi_input['num_trajs']
 
-                self.__generate_dirs(experi_strat, experi_num_steps, experi_num_trajs)
-
+                self.__assign_dirs(experi_strat, num_steps, num_trajs, 0, gen_dirs)
                 for trial_num in range(self.num_trials):
-                    print(f"RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num}")
+                    print(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
                     flow_label, flow_vol = self.__gather_vol_data(experi_input)
                     self.__save_data_into_sheet(spreadsheet, trial_num, flow_label, flow_vol)
 
-                    self.__update_seed()
                     experi_strat.reset()
-                    self.__generate_dirs(experi_strat, experi_num_steps, experi_num_trajs)
+                    self.__assign_dirs(experi_strat, num_steps, num_trajs, trial_num + 1, gen_dirs)
+
+    """
+    Assign directions based on pre-generated directions for each trial.
+    """
+    def __assign_dirs(self, strat, num_steps, num_trajs, trial_num, gen_dirs):
+        if isinstance(strat, MultiStrategy):
+            for st in strat.strats:
+                self.__assign_dirs_by_strat(st, num_steps, num_trajs, trial_num, gen_dirs)
+        else:
+            self.__assign_dirs_by_strat(strat, num_steps, num_trajs, trial_num, gen_dirs)
+
+    """
+    Auxiliary method to assign directions based on strategy type.
+    """
+    def __assign_dirs_by_strat(self, strat, num_steps, num_trajs, trial_num, gen_dirs):
+        if isinstance(strat, AbstractPCAStrat):
+            strat.pca_dirs = gen_dirs[trial_num][0]
+        elif isinstance(strat, AbstractLinStrat):
+            strat.lin_dirs = gen_dirs[trial_num][1]
+        else:
+            raise RuntimeError("Strategies have to be of either PCA, LinApp type.")
+
+    """
+    Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
+    """
+    def __generate_dirs(self, model, num_steps, num_trajs, num_trials):
+        generated_dirs = []
+        for trial_num in range(self.num_trials):
+            print(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS")
+            self.__update_seed()
+            gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
+            gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
+            generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
+
+        self.__reset_seed()
+        return generated_dirs
 
     """
     Saves data into a desired cell in spreadsheet.
@@ -72,27 +107,6 @@ class Experiment:
             sheet[chr(66 + self.num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
 
         workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
-
-    """
-    Pre-generates directions based on the current global seed for Random.
-    """
-    def __generate_dirs(self, strat, num_steps, num_trajs):
-        if isinstance(strat, MultiStrategy):
-            for st in strat.strats:
-                self.__generate_dirs_by_strat(st, num_steps, num_trajs)
-        else:
-            self.__generate_dirs_by_strat(strat, num_steps, num_trajs)
-
-    """
-    Auxiliary method to generate directions based on strategy type.
-    """
-    def __generate_dirs_by_strat(self, strat, num_steps, num_trajs):
-        if isinstance(strat, AbstractPCAStrat):
-            strat.pca_dirs = GeneratedPCADirs(strat.model, num_steps, num_trajs)
-        elif isinstance(strat, AbstractLinStrat):
-            strat.lin_dirs = GeneratedLinDirs(strat.model, num_steps, num_trajs)
-        else:
-            raise RuntimeError("Strategies have to be a PCAStrat or a LinStrat")
 
     """
     Initializes openpyxl spreadsheet to dump resulting data.
@@ -118,6 +132,12 @@ class Experiment:
     """
     def __update_seed(self, offset=1):
         KaaSettings.RandSeed += offset
+
+    """
+    Reset global random seed.
+    """
+    def __reset_seed(self):
+        KaaSettings.RandSeed = 897987178
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
