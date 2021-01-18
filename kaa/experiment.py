@@ -8,9 +8,10 @@ from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import PlotSettings, KaaSettings
-from kaa.templates import MultiStrategy
+from kaa.templates import MultiStrategy, GeneratedDirs
 from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
+from kaa.log import Output
 from kaa.timer import Timer
 
 class SpreadSheet:
@@ -18,6 +19,39 @@ class SpreadSheet:
     def __init__(self, workbook, row_dict):
         self.workbook = workbook
         self.row_dict = row_dict
+
+class DirSaveLoader:
+
+    @staticmethod
+    def load_dirs(model, num_steps, num_trajs, seed):
+        pca_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
+        lin_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
+
+        pca_gendir_obj_list = DirSaveLoader.wrap_dirs(model, pca_dirs_from_file)
+        lin_gendir_obj_list = DirSaveLoader.wrap_dirs(model, lin_dirs_from_file)
+
+        return list(zip(pca_gendir_obj_list, lin_gendir_obj_list))
+    
+    @staticmethod
+    def save_dirs(model, num_steps, num_trajs, seed, gen_dirs_list):
+        pca_dir_stack, lin_dir_stack = zip(*gen_dirs_list)
+
+        pca_dir_stack = [gen_dirs.dir_mat for gen_dirs in pca_dir_stack]
+        lin_dir_stack = [gen_dirs.dir_mat for gen_dirs in lin_dir_stack]
+
+        pca_data_to_save = np.column_stack([dirs.flatten() for dirs in pca_dir_stack])
+        lin_data_to_save = np.column_stack([dirs.flatten() for dirs in lin_dir_stack])
+
+        np.savetxt(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"), pca_data_to_save, delimiter=',')
+        np.savetxt(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"), lin_data_to_save, delimiter=',')
+
+    def load_and_reshape(model, datapath):
+        dir_from_file = np.loadtxt(datapath, delimiter=',', unpack=True)
+        return [dir_mat.reshape((-1, model.dim)) for dir_mat in dir_from_file]
+
+    def wrap_dirs(model, dir_mat_list):
+        return [GeneratedDirs.from_mat(model, mat) for mat in dir_mat_list]
+
 
 class Experiment:
 
@@ -39,34 +73,34 @@ class Experiment:
             num_trajs = max(*[input['num_trajs'] for input in self.inputs])
 
             spreadsheet = self.__generate_sheet()
-            gen_dirs = self.__generate_dirs(self.model, num_steps, num_trajs, self.num_trials)
+            gen_dirs = self.__load_dirs(self.model, num_steps, num_trajs, self.num_trials)
 
             for experi_input in self.inputs:
                 experi_strat = experi_input['strat']
 
-                self.__assign_dirs(experi_strat, num_steps, num_trajs, 0, gen_dirs)
                 for trial_num in range(self.num_trials):
-                    print(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
+                    Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
+                    self.__assign_dirs(experi_strat, trial_num, gen_dirs)
+                    
                     flow_label, flow_vol = self.__gather_vol_data(experi_input)
                     self.__save_data_into_sheet(spreadsheet, trial_num, flow_label, flow_vol)
 
                     experi_strat.reset()
-                    self.__assign_dirs(experi_strat, num_steps, num_trajs, trial_num + 1, gen_dirs)
 
     """
     Assign directions based on pre-generated directions for each trial.
     """
-    def __assign_dirs(self, strat, num_steps, num_trajs, trial_num, gen_dirs):
+    def __assign_dirs(self, strat, trial_num, gen_dirs):
         if isinstance(strat, MultiStrategy):
             for st in strat.strats:
-                self.__assign_dirs_by_strat(st, num_steps, num_trajs, trial_num, gen_dirs)
+                self.__assign_dirs_by_strat(st, trial_num, gen_dirs)
         else:
-            self.__assign_dirs_by_strat(strat, num_steps, num_trajs, trial_num, gen_dirs)
+            self.__assign_dirs_by_strat(strat, trial_num, gen_dirs)
 
     """
     Auxiliary method to assign directions based on strategy type.
     """
-    def __assign_dirs_by_strat(self, strat, num_steps, num_trajs, trial_num, gen_dirs):
+    def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
         if isinstance(strat, AbstractPCAStrat):
             strat.pca_dirs = gen_dirs[trial_num][0]
         elif isinstance(strat, AbstractLinStrat):
@@ -75,16 +109,31 @@ class Experiment:
             raise RuntimeError("Strategies have to be of either PCA, LinApp type.")
 
     """
+    Method to load pre-generated directions from data directory. If not, pre-generate with supplied parameters and save to the data directory.
+    """
+    def __load_dirs(self, model, num_steps, num_trajs, num_trials):
+        try:
+            gen_dirs = DirSaveLoader.load_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed)
+            Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
+        except IOError:
+            Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
+            gen_dirs = self.__generate_dirs(self.model, num_steps, num_trajs, self.num_trials)
+            Output.prominent("SAVING TO DISK.")
+            DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
+            
+        return gen_dirs
+
+    """
     Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
     """
     def __generate_dirs(self, model, num_steps, num_trajs, num_trials):
         generated_dirs = []
         for trial_num in range(self.num_trials):
-            print(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS")
-            self.__update_seed()
+            Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
             generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
+            self.__update_seed()
 
         self.__reset_seed()
         return generated_dirs

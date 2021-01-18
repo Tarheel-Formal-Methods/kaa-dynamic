@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from termcolor import cprint
 
 '''
 Basic logger utility module for debugging purposes.
@@ -20,13 +21,13 @@ class DebugCodes(Enum):
     PROJ_MINMAX = auto()
 
 _Debug_Strings = {
-Debug.MINMAX: 'Min/Max points for Parall {0}: {1}    {2}',
-Debug.POLY:  'UPoly: {0}   LPoly: {1}',
-Debug.LOCAL_BOUND: 'MaxB: {0}   MinB: {1}    for P: {2}',
-Debug.GLOBAL_BOUND: 'New Offu: {0}    New Offl: {1}',
-Debug.STEP: 'STEP: {0} \n ----------------------------------------------',
-Debug.A_B: 'A:  {0}  \n\n  b: {1}',
-Debug.PROJ_MINMAX: 'STEP {0}: \n  MIN: {1}   MAX: {2}'
+DebugCodes.MINMAX: 'Min/Max points for Parall {0}: {1}    {2}',
+DebugCodes.POLY:  'UPoly: {0}   LPoly: {1}',
+DebugCodes.LOCAL_BOUND: 'MaxB: {0}   MinB: {1}    for P: {2}',
+DebugCodes.GLOBAL_BOUND: 'New Offu: {0}    New Offl: {1}',
+DebugCodes.STEP: 'STEP: {0} \n ----------------------------------------------',
+DebugCodes.A_B: 'A:  {0}  \n\n  b: {1}',
+DebugCodes.PROJ_MINMAX: 'STEP {0}: \n  MIN: {1}   MAX: {2}'
 }
 
 def write_log(*args):
@@ -43,4 +44,12 @@ Logging class should have the following features
 - Which directions were computed as output from PCA/LinApp.
 """
 
-#def save_flowpipe_to_disk(flowpipe):
+class Output:
+
+    @staticmethod
+    def warning(output):
+        cprint(output.upper(), 'red', attrs=['blink'])
+
+    @staticmethod
+    def prominent(output):
+        cprint(output.upper(), 'white', attrs=['bold'])

@@ -31,6 +31,8 @@ class KaaSettings:
     'Save the flowpipe when error appears during transformation'
     SaveStateonError = True
 
+    DataDir = "/Users/edwardkim/Work/kaa-optimize/data"
+
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

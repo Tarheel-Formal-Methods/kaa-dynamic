@@ -151,6 +151,11 @@ class GeneratedDirs:
         self.model = model
         self.dim = model.dim
         self.dir_mat = dir_mat
+        self.num_steps = len(dir_mat)
+
+    @classmethod
+    def from_mat(cls, model, dir_mat):
+        return cls(model, dir_mat)
 
     def get_dirs_at_step(self, step_num):
         return self.dir_mat[step_num:step_num+self.dim,]

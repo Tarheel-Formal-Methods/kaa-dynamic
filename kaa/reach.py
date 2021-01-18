@@ -58,3 +58,14 @@ class ReachSet:
             self.flowpipe.append(trans_bund)
 
         return self.flowpipe
+
+
+"""
+class FlowpipeSaveLoader:
+
+    @staticmethod
+    def save_flowpipe(flowpipe):
+        model = flowpipe.model
+
+        with open("")
+"""

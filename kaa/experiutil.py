@@ -61,9 +61,9 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
     return np.amax(np.append(max_diff, min_diff))
 
-def test_strat_comb(model, step_tup, num_steps, num_trials=10, filename="STRATCOMB"):
+def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, filename="STRATCOMB"):
     NUM_STEPS = num_steps
-    NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
+    NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
 
     pca_iter_steps = step_tup
