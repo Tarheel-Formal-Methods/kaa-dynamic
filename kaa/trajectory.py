@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial import ConvexHull
 
 """
 Wrapper around list for representing arbitrary trajectories of a system.
@@ -63,7 +64,7 @@ class Traj:
         mat = np.empty((self.num_points, dim))
 
         for i in range(self.num_points):
-            mat[i] = [ self.traj_set[var][i] for var in self.vars  ]
+            mat[i] = [self.traj_set[var][i] for var in self.vars]
 
     @property
     def end_point(self):
@@ -81,7 +82,7 @@ class Traj:
         return self.model.name
     
     def __getitem__(self, index):
-        return [ (self.traj_set[var])[index] for var in self.vars ]
+        return [(self.traj_set[var])[index] for var in self.vars]
 
     def __len__(self):
         return self.num_points
@@ -109,6 +110,14 @@ class TrajCollection:
     @property
     def max_traj_len(self):
         return max([len(traj) for traj in self.traj_list])
+
+    @property
+    def conv_hull_vol(self):
+        vol_data = []
+        for i in range(self.max_traj_len):
+            vol_data.append(ConvexHull([traj[i] for traj in self.traj_list]).volume)
+            
+        return sum(vol_data)
 
     def __getitem__(self, index):
         traj_points_list = [traj[index] for traj in self.traj_list]

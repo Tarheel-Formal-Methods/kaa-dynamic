@@ -7,7 +7,7 @@ from itertools import product, chain
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
-from kaa.experiment import Experiment, ExperimentBatch, exec_plot_vol_results
+from kaa.experiment import Experiment, DirSaveLoader
 from kaa.settings import KaaSettings
 
 """
@@ -125,15 +125,14 @@ def test_one_one_strat_lin(model, max_step, num_steps, num_trials=10, filename="
     experi = Experiment(*inputs, label="1-1 Strat Base LinApp Trials", num_trials=num_trials)
     experi.execute()
 
-def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, filename="SLIDINGPCA"):
+def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
-    NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
+    NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
     LIFE_INCREMENT = life_incre
 
 
     inputs = []
-    """
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
@@ -142,7 +141,7 @@ def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, fi
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
-    """
+    
     for lifespan in range(1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
@@ -153,7 +152,7 @@ def test_sliding_pca(model, max_life, num_steps, life_incre=5, num_trials=10, fi
         inputs.append(experi_input)
 
 
-    experi = Experiment(*inputs, label=f"UpperSlidingPCA with NUM_TRAJ:{NUM_TRAJ}", num_trials=num_trials)
+    experi = Experiment(*inputs, label=f"SlidingPCA with NUM_TRAJ:{NUM_TRAJ}", num_trials=num_trials)
     experi.execute()
 
 def test_sliding_lin(model, max_life, num_steps, num_trials=10, life_incre=5, filename="SLIDINGLIN"):
@@ -205,3 +204,17 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCO
 
     experi = Experiment(*inputs, label="Combination with PCA and Lin Strats", num_trials=num_trials)
     experi.execute()
+
+def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
+
+    for num_trajs in range(1000, max_num_trajs, 1000):
+        generated_dirs = []
+        for trial_num in range(self.num_trials):
+            Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
+            gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
+            gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
+            generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
+            self.__update_seed()
+            
+        self.__reset_seed()
+        DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)

@@ -70,10 +70,19 @@ def test_sir_lin_pca_strat():
 
 def test_strat_comb_sir():
     unit_model = SIR_UnitBox(delta=0.5)
-    trial_nums = 10
+    test_strat_comb(model, (1,3,5), 150, 8000)
 
-    for i in range(trial_nums):
-        KaaSettings.RandSeed = 897987178 + i
-        test_strat_comb(unit_model,(1,3,5), 100 , filename=f"StratCombSIR(Trial {i})")
-        test_one_one_strat_pca(unit_model, 5, 100, filename=f"OneOnePCASIR(Trial{i})")
-        test_one_one_strat_lin(unit_model, 5, 100, filename=f"OneOneLinSIR(Trial{i})")
+
+def test_sliding_pca_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    test_sliding_pca(model, 20, 150, 8000)
+
+
+def test_sliding_lin_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    test_sliding_lin(model, 20, 150, 8000)
+
+
+def gen_save_dirs_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    gen_save_dirs(model, 150)

@@ -118,6 +118,7 @@ class GeneratedPCADirs(GeneratedDirs):
         trajs = bund.getIntersect().generate_traj(num_trajs, num_steps, sample=False) #trajs is TrajCollecton object'
 
         for step in range(num_steps):
+
             pca = PCA(n_components=dim)
             pca.fit(trajs[step]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 
