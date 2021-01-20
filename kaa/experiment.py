@@ -133,9 +133,9 @@ class Experiment:
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
             generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
-            self.__update_seed()
+            update_seed()
 
-        self.__reset_seed()
+        reset_seed()
         return generated_dirs
 
     """
@@ -175,18 +175,6 @@ class Experiment:
 
         workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
         return SpreadSheet(workbook, row_dict)
-
-    """
-    Update global random seed.
-    """
-    def __update_seed(self, offset=1):
-        KaaSettings.RandSeed += offset
-
-    """
-    Reset global random seed.
-    """
-    def __reset_seed(self):
-        KaaSettings.RandSeed = 897987178
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
@@ -346,3 +334,18 @@ def exec_plot_vol_results(experi, filename):
 
     fig = go.Figure(data=[experi_vol_table])
     fig.write_image(os.path.join(PlotSettings.default_fig_path, filename + 'png'), format='png')
+
+
+
+
+"""
+Update global random seed.
+"""
+def update_seed(offset=1):
+    KaaSettings.RandSeed += offset
+
+"""
+Reset global random seed.
+"""
+def reset_seed():
+    KaaSettings.RandSeed = 897987178

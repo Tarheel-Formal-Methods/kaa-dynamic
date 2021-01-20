@@ -55,7 +55,7 @@ class Traj:
     def get_proj(self, var):
         return self.traj_set[var]
 
-    """
+    """1
     Returns numpy matrix with rows containing trajectory points.
     @returns matrix containing trajectory points.
     """

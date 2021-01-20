@@ -7,8 +7,9 @@ from itertools import product, chain
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
-from kaa.experiment import Experiment, DirSaveLoader
+from kaa.experiment import *
 from kaa.settings import KaaSettings
+from kaa.log import Output
 
 """
 Generate random trajectories from initial set (initial bundle) of model.
@@ -209,12 +210,12 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
 
     for num_trajs in range(1000, max_num_trajs, 1000):
         generated_dirs = []
-        for trial_num in range(self.num_trials):
+        for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
             generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
-            self.__update_seed()
+            update_seed()
             
-        self.__reset_seed()
+        reset_seed()
         DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
