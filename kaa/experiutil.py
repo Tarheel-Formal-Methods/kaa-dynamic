@@ -142,7 +142,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
-    
+
     for lifespan in range(1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
@@ -216,6 +216,36 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
             generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
             update_seed()
-            
+
         reset_seed()
         DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
+
+
+def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
+    inputs = []
+    for num_trajs in range(1000, max_num_trajs+1000, 1000):
+        experi_input = dict(model=model,
+                            strat=None,
+                            label= f"PCA from {num_trajs} TRAJS",
+                            num_trajs=num_trajs,
+                            num_steps=num_steps
+                            )
+        inputs.append(experi_input)
+
+    experi = Experiment(*inputs, label="PCADEV for VDP")
+    experi.execute(num_trials, experi_type="PCADev")
+
+
+def find_lin_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
+    inputs = []
+    for num_trajs in range(1000, max_num_trajs+1000, 1000):
+        experi_input = dict(model=model,
+                            strat=None,
+                            label= f"LinApp from {num_trajs} TRAJS",
+                            num_trajs=num_trajs,
+                            num_steps=num_steps
+                            )
+        inputs.append(experi_input)
+
+    experi = Experiment(*inputs, label="LINDEV for VDP")
+    experi.execute(num_trials, experi_type="LINDev")

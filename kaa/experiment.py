@@ -27,11 +27,11 @@ class DirSaveLoader:
         pca_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
         lin_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
 
-        pca_gendir_obj_list = DirSaveLoader.wrap_dirs(model, pca_dirs_from_file)
-        lin_gendir_obj_list = DirSaveLoader.wrap_dirs(model, lin_dirs_from_file)
+        pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file)
+        lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file)
 
         return list(zip(pca_gendir_obj_list, lin_gendir_obj_list))
-    
+
     @staticmethod
     def save_dirs(model, num_steps, num_trajs, seed, gen_dirs_list):
         pca_dir_stack, lin_dir_stack = zip(*gen_dirs_list)
@@ -49,8 +49,11 @@ class DirSaveLoader:
         dir_from_file = np.loadtxt(datapath, delimiter=',', unpack=True)
         return [dir_mat.reshape((-1, model.dim)) for dir_mat in dir_from_file]
 
-    def wrap_dirs(model, dir_mat_list):
-        return [GeneratedDirs.from_mat(model, mat) for mat in dir_mat_list]
+    def wrap_pca_dirs(model, dir_mat_list):
+        return [GeneratedPCADirs(model, -1, -1, dir_mat=mat) for mat in dir_mat_list]
+
+    def wrap_lin_dirs(model, dir_mat_list):
+        return [GeneratedLinDirs(model, -1, -1, dir_mat=mat) for mat in dir_mat_list]
 
 
 class Experiment:
@@ -67,25 +70,51 @@ class Experiment:
     """
     Execute experiment and dump results into spreadsheet.
     """
-    def execute(self, experi_type="Volume"):
-        if experi_type == "Volume":
-            num_steps = max(*[input['num_steps'] for input in self.inputs])
-            num_trajs = max(*[input['num_trajs'] for input in self.inputs])
+    def execute(self, num_trials, experi_type="Volume"):
+        spreadsheet = self.__generate_sheet(num_trials)
 
-            spreadsheet = self.__generate_sheet()
+        if experi_type == "Volume":
+            num_steps = max([input['num_steps'] for input in self.inputs])
+            num_trajs = max([input['num_trajs'] for input in self.inputs])
             gen_dirs = self.__load_dirs(self.model, num_steps, num_trajs, self.num_trials)
 
             for experi_input in self.inputs:
                 experi_strat = experi_input['strat']
 
-                for trial_num in range(self.num_trials):
+                for trial_num in range(num_trials):
                     Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
                     self.__assign_dirs(experi_strat, trial_num, gen_dirs)
-                    
+
                     flow_label, flow_vol = self.__gather_vol_data(experi_input)
-                    self.__save_data_into_sheet(spreadsheet, trial_num, flow_label, flow_vol)
+                    self.__save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
 
                     experi_strat.reset()
+
+        else:
+            idx = dict(PCADev=0,
+                       LinDev=1)
+
+            pca_dirs_by_traj = []
+            row_labels = []
+            for experi_input in self.inputs:
+                num_steps = experi_input['num_steps']
+                num_trajs = experi_input['num_trajs']
+                label = experi_input['label']
+
+                pca_dirs = [dirs[idx[experi_type]] for dirs in self.__load_dirs(num_steps, num_trajs, num_trials)]
+                pca_dirs_by_traj.append(pca_dirs)
+                row_labels.append(label)
+
+            for trial_num in range(num_trials):
+                for row_label, pca_dirs_prev, pca_dirs_curr in zip(row_labels, pca_dirs_by_traj, pca_dirs_by_traj[1:]):
+                    dirs_dist = self.__calc_dirs_dist(pca_dirs_prev[trial_num], pca_dirs_curr[trial_num])
+                    self.__save_data_into_sheet(spreadsheet, trial_num, num_trials, row_label, dirs_dist)
+
+    def __calc_dirs_dist(self, gen_dirs_one, gen_dirs_two):
+         norm_dir_one = (gen_dirs_one.dir_mat.T / np.linalg.norm(gen_dirs_one.dir_mat, axis=1)).T
+         norm_dir_two = (gen_dirs_two.dir_mat.T / np.linalg.norm(gen_dirs_two.dir_mat, axis=1)).T
+         abs_dot_prods = np.abs(np.einsum('ij,ij->i', norm_dir_one, norm_dir_two))
+         return np.min(abs_dot_prods)
 
     """
     Assign directions based on pre-generated directions for each trial.
@@ -110,28 +139,29 @@ class Experiment:
 
     """
     Method to load pre-generated directions from data directory. If not, pre-generate with supplied parameters and save to the data directory.
+    model
     """
-    def __load_dirs(self, model, num_steps, num_trajs, num_trials):
+    def __load_dirs(self, num_steps, num_trajs, num_trials):
         try:
-            gen_dirs = DirSaveLoader.load_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed)
+            gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
             Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
         except IOError:
             Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
-            gen_dirs = self.__generate_dirs(self.model, num_steps, num_trajs, self.num_trials)
+            gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
             Output.prominent("SAVING TO DISK.")
             DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
-            
+
         return gen_dirs
 
     """
     Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
     """
-    def __generate_dirs(self, model, num_steps, num_trajs, num_trials):
+    def __generate_dirs(self, num_steps, num_trajs, num_trials):
         generated_dirs = []
-        for trial_num in range(self.num_trials):
+        for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
-            gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
-            gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
+            ca_dirs = GeneratedPCADirs(self.model, num_steps, num_trajs)
+            in_dirs = GeneratedLinDirs(self.model, num_steps, num_trajs)
             generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
             update_seed()
 
@@ -141,7 +171,7 @@ class Experiment:
     """
     Saves data into a desired cell in spreadsheet.
     """
-    def __save_data_into_sheet(self, spreadsheet, trial_num, flow_label, data):
+    def __save_data_into_sheet(self, spreadsheet, trial_num, num_trials, flow_label, data):
         workbook = spreadsheet.workbook
         row_dict = spreadsheet.row_dict
 
@@ -151,19 +181,19 @@ class Experiment:
         sheet = workbook.active
         sheet[chr(66 + column_offset) + str(row_offset)] = data
 
-        if column_offset == self.num_trials - 1:
-            sheet[chr(66 + self.num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
-            sheet[chr(66 + self.num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
+        if column_offset == num_trials - 1:
+            sheet[chr(66 + num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
+            sheet[chr(66 + num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
 
         workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
 
     """
     Initializes openpyxl spreadsheet to dump resulting data.
     """
-    def __generate_sheet(self):
+    def __generate_sheet(self, num_trials, row_labels=None):
         workbook = Workbook()
         sheet = workbook.active
-        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(self.num_trials)] + ["Mean", "Stdev"])
+        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(num_trials)] + ["Mean", "Stdev"])
 
         'Initialize label-row dictionary'
         row_dict = {experi_input['label'] : row_idx + 2 for row_idx, experi_input in enumerate(self.inputs)}

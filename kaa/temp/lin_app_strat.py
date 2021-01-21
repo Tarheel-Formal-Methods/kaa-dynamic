@@ -124,11 +124,14 @@ class SlidingLinStrat(AbstractLinStrat):
 
 class GeneratedLinDirs(GeneratedDirs):
 
-    def __init__(self, model, num_steps, num_trajs, cond_threshold=7):
-        self.unit_dir_mat = initialize_unit_mat(model.dim)
-        self.cond_threshold = cond_threshold
-        self.num_trajs = num_trajs
-        super().__init__(model, self.__generate_lin_dir(model, num_steps))
+    def __init__(self, model, num_steps, num_trajs, cond_threshold=7, dir_mat=None):
+        if dir_mat is None:
+            self.unit_dir_mat = initialize_unit_mat(model.dim)
+            self.cond_threshold = cond_threshold
+            self.num_trajs = num_trajs
+            super().__init__(model, self.__generate_lin_dir(model, num_steps))
+        else:
+            super().__init__(model, dir_mat)
 
     """
     Generates the linear approximation directions based on trajectories taken starting from
