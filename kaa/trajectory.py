@@ -18,14 +18,14 @@ class Traj:
         'Initialize point and propagate for steps.'
         self.add_point(initial_point)
         self.propagate(steps)
-        
+
     """
     Add a point from the system to the trajectory.
     @params traj_point: point to add to the trajectory.
     """
     def add_point(self, traj_point):
         assert len(traj_point) == len(self.vars), "Trajectory dimensions should match system dimensions."
-        
+
         for var_ind, var in enumerate(self.vars):
             self.traj_set[var].append(traj_point[var_ind])
         self.num_points += 1
@@ -80,7 +80,7 @@ class Traj:
     @property
     def model_name(self):
         return self.model.name
-    
+
     def __getitem__(self, index):
         return [(self.traj_set[var])[index] for var in self.vars]
 
@@ -116,8 +116,11 @@ class TrajCollection:
         vol_data = []
         for i in range(self.max_traj_len):
             vol_data.append(ConvexHull([traj[i] for traj in self.traj_list]).volume)
-            
+
         return sum(vol_data)
+
+    def append(self):
+        pass
 
     def __getitem__(self, index):
         traj_points_list = [traj[index] for traj in self.traj_list]

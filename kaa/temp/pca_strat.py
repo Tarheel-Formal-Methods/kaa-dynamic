@@ -108,17 +108,20 @@ class SlidingPCAStrat(AbstractPCAStrat):
 class GeneratedPCADirs(GeneratedDirs):
 
     def __init__(self, model, num_steps, num_trajs, dir_mat=None):
+        self.num_trajs = num_trajs
+        self.num_steps = num_steps
+
         if dir_mat is None:
-            super().__init__(model, self.__generate_pca_dir(model, num_trajs, num_steps))
+            super().__init__(model, self.__generate_pca_dir(model))
         else:
             super().__init__(model, dir_mat)
 
-    def __generate_pca_dir(self, model, num_trajs, num_steps):
+    def __generate_pca_dir(self, model):
         bund = model.bund
         dim = model.dim
 
         generated_pca_dir_mat = np.empty((dim*num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(num_trajs, num_steps, sample=False) #trajs is TrajCollecton object'
+        trajs = bund.getIntersect().generate_traj(self.num_trajs, num_steps) #trajs is TrajCollecton object'
 
         for step in range(num_steps):
 

@@ -147,18 +147,18 @@ class LinearSystem:
     """
     Generate random trajectories from polytope defined by parallelotope bundle.
     @params model: Model
-            num_traj: umber of trajectories to generate.
+            num_traj: number of trajectories to generate.
             time_steps: number of time steps to generate trajs.
     @returns list of Traj objects representing num random trajectories.
     """
-    def generate_traj(self, num_trajs, time_steps, sample=False):
+    def generate_traj(self, num_trajs, time_steps, resample=False):
         #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
         initial_points = self.gen_ran_pts_box(num_trajs)
         output_queue = mp.Manager().Queue()
         input_params = [(self.model, point, time_steps, output_queue) for point in initial_points]
 
         'Parallelize point propagation'
-        p = mp.Pool(processes=6)
+        p = mp.Pool(processes=12)
         p.starmap(self.create_traj, input_params)
         p.close()
         p.join()

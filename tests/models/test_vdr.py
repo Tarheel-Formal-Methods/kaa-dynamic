@@ -198,8 +198,8 @@ def gen_save_dirs_VDP():
 
 def find_pca_variation_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    find_pca_variation(unit_model, 70, max_num_trajs=3000)
+    find_pca_variation(unit_model, 70, max_num_trajs=6000)
 
 def find_lin_variation_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    find_pca_variation(unit_model, 70, max_num_trajs=3000)
+    find_lin_variation(unit_model, 70, max_num_trajs=6000)

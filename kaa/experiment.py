@@ -365,9 +365,6 @@ def exec_plot_vol_results(experi, filename):
     fig = go.Figure(data=[experi_vol_table])
     fig.write_image(os.path.join(PlotSettings.default_fig_path, filename + 'png'), format='png')
 
-
-
-
 """
 Update global random seed.
 """

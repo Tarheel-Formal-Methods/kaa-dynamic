@@ -220,7 +220,6 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
         reset_seed()
         DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
 
-
 def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
     inputs = []
     for num_trajs in range(1000, max_num_trajs+1000, 1000):
@@ -235,7 +234,6 @@ def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
     experi = Experiment(*inputs, label="PCADEV for VDP")
     experi.execute(num_trials, experi_type="PCADev")
 
-
 def find_lin_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
     inputs = []
     for num_trajs in range(1000, max_num_trajs+1000, 1000):
@@ -248,4 +246,4 @@ def find_lin_variation(model, num_steps, num_trials=10, max_num_trajs=8000):
         inputs.append(experi_input)
 
     experi = Experiment(*inputs, label="LINDEV for VDP")
-    experi.execute(num_trials, experi_type="LINDev")
+    experi.execute(num_trials, experi_type="LinDev")
