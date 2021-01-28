@@ -16,22 +16,28 @@ class Parallelotope(LinearSystem):
         super().__init__(model, A, b)
         self.u_A = A[:self.dim]
         self.u_b = b[:self.dim]
+        self.base_vertex, self.gens = self.__get_generators()
+
+    @property
+    def generator_vecs(self):
+        return self.gens
+
+    def __get_generators(self):
+        base_vertex = self.__computeBaseVertex()
+        return base_vertex, self.__computeGenerators(base_vertex)
 
     """
     Return list of functions transforming the n-unit-box over the parallelotope.
     @returns list of transfomation from unitbox over the parallelotope.
     """
     def getGeneratorRep(self):
-
         Timer.start('Generator Procedure')
-        base_vertex = self._computeBaseVertex()
-        gen_list = self._computeGenerators(base_vertex)
 
-        'Create list representing the linear transformation q + \sum_{j} a_j* g_j'
-        expr_list = base_vertex
+        'Create list representing the linear transformation q + \sum_{j} a_j* g_j where g_j'
+        expr_list = self.base_vertex
         for j in range(self.dim):
             for var_ind, var in enumerate(self.vars):
-                expr_list[j] += gen_list[var_ind][j] * var
+                expr_list[j] += self.gens[var_ind][j] * var
         Timer.stop('Generator Procedure')
 
         return expr_list
@@ -55,7 +61,7 @@ class Parallelotope(LinearSystem):
     @params base_vertex: base vertex q
     @returns generator vectors g_j
     """
-    def _computeGenerators(self, base_vertex):
+    def __computeGenerators(self, base_vertex):
 
         """
         'Hacky way to toggle parallelism for experiments'
@@ -68,7 +74,7 @@ class Parallelotope(LinearSystem):
         """
         vertices = []
         for i in range(self.dim):
-            vertices.append(self._gen_worker(i, self.u_b, self.u_A))
+            vertices.append(self.__gen_worker(i, self.u_b, self.u_A))
 
         vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
         #print("Vertex List For Paratope: {} \n".format(vertices))
@@ -82,7 +88,7 @@ class Parallelotope(LinearSystem):
             u_b, coef_mat - shared reference to upper offsets and directions matrix.
     @returns coordinates of vertex
     """
-    def _gen_worker(self, i, u_b, coeff_mat):
+    def __gen_worker(self, i, u_b, coeff_mat):
         #print(coeff_mat, u_b)
 
         negated_bi = np.copy(self.u_b)
@@ -102,17 +108,16 @@ class Parallelotope(LinearSystem):
 
     @returns base-vertex in list
     """
-    def _computeBaseVertex(self):
+    def __computeBaseVertex(self):
         sol_set = np.linalg.solve(self.u_A, self.u_b)
         return list(sol_set)
-
 
     """
     Convert numpy matrix into sympy matrix
     @params mat: numpy matrix
     @returns sympy matrix counterpart
     """
-    def _convertMatFormat(self, mat):
+    def __convertMatFormat(self, mat):
         return sp.Matrix(mat.tolist())
 
     """
@@ -120,6 +125,6 @@ class Parallelotope(LinearSystem):
     @params fin_set: FiniteSet
     @returns list of sympy solution set
     """
-    def _convertSolSetToList(self, fin_set):
+    def __convertSolSetToList(self, fin_set):
         assert fin_set is not sp.EmptySet
         return list(fin_set.args[0])

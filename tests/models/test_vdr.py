@@ -178,15 +178,15 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_strat_comb(unit_model, (1,3,5), 70, 300)
+    test_strat_comb(unit_model, (1,3,5), 70, 300, num_trials=1)
 
 def test_sliding_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_sliding_pca(unit_model, 10, 70)
+    test_sliding_pca(unit_model, 20, 70, 8000, num_trials=1)
 
 def test_sliding_lin_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_sliding_lin(unit_model, 20, 70)
+    test_sliding_lin(unit_model, 20, 70, 8000, num_trials=1)
 
 def test_strat_comb_stdev_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
@@ -198,8 +198,8 @@ def gen_save_dirs_VDP():
 
 def find_pca_variation_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    find_pca_variation(unit_model, 70, max_num_trajs=6000)
+    find_pca_variation(unit_model, 70, max_num_trajs=8000)
 
 def find_lin_variation_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    find_lin_variation(unit_model, 70, max_num_trajs=6000)
+    find_lin_variation(unit_model, 70, max_num_trajs=8000)

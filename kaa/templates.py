@@ -1,6 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
-from sklearn.decomposition import PCA
+
+from kaa.settings import KaaSettings
 
 """
 Object containing routines and data structures required to dynamically change the template matrix of a bundle based off a pre-determined
@@ -16,7 +17,7 @@ class TempStrategy(ABC):
         self.ptope_hash = {}
         self.ptope_counter = 0
         self.strat_order = stratorder
-
+        
     """
     Method called before the transformation operation and maximization over parallotopes are performed.
     """
@@ -46,7 +47,7 @@ class TempStrategy(ABC):
     """
     def __hash_ptope(self, dir_label_list, name=None):
         assert len(dir_label_list) == self.dim, "Number of directions associated to a parallelotope must match the dimension of the system."
-
+        
         key = self.__generate_unique_key() if name is None else name
         self.ptope_hash[key] = dir_label_list
         return key
@@ -80,14 +81,30 @@ class TempStrategy(ABC):
         bund.add_temp(self, dir_labels, ptope_name)
 
         return ptope_name
-
+        
     """
     Generates a unique key for a ptope.
+    @returns unique label for ptope
     """
     def __generate_unique_key(self):
         self.ptope_counter += 1
         return "Ptope" + str(self.ptope_counter)
+    
+    """
+    Generate trajectories according to scheme defined in KaaSettings
+    @params bund: Bundle object
+            num_trajs: number of trajectories to generate
+    @returns TrajCollection object wrapping generated Traj objects.
+    """
+    def generate_trajs(self, bund, num_trajs):
+        if KaaSettings.UseSuppPoints:
+            trajs = bund.getIntersect().generate_supp_trajs(bund.T, 1)
+        else:
+            trajs = bund.getIntersect().generate_ran_trajs(num_trajs, 1)
 
+        return trajs
+ 
+    
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.
 """
@@ -152,6 +169,7 @@ class GeneratedDirs:
         self.model = model
         self.dim = model.dim
         self.dir_mat = dir_mat
+        self.num_steps = len(dir_mat)
 
     @classmethod
     def from_mat(cls, model, dir_mat):

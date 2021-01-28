@@ -2,6 +2,7 @@ import random as rand
 import numpy as np
 import multiprocessing as mp
 from scipy.spatial import HalfspaceIntersection, ConvexHull
+from scipy.spatial.qhull import QhullError
 
 from operator import mul, add
 from functools import reduce
@@ -50,7 +51,9 @@ class LinearSystem:
     """
     @property
     def volume(self):
-        if KaaSettings.RandVol:
+        try:
+            return ConvexHull(self.vertices).volume
+        except QhullError:
             envelop_box = self.__calc_envelop_box()
             num_samples = KaaSettings.VolumeSamples
 
@@ -59,8 +62,6 @@ class LinearSystem:
             num_contained_points = reduce(add, point_value)
 
             return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
-        else:
-            return ConvexHull(self.vertices).volume
 
     @property
     def vertices(self):
@@ -133,10 +134,22 @@ class LinearSystem:
     def __sample_box_point(self, box_intervals):
         assert len(box_intervals) == self.dim, "Number of intervals defining box must match dimension of system."
         return [self.randgen.uniform(start, end) for start, end in box_intervals]
+    """
+    Create a trajectory at certain point in system and propagate it forward according
+    to system dynamics. Add to shared Queue after initialization is finished.
+    @params model: system model
+            point: initial point of trajectory
+            time_step: number of steps to propagate forward
+            output_queue: Manager.Queue object shared between processes
+    """
+    def create_traj(self, point, steps, output_queue):
+        output_queue.put(Traj(self.model, point, steps=steps))
 
-    def create_traj(self, model, point, time_steps, output_queue):
-        output_queue.put(Traj(model, point, steps=time_steps))
-
+    """
+    Auxiliary method to convert Manager.Queue object into list.
+    @params mp_queue: Manager.Queue object to convert.
+    @returns: List object with queue contents.
+    """
     def queue_to_list(self, mp_queue):
         output_list = []
         while(mp_queue.qsize() != 0):
@@ -151,11 +164,11 @@ class LinearSystem:
             time_steps: number of time steps to generate trajs.
     @returns list of Traj objects representing num random trajectories.
     """
-    def generate_traj(self, num_trajs, time_steps, resample=False):
+    def generate_ran_trajs(self, num_trajs, steps, resample=False):
         #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
         initial_points = self.gen_ran_pts_box(num_trajs)
         output_queue = mp.Manager().Queue()
-        input_params = [(self.model, point, time_steps, output_queue) for point in initial_points]
+        input_params = [(point, steps, output_queue) for point in initial_points]
 
         'Parallelize point propagation'
         p = mp.Pool(processes=12)
@@ -165,6 +178,33 @@ class LinearSystem:
 
         return TrajCollection(self.queue_to_list(output_queue))
 
+    """
+    Worker for trajectory generation using support points.
+    """
+    def generate_supp_worker(self, dir_vec, steps, output_queue):
+        supp_point = self.max_opt(dir_vec).x
+        self.create_traj(supp_point, steps, output_queue)
+    
+    """
+    Generates trajectories based on support points of provided directions.
+    @params dir_vecs: Matrix of directions stored as rows.
+            time_steps: number of steps to
+    """
+    def generate_supp_trajs(self, dir_vecs, steps):
+        output_queue = mp.Manager().Queue()
+
+        input_params = []
+        for dir_vec in dir_vecs:
+            input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
+        
+        p = mp.Pool(processes=12)
+        p.starmap(self.generate_supp_worker, input_params)
+        p.close()
+        p.join()
+
+        return TrajCollection(self.queue_to_list(output_queue))
+
+    
     """
     Generates random points contained within the tightest enveloping parallelotope of the Chevyshev sphere.
     @params bund: Bundle object

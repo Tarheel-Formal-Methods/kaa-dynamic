@@ -5,8 +5,8 @@ from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
+from kaa.templates import StaticStrat
 
-DefaultStrat = KaaSettings.DefaultStrat
 bolden = lambda string: colored(string, 'white', attrs=['bold'])
 
 """
@@ -16,7 +16,7 @@ class ReachSet:
 
     def __init__(self, model, strat=None, label=""):
         self.model = model
-        self.strat = DefaultStrat(self.model) if strat is None else strat
+        self.strat = StaticStrat(self.model) if strat is None else strat
         self.flowpipe = FlowPipe(self.model, strat, label)
 
     """

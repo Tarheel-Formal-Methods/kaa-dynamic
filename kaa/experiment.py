@@ -1,5 +1,6 @@
 from plotly.offline import plot
 from openpyxl import Workbook
+from abc import ABC, abstractmethod
 import plotly.graph_objects as go
 import numpy as np
 import os
@@ -56,80 +57,38 @@ class DirSaveLoader:
         return [GeneratedLinDirs(model, -1, -1, dir_mat=mat) for mat in dir_mat_list]
 
 
-class Experiment:
+class Experiment(ABC):
 
-    def __init__(self, *inputs, label="Experiment", num_trials=1):
+    def __init__(self, *inputs, label=""):
         self.inputs = inputs
         self.plot = Plot()
 
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0]['model']
         self.label = label
-        self.num_trials = num_trials
 
     """
     Execute experiment and dump results into spreadsheet.
     """
-    def execute(self, num_trials, experi_type="Volume"):
-        spreadsheet = self.__generate_sheet(num_trials)
-
-        if experi_type == "Volume":
-            num_steps = max([input['num_steps'] for input in self.inputs])
-            num_trajs = max([input['num_trajs'] for input in self.inputs])
-            gen_dirs = self.__load_dirs(self.model, num_steps, num_trajs, self.num_trials)
-
-            for experi_input in self.inputs:
-                experi_strat = experi_input['strat']
-
-                for trial_num in range(num_trials):
-                    Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
-                    self.__assign_dirs(experi_strat, trial_num, gen_dirs)
-
-                    flow_label, flow_vol = self.__gather_vol_data(experi_input)
-                    self.__save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
-
-                    experi_strat.reset()
-
-        else:
-            idx = dict(PCADev=0,
-                       LinDev=1)
-
-            pca_dirs_by_traj = []
-            row_labels = []
-            for experi_input in self.inputs:
-                num_steps = experi_input['num_steps']
-                num_trajs = experi_input['num_trajs']
-                label = experi_input['label']
-
-                pca_dirs = [dirs[idx[experi_type]] for dirs in self.__load_dirs(num_steps, num_trajs, num_trials)]
-                pca_dirs_by_traj.append(pca_dirs)
-                row_labels.append(label)
-
-            for trial_num in range(num_trials):
-                for row_label, pca_dirs_prev, pca_dirs_curr in zip(row_labels, pca_dirs_by_traj, pca_dirs_by_traj[1:]):
-                    dirs_dist = self.__calc_dirs_dist(pca_dirs_prev[trial_num], pca_dirs_curr[trial_num])
-                    self.__save_data_into_sheet(spreadsheet, trial_num, num_trials, row_label, dirs_dist)
-
-    def __calc_dirs_dist(self, gen_dirs_one, gen_dirs_two):
-         norm_dir_one = (gen_dirs_one.dir_mat.T / np.linalg.norm(gen_dirs_one.dir_mat, axis=1)).T
-         norm_dir_two = (gen_dirs_two.dir_mat.T / np.linalg.norm(gen_dirs_two.dir_mat, axis=1)).T
-         abs_dot_prods = np.abs(np.einsum('ij,ij->i', norm_dir_one, norm_dir_two))
-         return np.min(abs_dot_prods)
+    @abstractmethod
+    def execute(self, num_trials):
+        pass
 
     """
     Assign directions based on pre-generated directions for each trial.
     """
-    def __assign_dirs(self, strat, trial_num, gen_dirs):
-        if isinstance(strat, MultiStrategy):
-            for st in strat.strats:
-                self.__assign_dirs_by_strat(st, trial_num, gen_dirs)
-        else:
-            self.__assign_dirs_by_strat(strat, trial_num, gen_dirs)
+    def assign_dirs(self, strat, trial_num, gen_dirs):
+        if gen_dirs is not None:
+            if isinstance(strat, MultiStrategy):
+                for st in strat.strats:
+                    self.__assign_dirs_by_strat(st, trial_num, gen_dirs)
+            else:
+                self.__assign_dirs_by_strat(strat, trial_num, gen_dirs)
 
     """
     Auxiliary method to assign directions based on strategy type.
     """
-    def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
+    def assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
         if isinstance(strat, AbstractPCAStrat):
             strat.pca_dirs = gen_dirs[trial_num][0]
         elif isinstance(strat, AbstractLinStrat):
@@ -141,15 +100,18 @@ class Experiment:
     Method to load pre-generated directions from data directory. If not, pre-generate with supplied parameters and save to the data directory.
     model
     """
-    def __load_dirs(self, num_steps, num_trajs, num_trials):
-        try:
-            gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
-            Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
-        except IOError:
-            Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
-            gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
-            Output.prominent("SAVING TO DISK.")
-            DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
+    def load_dirs(self, num_steps, num_trajs, num_trials):
+        if KaaSettings.UsePreGenDirs:
+            try:
+                gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
+                Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
+            except IOError:
+                Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
+                gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
+                Output.prominent("SAVING TO DISK.")
+                DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
+        else:
+            gen_dirs = None
 
         return gen_dirs
 
@@ -171,7 +133,7 @@ class Experiment:
     """
     Saves data into a desired cell in spreadsheet.
     """
-    def __save_data_into_sheet(self, spreadsheet, trial_num, num_trials, flow_label, data):
+    def save_data_into_sheet(self, spreadsheet, trial_num, num_trials, flow_label, data):
         workbook = spreadsheet.workbook
         row_dict = spreadsheet.row_dict
 
@@ -190,7 +152,7 @@ class Experiment:
     """
     Initializes openpyxl spreadsheet to dump resulting data.
     """
-    def __generate_sheet(self, num_trials, row_labels=None):
+    def generate_sheet(self, num_trials, row_labels=None):
         workbook = Workbook()
         sheet = workbook.active
         sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(num_trials)] + ["Mean", "Stdev"])
@@ -225,7 +187,7 @@ class Experiment:
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
 
-    def __gather_vol_data(self, experi_input):
+    def gather_vol_data(self, experi_input):
         model = experi_input['model']
         strat = experi_input['strat']
         flow_label = experi_input['label']
@@ -277,6 +239,72 @@ class Experiment:
     def __str__(self):
         return self.label
 
+"""
+Experiment to compute the reachable set and estimate the total volume of all of its overapproximations.
+"""
+class VolumeExperiment(Experiment):
+
+    def __init__(self, *inputs, label="Experiment"):
+        super().__init__(*inputs, label=label)
+
+    def execute(self, num_trials):
+        num_steps = max([input['num_steps'] for input in self.inputs])
+        num_trajs = max([input['num_trajs'] for input in self.inputs])
+
+        spreadsheet = self.generate_sheet(num_trials)
+        loaded_dirs = self.load_dirs(num_steps, num_trajs, num_trials)
+
+        for experi_input in self.inputs:
+            experi_strat = experi_input['strat']
+
+            for trial_num in range(num_trials):
+                Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
+                self.assign_dirs(experi_strat, trial_num, loaded_dirs)
+
+                flow_label, flow_vol = self.gather_vol_data(experi_input)
+                self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
+
+                experi_strat.reset()
+
+"""
+Experiment to measure deviations between generated directions for a strategy type over the course of the reachable set computation.
+"""
+class DeviationExperiment(Experiment):
+
+    def __init__(self, *inputs, experi_type, label="Experiment"):
+        super().__init__(*inputs, label=label)
+        self.experi_type = experi_type
+
+    def execute(self, num_trials):
+        idx = dict(PCADev=0,
+                   LinDev=1)
+
+        strat_dirs_by_input = []
+        row_labels = []
+        for experi_input in self.inputs:
+            num_steps = experi_input['num_steps']
+            num_trajs = experi_input['num_trajs']
+            label = experi_input['label']
+
+            for dir_tuple in loaded_dirs:
+                strat_dirs = dir_tuple[idx[self.experi_type]] #experi_type determines index of tuple to fetch (first index for PCA, second for LinApp)
+                strat_dirs_by_input.append(pca_dirs)
+                row_labels.append(label)
+
+        for trial_num in range(num_trials):
+            for row_label, strat_dirs_prev, strat_dirs_curr in zip(row_labels, strat_dirs_by_traj, strat_dirs_by_traj[1:]):
+                prev_dirs = strat_dirs_prev[trial_num] #Corresponding directions from previous input to compare against
+                curr_dirs = strat_dirs_curr[trial_num] #Corresponding directions from current input to compare against
+
+                dirs_dist = self.__calc_dirs_dist(prev_dirs, curr_dirs)
+                self.save_data_into_sheet(spreadsheet, trial_num, num_trials, row_label, dirs_dist)
+
+    def __calc_dirs_dist(self, gen_dirs_one, gen_dirs_two):
+         norm_dir_one = (gen_dirs_one.dir_mat.T / np.linalg.norm(gen_dirs_one.dir_mat, axis=1)).T
+         norm_dir_two = (gen_dirs_two.dir_mat.T / np.linalg.norm(gen_dirs_two.dir_mat, axis=1)).T
+         abs_dot_prods = np.abs(np.einsum('ij,ij->i', norm_dir_one, norm_dir_two))
+         return np.min(abs_dot_prods)
+
 class PhasePlotExperiment(Experiment):
 
     def __init__(self, *inputs):
@@ -304,36 +332,6 @@ class Animation:
     def animate(self, x, y, *strat):
         assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
         self.animation.animate(x, y, *strat)
-
-"""
-Wraps around a batch of Experiments for coalesed output retrival.
-TODO Get rid of this class. Redundent and can easily be factored into Experiment.
-"""
-class ExperimentBatch:
-
-    def __init__(self, label=""):
-        self.experiments = []
-        self.vol_data = []
-        self.label = label
-
-    def add_experi(self, experiment):
-        assert isinstance(experiment, Experiment), "Only takes Experiment objects."
-        self.experiments.append(experiment)
-
-    def execute(self):
-        assert len(self.experiments) != 0, "Must add Experiments to ExperimentBatch before executing the batch."
-        for experi in self.experiments:
-            print(f"\n Executing Experiment {experi.label} \n")
-            experi.execute()
-
-    """
-    Returns total volume results from consitutent experiments in order which they were added in ExperimentBatch
-    """
-    def get_vol_data(self):
-        return [(str(experi.inputs[0]['strat']), experi.get_total_vol_results()) for experi in self.experiments]
-
-    def get_strat_labels(self):
-        return [str(experi.inputs[0]['strat']) for experi in self.experiments]
 
 """
 Find corner vertices for an initial box along with midpoints between the corners.
@@ -376,3 +374,33 @@ Reset global random seed.
 """
 def reset_seed():
     KaaSettings.RandSeed = 897987178
+
+"""
+Wraps around a batch of Experiments for coalesed output retrival.
+TODO Get rid of this class. Redundent and can easily be factored into Experiment.
+"""
+class ExperimentBatch:
+
+    def __init__(self, label=""):
+        self.experiments = []
+        self.vol_data = []
+        self.label = label
+
+    def add_experi(self, experiment):
+        assert isinstance(experiment, Experiment), "Only takes Experiment objects."
+        self.experiments.append(experiment)
+
+    def execute(self):
+        assert len(self.experiments) != 0, "Must add Experiments to ExperimentBatch before executing the batch."
+        for experi in self.experiments:
+            print(f"\n Executing Experiment {experi.label} \n")
+            experi.execute()
+
+    """
+    Returns total volume results from consitutent experiments in order which they were added in ExperimentBatch
+    """
+    def get_vol_data(self):
+        return [(str(experi.inputs[0]['strat']), experi.get_total_vol_results()) for experi in self.experiments]
+
+    def get_strat_labels(self):
+        return [str(experi.inputs[0]['strat']) for experi in self.experiments]

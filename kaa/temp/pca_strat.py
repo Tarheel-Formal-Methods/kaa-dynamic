@@ -22,9 +22,17 @@ class AbstractPCAStrat(TempStrategy):
     def close_strat(self, bund, step_num):
         pass
 
+    """
+    Generate PCA directions from Bundle object or fetch them from
+    GeneratedPCADirs object.
+    @params bund: Bundle object
+            step_num: step number of computation
+    @returns tuple with first component being the matrix containing the PCA directions
+             and the second component being the corresponding labels to identify each direction generated.
+    """
     def generate_pca_dir(self, bund, step_num):
         if self.pca_dirs is None:
-            trajs = bund.getIntersect().generate_traj(self.num_trajs, 1, sample=False)
+            trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
 
             pca = PCA(n_components=self.dim)
@@ -47,6 +55,9 @@ class PCAStrat(AbstractPCAStrat):
         self.iter_steps = iter_steps
         self.last_ptope = None
 
+    """
+    Opening PCA routine
+    """
     def open_strat(self, bund, step_num):
         if not step_num % self.iter_steps:
             #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
@@ -56,6 +67,9 @@ class PCAStrat(AbstractPCAStrat):
             ptope_label = self.add_ptope_to_bund(bund, pca_comps, pca_comp_labels)
             self.last_ptope = ptope_label
 
+    """
+    Closing PCA routine
+    """
     def close_strat(self, bund, step_num):
         if not step_num % self.iter_steps and step_num > 0:
                 self.rm_ptope_from_bund(bund, self.last_ptope)
@@ -85,6 +99,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
         'Remove dead templates'
         for ptope_label in list(self.pca_ptope_life_data.keys()):
             self.pca_ptope_life_data[ptope_label] -= 1
+            
             if self.pca_ptope_life_data[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.pca_ptope_life_data.pop(ptope_label)
@@ -116,15 +131,19 @@ class GeneratedPCADirs(GeneratedDirs):
         else:
             super().__init__(model, dir_mat)
 
+    """
+    Pre-generates all PCA directions using random initial points from the initial box.
+    @params model: Model object containing dynamics and initial box
+    @returns matrix containing pre-generated PCA dirs.
+    """
     def __generate_pca_dir(self, model):
         bund = model.bund
         dim = model.dim
 
-        generated_pca_dir_mat = np.empty((dim*num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(self.num_trajs, num_steps) #trajs is TrajCollecton object'
+        generated_pca_dir_mat = np.empty((dim*self.num_steps, dim))
+        trajs = bund.getIntersect().generate_traj(self.num_trajs, self.num_steps) #trajs is TrajCollecton object'
 
-        for step in range(num_steps):
-
+        for step in range(self.num_steps):
             pca = PCA(n_components=dim)
             pca.fit(trajs[step]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 

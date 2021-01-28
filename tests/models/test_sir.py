@@ -67,22 +67,26 @@ def test_sir_lin_pca_strat():
 
     Timer.generate_stats()
 
-
 def test_strat_comb_sir():
     model = SIR_UnitBox(delta=0.5)
     test_strat_comb(model, (1,3,5), 150, 8000)
 
-
 def test_sliding_pca_sir():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_pca(model, 20, 150, 8000)
-
+    test_sliding_pca(model, 20, 150, 6000)
 
 def test_sliding_lin_sir():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_lin(model, 20, 150, 8000)
-
+    test_sliding_lin(model, 20, 150, 6000)
 
 def gen_save_dirs_sir():
     model = SIR_UnitBox(delta=0.5)
     gen_save_dirs(model, 150)
+
+def find_pca_variation_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    find_pca_variation(unit_model, 150, max_num_trajs=6000, label="PCADevSIR")
+
+def find_lin_variation_sir():
+    unit_model = SIR_UnitBox(delta=0.5)
+    find_lin_variation(unit_model, 150, max_num_trajs=6000, label="LinDevSIR")

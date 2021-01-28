@@ -24,7 +24,8 @@ class AbstractLinStrat(TempStrategy):
         pass
 
     """
-    Generates the linear app. directions for input bundle.
+    Generate Linear Approximation directions from Bundle object or fetch them from
+    GeneratedLinDirs object.
     @params bund: Bundle object
             step_num: step number of computation
     @returns tuple of matrix containing linear app. directions and
@@ -55,12 +56,9 @@ class AbstractLinStrat(TempStrategy):
     @returns best-fit linear transformation matrix.
     """
     def __approx_A(self, bund):
-        trajs = bund.getIntersect().generate_traj(self.num_trajs, self.iter_steps)
+        trajs = self.generate_trajs(bund, self.num_trajs)
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
-        return approx_lin_trans(start_end_tup, self.num_trajs, self.dim)
-
-    def __str__(self):
-        return "LinApp(Steps:{})".format(self.iter_steps)
+        return approx_lin_trans(start_end_tup, self.dim)
 
 """
 Local linear approximation strategy.
@@ -90,6 +88,9 @@ class LinStrat(AbstractLinStrat):
     def reset(self):
         self.last_ptope = None
 
+    def __str__(self):
+        return f"LinApp(Steps:{self.iter_steps})"
+
 class SlidingLinStrat(AbstractLinStrat):
 
     def __init__(self, model, lifespan=1, num_trajs=-1, cond_threshold=7, lin_dirs=None):
@@ -112,7 +113,7 @@ class SlidingLinStrat(AbstractLinStrat):
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.lin_ptope_life_data[new_ptope_label] = self.life_span #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life_data[new_ptope_label] = self.lifespan #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 
@@ -152,7 +153,7 @@ class GeneratedLinDirs(GeneratedDirs):
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step+1]) for t in trajs]
 
-            approx_A = approx_lin_trans(start_end_tup, self.num_trajs, dim)
+            approx_A = approx_lin_trans(start_end_tup, dim)
             inv_A = np.linalg.inv(approx_A)
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
@@ -175,8 +176,9 @@ Uses np.linalg.lstsq to accomplish this.
          dim: dimension of system
 @returns best-fit linear transformation matrix.
 """
-def approx_lin_trans(dom_ran_tup, num_trajs, dim):
-    coeff_mat = np.zeros((dim*num_trajs, dim**2), dtype='float')
+def approx_lin_trans(dom_ran_tup, dim):
+    num_data_points = len(dom_ran_tup)
+    coeff_mat = np.zeros((dim*num_data_points, dim**2), dtype='float')
 
     'Initialize the A matrix containing linear constraints.'
     for t_idx, t in enumerate(dom_ran_tup):
