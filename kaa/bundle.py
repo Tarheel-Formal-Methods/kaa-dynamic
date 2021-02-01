@@ -68,7 +68,6 @@ class Bundle:
     @returns linear constraints and their offsets.
     """
     def getIntersect(self):
-
         L = self.L
         A = np.empty([2*self.num_dir, self.dim])
         b = np.empty(2*self.num_dir)
@@ -112,7 +111,6 @@ class Bundle:
                 asso_temps.append(temp_idx)
 
         return [self.getParallelotope(temp_idx) for temp_idx in asso_temps]
-
 
     """
     Returns the Parallelotope object defined by a row in the template matrix.

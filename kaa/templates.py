@@ -125,7 +125,6 @@ A wrapper enveloping multiple strategies working in tandem.
 class MultiStrategy(TempStrategy):
 
     def __init__(self, *var_tup):
-
         self.strat_list = []
         self.strat_freq = {}
 

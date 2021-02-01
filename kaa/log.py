@@ -36,6 +36,9 @@ def write_log(*args):
         f.write('\n' + spaces(debug_cat.value) + _Debug_Strings[debug_cat].format(*args) + '\n')
 
 
+
+
+
 """
 Logging class should have the following features
 - Dumping Directons/Ptope matrix into readable format
