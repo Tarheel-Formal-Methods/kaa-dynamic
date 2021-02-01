@@ -17,11 +17,11 @@ class Parallelotope(LinearSystem):
         self.u_A = A[:self.dim]
         self.u_b = b[:self.dim]
 
-    @property
-    def generator_vecs(self):
-        bv, gens = self.__get_generators()
-        return gens
-
+    """
+    Calculates and returns the base vertex and generator vectors which describe this ptope.
+    @returns tuple with first component containing the base vertex encoded as list
+             and second component containing generator vectors as a 2D matrix.
+    """
     def __get_generators(self):
         base_vertex = self.__computeBaseVertex()
         return base_vertex, self.__computeGenerators(base_vertex)
@@ -78,8 +78,6 @@ class Parallelotope(LinearSystem):
             vertices.append(self.__gen_worker(i, self.u_b, self.u_A))
 
         vertex_list = [ [vert - base for vert, base in zip(vertices[i], base_vertex)] for i in range(self.dim) ]
-        #print("Vertex List For Paratope: {} \n".format(vertices))
-        #print("Vector List For Paratope: {} \n".format(vertex_list))
         return vertex_list
 
     """
@@ -94,7 +92,6 @@ class Parallelotope(LinearSystem):
 
         negated_bi = np.copy(self.u_b)
         negated_bi[i] = -self.b[i + self.dim]
-        #print("(coeff_mat, negated_bi): {}".format((coeff_mat, negated_bi)))
         sol_set_i = np.linalg.solve(coeff_mat, negated_bi)
 
         return list(sol_set_i)

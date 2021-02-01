@@ -32,15 +32,15 @@ class AbstractPCAStrat(TempStrategy):
     """
     def generate_pca_dir(self, bund, step_num):
         if self.pca_dirs is None:
-            trajs = self.generate_trajs(bund, self.num_trajs)
+            trajs = self.generate_trajs(bund, self.num_trajs) #Get trajs
             traj_mat = trajs.end_points
 
-            pca = PCA(n_components=self.dim)
+            pca = PCA(n_components=self.dim) #Run PCA
             pca.fit(traj_mat)
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num + 1)
+            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num + 1) #Else fetch pre-generated directions.
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
@@ -60,10 +60,9 @@ class PCAStrat(AbstractPCAStrat):
     """
     def open_strat(self, bund, step_num):
         if not step_num % self.iter_steps:
-            #print(f"OPEN DIR/TEMP MAT: {bund.L},  {bund.T}")
             pca_comps, pca_comp_labels  = self.generate_pca_dir(bund, step_num)
 
-            'Add the components to the bundle.'
+            'Add the components to the bundle and save last generated ptope data.'
             ptope_label = self.add_ptope_to_bund(bund, pca_comps, pca_comp_labels)
             self.last_ptope = ptope_label
 
@@ -74,6 +73,9 @@ class PCAStrat(AbstractPCAStrat):
         if not step_num % self.iter_steps and step_num > 0:
                 self.rm_ptope_from_bund(bund, self.last_ptope)
 
+    """
+    Reset the strategy for a new round of computation.
+    """
     def reset(self):
         self.last_ptope = None
 
@@ -92,8 +94,6 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
-        #print("Before:  L: {} \n T: {}".format(bund.L, bund.T))
-        #print("Before: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
@@ -104,9 +104,13 @@ class SlidingPCAStrat(AbstractPCAStrat):
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.pca_ptope_life_data.pop(ptope_label)
 
-        #print("After:  L: {} \n T: {}".format(bund.L, bund.T))
-        #print("After: offu: {} \n  offl: {}".format(bund.offu, bund.offl))
-
+    """
+    Auxiliary method to generate PCA directions and add them as
+    directions for a new ptope every step.
+    @params bund: Bundle object
+            step_num: step number in computation
+    @returns: label string for generated ptope
+    """
     def __add_new_ptope(self, bund, step_num):
         new_pca_dirs, new_dir_labels = self.generate_pca_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_pca_dirs, new_dir_labels)
@@ -114,6 +118,9 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
         return new_ptope_label
 
+    """
+    Reset the strategy for a new round of computation.
+    """
     def reset(self):
          self.pca_ptope_life_data = {}
 

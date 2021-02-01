@@ -33,10 +33,12 @@ class AbstractLinStrat(TempStrategy):
     """
     def generate_lin_dir(self, bund, step_num):
         if self.lin_dirs is None:
+            'Find best-fit linear transformation.'
             approx_A = self.__approx_A(bund)
             inv_A = np.linalg.inv(approx_A)
-            lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
 
+            'Find the LinAp directions and calculate condition number.'
+            lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
             cond_num = np.linalg.cond(lin_dir_mat)
 
             if cond_num > self.cond_threshold:
@@ -44,7 +46,7 @@ class AbstractLinStrat(TempStrategy):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
         else:
-            lin_dir_mat = self.lin_dirs.get_dirs_at_step(step_num+1)
+            lin_dir_mat = self.lin_dirs.get_dirs_at_step(step_num+1) #Else fetch pre-generated directions.
 
         lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
         return lin_dir_mat, lin_dir_labels
@@ -71,20 +73,30 @@ class LinStrat(AbstractLinStrat):
         self.iter_steps = iter_steps
         self.last_ptope = None
 
+    """
+    Opening LinApp routine
+    """
     def open_strat(self, bund, step_num):
         if not step_num % self.iter_steps:
-            lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num)
-            ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
+            lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num) #Generate or fetch the LinApp directions.
 
+            'Add the components to the bundle and save last generated ptope data.'
+            ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
             self.last_ptope = ptope_label
             self.unit_dir_mat = lin_dir
 
         return bund
 
+    """
+    Closing LinApp routine
+    """
     def close_strat(self, bund, step_num):
         if not step_num % self.iter_steps and step_num > 0:
                 self.rm_ptope_from_bund(bund, self.last_ptope)
 
+    """
+    Reset the strategy for a new round of computation.
+    """
     def reset(self):
         self.last_ptope = None
 
@@ -99,17 +111,31 @@ class SlidingLinStrat(AbstractLinStrat):
         self.lin_ptope_life_data = {}
         self.lifespan = lifespan
 
+    """
+    Opening LinApp routine
+    """
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
 
+    """
+    Closing LinApp routine
+    """
     def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label in list(self.lin_ptope_life_data.keys()):
             self.lin_ptope_life_data[ptope_label] -= 1
+            
             if self.lin_ptope_life_data[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.lin_ptope_life_data.pop(ptope_label)
 
+    """
+    Auxiliary method to generate LinApp. directions and add them as
+    directions for a new ptope every step.
+    @params bund: Bundle object
+            step_num: step number in computation
+    @returns: label string for generated ptope
+    """
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
@@ -117,6 +143,9 @@ class SlidingLinStrat(AbstractLinStrat):
 
         return new_ptope_label
 
+    """
+    Reset the strategy for a new round of computation.
+    """
     def reset(self):
         self.lin_ptope_life_data = {}
 
@@ -153,11 +182,14 @@ class GeneratedLinDirs(GeneratedDirs):
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step+1]) for t in trajs]
 
+            'Find best-fit linear transformation.'
             approx_A = approx_lin_trans(start_end_tup, dim)
             inv_A = np.linalg.inv(approx_A)
-            lin_dir = np.dot(self.unit_dir_mat, inv_A)
 
+            'Find the LinAp directions and calculate condition number.'
+            lin_dir = np.dot(self.unit_dir_mat, inv_A)
             cond_num = np.linalg.cond(lin_dir)
+
             if cond_num > self.cond_threshold:
                 norm_lin_dir = normalize_mat(lin_dir)
                 closest_dirs = find_closest_dirs(norm_lin_dir)
@@ -205,6 +237,7 @@ which is orthogonal to resulting set of vectors.
 def merge_closest_dirs(dir_mat, closest_dirs, dim):
     randgen = rand.Random(KaaSettings.RandSeed)
     first_dir, second_dir = (0,1)
+
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
     ortho_dir = [randgen.uniform(-1,1) for _ in range(dim)]
 
