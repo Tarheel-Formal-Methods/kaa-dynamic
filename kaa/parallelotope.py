@@ -16,11 +16,11 @@ class Parallelotope(LinearSystem):
         super().__init__(model, A, b)
         self.u_A = A[:self.dim]
         self.u_b = b[:self.dim]
-        self.base_vertex, self.gens = self.__get_generators()
 
     @property
     def generator_vecs(self):
-        return self.gens
+        bv, gens = self.__get_generators()
+        return gens
 
     def __get_generators(self):
         base_vertex = self.__computeBaseVertex()
@@ -32,12 +32,13 @@ class Parallelotope(LinearSystem):
     """
     def getGeneratorRep(self):
         Timer.start('Generator Procedure')
+        base_vertex, gens = self.__get_generators()
 
         'Create list representing the linear transformation q + \sum_{j} a_j* g_j where g_j'
-        expr_list = self.base_vertex
+        expr_list = base_vertex
         for j in range(self.dim):
             for var_ind, var in enumerate(self.vars):
-                expr_list[j] += self.gens[var_ind][j] * var
+                expr_list[j] += gens[var_ind][j] * var
         Timer.stop('Generator Procedure')
 
         return expr_list

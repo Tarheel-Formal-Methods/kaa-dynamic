@@ -88,7 +88,7 @@ class Experiment(ABC):
     """
     Auxiliary method to assign directions based on strategy type.
     """
-    def assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
+    def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
         if isinstance(strat, AbstractPCAStrat):
             strat.pca_dirs = gen_dirs[trial_num][0]
         elif isinstance(strat, AbstractLinStrat):
