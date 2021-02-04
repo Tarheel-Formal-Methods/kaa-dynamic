@@ -57,9 +57,11 @@ class AbstractLinStrat(TempStrategy):
     def __approx_inv_A(self, bund):
         trajs = self.generate_trajs(bund, self.num_trajs)
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
+
         try:
             approx_A = approx_lin_trans(start_end_tup, self.dim)
             inv_A = np.linalg.inv(approx_A)
+            
         except np.linalg.LinAlgError:
             Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
             inv_A = approx_inv_lin_trans(start_end_tup, self.dim)
@@ -183,6 +185,7 @@ class GeneratedLinDirs(GeneratedDirs):
             try:
                 approx_A = approx_lin_trans(start_end_tup, dim)
                 inv_A = np.linalg.inv(approx_A)
+                
             except np.linalg.LinAlgError:
                 Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
                 inv_A = approx_inv_lin_trans(start_end_tup, dim)
@@ -200,14 +203,18 @@ class GeneratedLinDirs(GeneratedDirs):
 
         return generated_lin_dir_mat
 
-
+"""
+Approximate the linear transformation.
+"""
 def approx_lin_trans(dom_ran_tup, dim):
     return __least_sq_trans(dom_ran_tup, dim)
 
+"""
+Approximate the inverse linear transformation.
+"""
 def approx_inv_lin_trans(dom_ran_tup, dim):
     swapped_dom_ran_tup = [ (ran, dom) for dom, ran in dom_ran_tup]
     return __least_sq_trans(swapped_dom_ran_tup, dim)
-
 
 """
 Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.
