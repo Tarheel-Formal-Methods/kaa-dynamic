@@ -62,7 +62,7 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
     return np.amax(np.append(max_diff, min_diff))
 
-def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1, filename="STRATCOMB"):
+def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
@@ -84,12 +84,11 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1, filenam
     experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats")
     experi.execute(num_trials)
 
-def test_one_one_strat_pca(model, max_step, num_steps, num_trials=1, filename="ONEONEPCA"):
+def test_one_one_strat_pca(model, num_steps, num_trials=1):
     NUM_STEPS = num_steps
     NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
     PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    MAX_STEP = max_step
 
     inputs = []
     for pca_step in range(2,6): #model tossed around too many times.
@@ -106,7 +105,7 @@ def test_one_one_strat_pca(model, max_step, num_steps, num_trials=1, filename="O
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials")
     experi.execute(num_trials)
 
-def test_one_one_strat_lin(model, max_step, num_steps, num_trials=1, filename="ONEONELIN"):
+def test_one_one_strat_lin(model, num_steps, num_trials=1):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max_step
@@ -162,7 +161,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_i
     LIFE_INCREMENT = life_incre
 
     inputs = []
-    """
+
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
@@ -171,7 +170,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_i
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
-    """
+
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
@@ -185,7 +184,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_i
     experi.execute(num_trials)
 
 
-def test_comb_stdev_reduction(model, num_steps, num_trials=1, filename="STRATCOMBSTDEV"):
+def test_comb_stdev_reduction(model, num_steps, num_trials=1):
     NUM_STEPS = num_steps
     MAX_STEP = 1
     PCA_ITER_STEPS = 1

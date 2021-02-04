@@ -180,6 +180,14 @@ def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     test_strat_comb(unit_model, (1,3,5), 70, -1, num_trials=1)
 
+def test_one_one_strat_pca_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_one_one_strat_pca(unit_model, 70)
+
+def test_one_one_strat_lin_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_one_one_strat_lin(unit_model, 70)
+
 def test_sliding_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     test_sliding_pca(unit_model, 20, 70, 8000, num_trials=1)

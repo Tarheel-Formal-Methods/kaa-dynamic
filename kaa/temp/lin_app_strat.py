@@ -4,6 +4,7 @@ import random as rand
 
 from kaa.templates import TempStrategy, GeneratedDirs
 from kaa.settings import KaaSettings
+from kaa.log import Output
 
 """
 Abstract linear approximation strategy.
@@ -33,10 +34,8 @@ class AbstractLinStrat(TempStrategy):
     """
     def generate_lin_dir(self, bund, step_num):
         if self.lin_dirs is None:
-            approx_A = self.__approx_A(bund)
-            inv_A = np.linalg.inv(approx_A)
+            inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
             lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
-
             cond_num = np.linalg.cond(lin_dir_mat)
 
             if cond_num > self.cond_threshold:
@@ -44,7 +43,7 @@ class AbstractLinStrat(TempStrategy):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
         else:
-            lin_dir_mat = self.lin_dirs.get_dirs_at_step(step_num+1)
+            lin_dir_mat = self.lin_dirs.get_dirs_at_step(step_num + 1)
 
         lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
         return lin_dir_mat, lin_dir_labels
@@ -55,10 +54,17 @@ class AbstractLinStrat(TempStrategy):
     @params bund: Bundle object.
     @returns best-fit linear transformation matrix.
     """
-    def __approx_A(self, bund):
+    def __approx_inv_A(self, bund):
         trajs = self.generate_trajs(bund, self.num_trajs)
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
-        return approx_lin_trans(start_end_tup, self.dim)
+        try:
+            approx_A = approx_lin_trans(start_end_tup, self.dim)
+            inv_A = np.linalg.inv(approx_A)
+        except np.linalg.LinAlgError:
+            Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
+            inv_A = approx_inv_lin_trans(start_end_tup, self.dim)
+
+        return inv_A
 
 """
 Local linear approximation strategy.
@@ -147,7 +153,7 @@ class SlidingLinStrat(AbstractLinStrat):
 class GeneratedLinDirs(GeneratedDirs):
 
     def __init__(self, model, num_steps, num_trajs, cond_threshold=7, dir_mat=None):
-        if dir_mat is None:
+        if dir_mat is None: #dir_mat is set if pre-generated directions are used during computation.
             self.unit_dir_mat = initialize_unit_mat(model.dim)
             self.cond_threshold = cond_threshold
             self.num_trajs = num_trajs
@@ -172,10 +178,15 @@ class GeneratedLinDirs(GeneratedDirs):
         trajs = bund.getIntersect().generate_traj(self.num_trajs, num_steps) #trajs is TrajCollecton object'
 
         for step in range(num_steps):
-            start_end_tup = [(t[step], t[step+1]) for t in trajs]
+            start_end_tup = [(t[step], t[step + 1]) for t in trajs]
 
-            approx_A = approx_lin_trans(start_end_tup, dim)
-            inv_A = np.linalg.inv(approx_A)
+            try:
+                approx_A = approx_lin_trans(start_end_tup, dim)
+                inv_A = np.linalg.inv(approx_A)
+            except np.linalg.LinAlgError:
+                Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
+                inv_A = approx_inv_lin_trans(start_end_tup, dim)
+
             lin_dir = np.dot(self.unit_dir_mat, inv_A)
             cond_num = np.linalg.cond(lin_dir)
 
@@ -184,10 +195,19 @@ class GeneratedLinDirs(GeneratedDirs):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir = merge_closest_dirs(norm_lin_dir, closest_dirs, dim)
 
-            generated_lin_dir_mat[step*dim:(step+1)*dim,] = lin_dir
+            generated_lin_dir_mat[step*dim:(step + 1)*dim,] = lin_dir
             self.unit_dir_mat = lin_dir
 
         return generated_lin_dir_mat
+
+
+def approx_lin_trans(dom_ran_tup, dim):
+    return __least_sq_trans(dom_ran_tup, dim)
+
+def approx_inv_lin_trans(dom_ran_tup, dim):
+    swapped_dom_ran_tup = [ (ran, dom) for dom, ran in dom_ran_tup]
+    return __least_sq_trans(swapped_dom_ran_tup, dim)
+
 
 """
 Routine to approximate the best-fit linear transformation matrix which matches the data given in domain-range tuple argument.
@@ -197,7 +217,7 @@ Uses np.linalg.lstsq to accomplish this.
          dim: dimension of system
 @returns best-fit linear transformation matrix.
 """
-def approx_lin_trans(dom_ran_tup, dim):
+def __least_sq_trans(dom_ran_tup, dim):
     num_data_points = len(dom_ran_tup)
     coeff_mat = np.zeros((dim*num_data_points, dim**2), dtype='float')
 

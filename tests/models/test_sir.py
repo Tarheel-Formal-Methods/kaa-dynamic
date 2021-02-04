@@ -67,26 +67,34 @@ def test_sir_lin_pca_strat():
 
     Timer.generate_stats()
 
-def test_strat_comb_sir():
+def test_strat_comb_SIR():
     model = SIR_UnitBox(delta=0.5)
     test_strat_comb(model, (1,3,5), 150, -1)
 
-def test_sliding_pca_sir():
+def test_one_one_strat_pca_SIR():
+    model = SIR_UnitBox(delta=0.08)
+    test_one_one_strat_pca(model, 150)
+
+def test_one_one_strat_lin_SIR():
+    model = SIR_UnitBox(delta=0.08)
+    test_one_one_strat_lin(model, 150)
+
+def test_sliding_pca_SIR():
     model = SIR_UnitBox(delta=0.5)
     test_sliding_pca(model, 20, 150, -1)
 
-def test_sliding_lin_sir():
+def test_sliding_lin_SIR():
     model = SIR_UnitBox(delta=0.5)
     test_sliding_lin(model, 20, 150, -1)
 
-def gen_save_dirs_sir():
+def gen_save_dirs_SIR():
     model = SIR_UnitBox(delta=0.5)
     gen_save_dirs(model, 150)
 
-def find_pca_variation_sir():
+def find_pca_variation_SIR():
     unit_model = SIR_UnitBox(delta=0.5)
     find_pca_variation(unit_model, 150, max_num_trajs=6000, label="PCADevSIR")
 
-def find_lin_variation_sir():
+def find_lin_variation_SIR():
     unit_model = SIR_UnitBox(delta=0.5)
     find_lin_variation(unit_model, 150, max_num_trajs=6000, label="LinDevSIR")
