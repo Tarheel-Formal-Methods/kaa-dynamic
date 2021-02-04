@@ -69,15 +69,15 @@ def test_sir_lin_pca_strat():
 
 def test_strat_comb_sir():
     model = SIR_UnitBox(delta=0.5)
-    test_strat_comb(model, (1,3,5), 150, 8000)
+    test_strat_comb(model, (1,3,5), 150, -1)
 
 def test_sliding_pca_sir():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_pca(model, 20, 150, 6000)
+    test_sliding_pca(model, 20, 150, -1)
 
 def test_sliding_lin_sir():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_lin(model, 20, 150, 6000)
+    test_sliding_lin(model, 20, 150, -1)
 
 def gen_save_dirs_sir():
     model = SIR_UnitBox(delta=0.5)

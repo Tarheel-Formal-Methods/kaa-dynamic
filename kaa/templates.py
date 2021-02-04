@@ -98,7 +98,7 @@ class TempStrategy(ABC):
     """
     def generate_trajs(self, bund, num_trajs):
         if KaaSettings.UseSuppPoints:
-            trajs = bund.getIntersect().generate_supp_trajs(bund.T, 1)
+            trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:
             trajs = bund.getIntersect().generate_ran_trajs(num_trajs, 1)
 

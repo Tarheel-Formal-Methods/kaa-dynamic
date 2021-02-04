@@ -196,7 +196,8 @@ class LinearSystem:
         input_params = []
         for dir_vec in dir_vecs:
             input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
-        
+
+        #print(f"Number of Directons: {len(input_params)}")
         p = mp.Pool(processes=12)
         p.starmap(self.generate_supp_worker, input_params)
         p.close()

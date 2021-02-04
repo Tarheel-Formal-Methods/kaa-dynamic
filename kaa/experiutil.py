@@ -62,7 +62,7 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
     return np.amax(np.append(max_diff, min_diff))
 
-def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, filename="STRATCOMB"):
+def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1, filename="STRATCOMB"):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
@@ -84,7 +84,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, filena
     experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats")
     experi.execute(num_trials)
 
-def test_one_one_strat_pca(model, max_step, num_steps, num_trials=10, filename="ONEONEPCA"):
+def test_one_one_strat_pca(model, max_step, num_steps, num_trials=1, filename="ONEONEPCA"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
     LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
@@ -106,7 +106,7 @@ def test_one_one_strat_pca(model, max_step, num_steps, num_trials=10, filename="
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials")
     experi.execute(num_trials)
 
-def test_one_one_strat_lin(model, max_step, num_steps, num_trials=10, filename="ONEONELIN"):
+def test_one_one_strat_lin(model, max_step, num_steps, num_trials=1, filename="ONEONELIN"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max_step
@@ -155,7 +155,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ}")
     experi.execute(num_trials)
 
-def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=10, life_incre=5, filename="SLIDINGLIN"):
+def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_incre=5, filename="SLIDINGLIN"):
     NUM_STEPS = num_steps
     NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
@@ -172,7 +172,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=10, life_
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
     """
-    for lifespan in range(1, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
@@ -185,7 +185,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=10, life_
     experi.execute(num_trials)
 
 
-def test_comb_stdev_reduction(model, num_steps, num_trials=10, filename="STRATCOMBSTDEV"):
+def test_comb_stdev_reduction(model, num_steps, num_trials=1, filename="STRATCOMBSTDEV"):
     NUM_STEPS = num_steps
     MAX_STEP = 1
     PCA_ITER_STEPS = 1
@@ -220,7 +220,7 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
         reset_seed()
         DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
 
-def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, label=""):
+def find_pca_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label=""):
     inputs = []
     for num_trajs in range(1000, max_num_trajs+1000, 1000):
         experi_input = dict(model=model,
@@ -234,7 +234,7 @@ def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, labe
     experi = DeviationExperiment(*inputs, "PCADev", label=label)
     experi.execute(num_trials)
 
-def find_lin_variation(model, num_steps, num_trials=10, max_num_trajs=8000, label=""):
+def find_lin_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label=""):
     inputs = []
     for num_trajs in range(1000, max_num_trajs+1000, 1000):
         experi_input = dict(model=model,
