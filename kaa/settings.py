@@ -29,9 +29,6 @@ class KaaSettings:
     'Path for data directory to save all xlsx files from experiments.'
     DataDir = "/Users/edwardkim/Work/kaa-optimize/data"
 
-    'Use support points to sample inital points of trajectories'
-    UseSuppPoints = True
-
     'Use pre-generated directions for all experiments.'
     UsePreGenDirs = False
 

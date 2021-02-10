@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 from kaa.reach import ReachSet
-from kaa.plotutil import Plot, TempAnimation
+from kaa.plotutil import Plot, TempAnimation, CompareAnimation
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import PlotSettings, KaaSettings
 from kaa.templates import MultiStrategy, GeneratedDirs
@@ -25,36 +25,33 @@ class DirSaveLoader:
 
     @staticmethod
     def load_dirs(model, num_steps, num_trajs, seed):
-        pca_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
-        lin_dirs_from_file = DirSaveLoader.load_and_reshape(model, os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"))
+        pca_dirs_from_file = np.load(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
+        lin_dirs_from_file = np.load(model, os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
+        samp_pts_from_file = np.load(model, num_steps, os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
 
-        pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file)
-        lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file)
+        pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file, samp_pts_from_file)
+        lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file, samp_pts_from_file)
 
         return list(zip(pca_gendir_obj_list, lin_gendir_obj_list))
 
     @staticmethod
     def save_dirs(model, num_steps, num_trajs, seed, gen_dirs_list):
-        pca_dir_stack, lin_dir_stack = zip(*gen_dirs_list)
+        sampled_points, pca_dir_stack, lin_dir_stack = zip(*gen_dirs_list)
 
-        pca_dir_stack = [gen_dirs.dir_mat for gen_dirs in pca_dir_stack]
-        lin_dir_stack = [gen_dirs.dir_mat for gen_dirs in lin_dir_stack]
+        pca_dir_by_trial = [gen_dirs.dir_mat for gen_dirs in pca_dir_stack]
+        lin_dir_by_trial = [gen_dirs.dir_mat for gen_dirs in lin_dir_stack]
 
-        pca_data_to_save = np.column_stack([dirs.flatten() for dirs in pca_dir_stack])
-        lin_data_to_save = np.column_stack([dirs.flatten() for dirs in lin_dir_stack])
+        sampled_points = sampled_points[0]
 
-        np.savetxt(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"), pca_data_to_save, delimiter=',')
-        np.savetxt(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).txt"), lin_data_to_save, delimiter=',')
+        np.save(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), pca_dir_by_trial)
+        np.save(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), lin_dir_by_trial)
+        np.save(os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), sampled_points)
 
-    def load_and_reshape(model, datapath):
-        dir_from_file = np.loadtxt(datapath, delimiter=',', unpack=True)
-        return [dir_mat.reshape((-1, model.dim)) for dir_mat in dir_from_file]
+    def wrap_pca_dirs(model, pca_dir_mat_list, sampled_points):
+        return [GeneratedPCADirs(model, -1, -1, dir_mat=mat, sampled_points=sampled_points) for mat in pca_dir_mat_list]
 
-    def wrap_pca_dirs(model, dir_mat_list):
-        return [GeneratedPCADirs(model, -1, -1, dir_mat=mat) for mat in dir_mat_list]
-
-    def wrap_lin_dirs(model, dir_mat_list):
-        return [GeneratedLinDirs(model, -1, -1, dir_mat=mat) for mat in dir_mat_list]
+    def wrap_lin_dirs(model, lin_dir_mat_list, sampled_points):
+        return [GeneratedLinDirs(model, -1, -1, dir_mat=mat, sampled_points=sampled_points) for mat in lin_dir_mat_list]
 
 
 class Experiment(ABC):
@@ -101,17 +98,14 @@ class Experiment(ABC):
     model
     """
     def load_dirs(self, num_steps, num_trajs, num_trials):
-        if KaaSettings.UsePreGenDirs:
-            try:
-                gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
-                Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
-            except IOError:
-                Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
-                gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
-                Output.prominent("SAVING TO DISK.")
-                DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
-        else:
-            gen_dirs = None
+        try:
+            gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
+            Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
+        except IOError:
+            Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
+            gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
+            Output.prominent("SAVING TO DISK.")
+            DirSaveLoader.save_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
 
         return gen_dirs
 
@@ -122,9 +116,12 @@ class Experiment(ABC):
         generated_dirs = []
         for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
-            ca_dirs = GeneratedPCADirs(self.model, num_steps, num_trajs)
-            in_dirs = GeneratedLinDirs(self.model, num_steps, num_trajs)
-            generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
+            gen_pca_dirs = GeneratedPCADirs(self.model, num_steps, num_trajs)
+            gen_lin_dirs = GeneratedLinDirs(self.model, num_steps, num_trajs)
+
+            sampled_points = gen_pca_dirs.sampled_points
+
+            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs))
             update_seed()
 
         reset_seed()
@@ -187,19 +184,25 @@ class Experiment(ABC):
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
 
-    def gather_vol_data(self, experi_input):
+    def calc_flowpipe(self, experi_input):
         model = experi_input['model']
         strat = experi_input['strat']
         flow_label = experi_input['label']
         num_steps = experi_input['num_steps']
 
         mod_reach = ReachSet(model, strat=strat, label=flow_label)
+        mod_flow = mod_reach.computeReachSet(num_steps)
+
+        return mod_flow
+
+
+    def gather_vol_data(self, experi_input):
         try:
-            mod_flow = mod_reach.computeReachSet(num_steps)
-            return (flow_label, mod_flow.total_volume)
+            flowpipe = self.calc_flowpipe(experi_input)
+            return (flowpipe.label, flowpipe.total_volume)
         except Exception as excep:
             raise
-            return (flow_label, str(excep))
+            return (experi_input['label'], str(excep))
 
     """
     Plot the results fed into the Plot object
@@ -232,9 +235,26 @@ class Experiment(ABC):
     def __simulate_border_points(self, num_steps):
         init_box_inter = self.__get_init_box()
         border_points = __get_init_box_borders(init_box_inter)
-
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
+        
         return TrajCollection(trajs)
+
+    def initialize_strat(self, experi_input, num_trials):
+        experi_strat = experi_input['strat']
+        experi_supp_mode = experi_input['supp_point_mode']
+        experi_pregen_mode = experi_input['pregen_dir_mode']
+        experi_num_trajs = experi_input['num_trajs']
+        experi_num_steps = experi_input['num_steps']
+
+        loaded_dirs = None
+        
+        if experi_supp_mode:
+            experi_strat.use_supp_point = True
+        elif experi_pregen_mode:
+            loaded_dirs = self.load_dirs(experi_num_steps, experi_num_trajs, num_trials)
+            self.assign_dirs(experi_strat, 0, loaded_dirs)
+
+        return loaded_dirs
 
     def __str__(self):
         return self.label
@@ -252,19 +272,19 @@ class VolumeExperiment(Experiment):
         num_trajs = max([input['num_trajs'] for input in self.inputs])
 
         spreadsheet = self.generate_sheet(num_trials)
-        loaded_dirs = self.load_dirs(num_steps, num_trajs, num_trials)
 
         for experi_input in self.inputs:
+            loaded_dirs = self.initialize_strat(experi_strat, num_trials)
             experi_strat = experi_input['strat']
 
-            for trial_num in range(num_trials):
+            for trial_num in range(1, num_trials):
                 Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
-                self.assign_dirs(experi_strat, trial_num, loaded_dirs)
 
                 flow_label, flow_vol = self.gather_vol_data(experi_input)
                 self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
+                self.assign_dirs(experi_strat, trial_num, loaded_dirs)
 
-                experi_strat.reset()
+                experi_strat.reset() #Reset attributes for next independent trial.
 
 """
 Experiment to measure deviations between generated directions for a strategy type over the course of the reachable set computation.
@@ -305,6 +325,9 @@ class DeviationExperiment(Experiment):
          abs_dot_prods = np.abs(np.einsum('ij,ij->i', norm_dir_one, norm_dir_two))
          return np.min(abs_dot_prods)
 
+"""
+Experiment to calculate and plot the phase plot.
+"""
 class PhasePlotExperiment(Experiment):
 
     def __init__(self, *inputs):
@@ -313,25 +336,19 @@ class PhasePlotExperiment(Experiment):
     def plot_results(self, *var_tup, separate=False):
         self.plot.plot2DPhase(*var_tup, separate=separate)
 
-class Animation:
+class CompAniExperiment(Experiment):
 
-    def __init__(self, experi_input):
-        #assert isinstance(experi_input, ExperimentInput), "One ExperimentInput is allowed for animation."
-        self.experi_input = experi_input
+    def __init__(self, *inputs):
+        super().__init__(*inputs, label="CompAni")
 
-    def execute(self):
-        model = self.experi_input['model']
-        strat = self.experi_input['strat']
-        label = self.experi_input['label']
-        num_steps = self.experi_input['num_steps']
-
-        mod_reach = ReachSet(model, strat=strat)
-        mod_flow = mod_reach.computeReachSet(num_steps)
-        self.animation = TempAnimation(mod_flow)
-
-    def animate(self, x, y, *strat):
-        assert self.animation is not None, "Run Animation.execute first to generate flowpipe to create TempAnimation object."
-        self.animation.animate(x, y, *strat)
+    def execute(self, x , y, ptope_order, max_step):
+        flowpipes = []
+        for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10)
+            flowpipes.append(self.calc_flowpipe(experi_input))
+        
+        animation = CompareAnimation(*flowpipes)
+        animation.animate(x, y, ptope_order, max_step)
 
 """
 Find corner vertices for an initial box along with midpoints between the corners.

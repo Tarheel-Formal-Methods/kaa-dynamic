@@ -6,6 +6,13 @@ from kaa.templates import TempStrategy, GeneratedDirs
 from kaa.settings import KaaSettings
 from kaa.log import Output
 
+
+class TrajData:
+
+    def __init__(self, initial_points, image_points):
+        self.initial_points = initial_points
+        self.image_points = image_points
+
 """
 Abstract linear approximation strategy.
 """
@@ -67,6 +74,15 @@ class AbstractLinStrat(TempStrategy):
             inv_A = approx_inv_lin_trans(start_end_tup, self.dim)
 
         return inv_A
+
+    #This traj_data checking should be part of TempStrategy. In fact, pre-generated dir handling logic should be in TempStrategy. Revise this.
+    def fetch_traj_data(self):
+        if lin_dirs is None:
+            return super().fetch_traj_data()
+        else:
+            traj_pts = lin_dirs.sampled_points
+            return SampledTrajData(traj_pts, traj_pts[1:])
+
 
 """
 Local linear approximation strategy.
@@ -154,14 +170,16 @@ class SlidingLinStrat(AbstractLinStrat):
 
 class GeneratedLinDirs(GeneratedDirs):
 
-    def __init__(self, model, num_steps, num_trajs, cond_threshold=7, dir_mat=None):
-        if dir_mat is None: #dir_mat is set if pre-generated directions are used during computation.
+    def __init__(self, model, num_steps, num_trajs, cond_threshold=7, dir_mat=None, sampled_points=None):
+        if dir_mat is None or sampled_points is None: #dir_mat is set if pre-generated directions are used during computation.
             self.unit_dir_mat = initialize_unit_mat(model.dim)
             self.cond_threshold = cond_threshold
             self.num_trajs = num_trajs
-            super().__init__(model, self.__generate_lin_dir(model, num_steps))
+            lin_dirs, traj_mat = self.__generate_lin_dir(model, num_steps)
+
+            super().__init__(model, lin_dirs, traj_mat)
         else:
-            super().__init__(model, dir_mat)
+            super().__init__(model, dir_mat, sampled_points)
 
     """
     Generates the linear approximation directions based on trajectories taken starting from
@@ -177,7 +195,7 @@ class GeneratedLinDirs(GeneratedDirs):
         dim = model.dim
 
         generated_lin_dir_mat = np.empty((dim*num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(self.num_trajs, num_steps) #trajs is TrajCollecton object'
+        trajs = bund.getIntersect().generate_ran_trajs(self.num_trajs, num_steps) #trajs is TrajCollecton object'
 
         for step in range(num_steps):
             start_end_tup = [(t[step], t[step + 1]) for t in trajs]
@@ -198,10 +216,10 @@ class GeneratedLinDirs(GeneratedDirs):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir = merge_closest_dirs(norm_lin_dir, closest_dirs, dim)
 
-            generated_lin_dir_mat[step*dim:(step + 1)*dim,] = lin_dir
+            generated_lin_dir_mat[step*dim : (step + 1)*dim,] = lin_dir
             self.unit_dir_mat = lin_dir
 
-        return generated_lin_dir_mat
+        return generated_lin_dir_mat, trajs.get_mat()
 
 """
 Approximate the linear transformation.

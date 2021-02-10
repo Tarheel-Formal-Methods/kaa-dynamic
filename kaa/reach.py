@@ -27,11 +27,10 @@ class ReachSet:
     """
     def computeReachSet(self, time_steps, transmode=BundleMode.AFO):
         transformer = BundleTransformer(self.model, transmode)
-        start_offset = len(self.flowpipe) - 1
-        
+
         for step in range(time_steps):
             Timer.start('Reachable Set Computation')
-            starting_bund = copy.deepcopy(self.flowpipe[start_offset + step])
+            starting_bund = copy.deepcopy(self.flowpipe[step])
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
@@ -57,6 +56,7 @@ class ReachSet:
                 
             self.flowpipe.append(trans_bund)
 
+        self.flowpipe.traj_data = self.strat.fetch_traj_data()
         return self.flowpipe
 
 

@@ -1,7 +1,17 @@
 import numpy as np
 from abc import ABC, abstractmethod
-
+from collections import namedtuple
 from kaa.settings import KaaSettings
+
+class SampledTrajData:
+
+    def __init__(self, initial_points, image_points, offsets):
+        self.initial_points = initial_points
+        self.image_points = image_points
+
+    def __getitem__(self, idx):
+        TrajData = nampledtuple('TrajData', ['initial_points, image_points'])
+        return TrajData(self.initial_points[idx], self.image_points[idx])
 
 """
 Object containing routines and data structures required to dynamically change the template matrix of a bundle based off a pre-determined
@@ -11,13 +21,16 @@ has on the ptopes which it creates and modifies.
 """
 class TempStrategy(ABC):
 
-    def __init__(self, model, stratorder=None):
+    def __init__(self, model, use_supp_points=False, stratorder=None):
         self.model = model
         self.dim = model.dim
         self.ptope_hash = {}
         self.ptope_counter = 0
         self.strat_order = stratorder
-        
+        self.inital_points = []
+        self.image_points = []
+        self.use_supp_points = use_supp_points
+
     """
     Method called before the transformation operation and maximization over parallotopes are performed.
     """
@@ -97,14 +110,22 @@ class TempStrategy(ABC):
     @returns TrajCollection object wrapping generated Traj objects.
     """
     def generate_trajs(self, bund, num_trajs):
-        if KaaSettings.UseSuppPoints:
+        if self.use_supp_points:
             trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:
             trajs = bund.getIntersect().generate_ran_trajs(num_trajs, 1)
 
+        self.initial_points.append(trajs.start_points)
+        self.image_points.append(trajs.end_points)
         return trajs
- 
     
+    """
+    Fetch data containing the initial points of the trajectories used and the points where they were propagated.
+    @returns TrajData object containing all relevant data
+    """
+    def fetch_traj_data(self):
+        return SampledTrajData(self.initial_points, self.image_points)
+ 
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.
 """
@@ -164,15 +185,16 @@ Wrapper over matrix of pre-generated dirs.
 """
 class GeneratedDirs:
 
-    def __init__(self, model, dir_mat):
+    def __init__(self, model, dir_mat, sampled_points):
         self.model = model
         self.dim = model.dim
         self.dir_mat = dir_mat
         self.num_steps = len(dir_mat)
+        self.sampled_points = sampled_points
 
     @classmethod
-    def from_mat(cls, model, dir_mat):
-        return cls(model, dir_mat)
+    def from_mat(cls, model, dir_mat, sampled_points):
+        return cls(model, dir_mat, sampled_points)
 
     def get_dirs_at_step(self, step_num):
-        return self.dir_mat[step_num:step_num+self.dim,]
+        return self.dir_mat[step_num*self.dim : (step_num + 1)*self.dim,]

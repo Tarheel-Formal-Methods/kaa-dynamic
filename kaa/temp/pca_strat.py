@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
 
-from kaa.templates import TempStrategy, GeneratedDirs
+from kaa.templates import TempStrategy, GeneratedDirs, SampledTrajData
 from kaa.bundle import Bundle
 from kaa.timer import Timer
 
@@ -45,6 +45,15 @@ class AbstractPCAStrat(TempStrategy):
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
 
+
+    #This traj_data checking should be part of TempStrategy. In fact, pre-generated dir handling logic should be in TempStrategy. Revise this.
+    def fetch_traj_data(self):
+        if pca_dirs is None:
+            return super().fetch_traj_data()
+        else:
+            traj_pts = pca_dirs.sampled_points
+            return SampledTrajData(traj_pts, traj_pts[1:])
+
 """
 Implementation of creating templates through PCA
 """
@@ -87,7 +96,7 @@ Delayed PCA
 """
 class SlidingPCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, num_steps=70, num_trajs=300, lifespan=3, pca_dirs=None):
+    def __init__(self, model, num_steps=70, num_trajs=300, lifespan=3,  pca_dirs=None):
         super().__init__(model, num_trajs, pca_dirs)
         self.pca_ptope_life_data = {}
         self.life_span = lifespan
@@ -129,14 +138,15 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
 class GeneratedPCADirs(GeneratedDirs):
 
-    def __init__(self, model, num_steps, num_trajs, dir_mat=None):
+    def __init__(self, model, num_steps, num_trajs, dir_mat=None, sampled_points=None):
         self.num_trajs = num_trajs
         self.num_steps = num_steps
 
-        if dir_mat is None:
-            super().__init__(model, self.__generate_pca_dir(model))
+        if dir_mat is None or sampled_points is None:
+            pca_dirs, traj_points = self.__generate_pca_dir(model)
+            super().__init__(model, pca_dirs, traj_points)
         else:
-            super().__init__(model, dir_mat)
+            super().__init__(model, dir_mat, sampled_points)
 
     """
     Pre-generates all PCA directions using random initial points from the initial box.
@@ -148,13 +158,13 @@ class GeneratedPCADirs(GeneratedDirs):
         dim = model.dim
 
         generated_pca_dir_mat = np.empty((dim*self.num_steps, dim))
-        trajs = bund.getIntersect().generate_traj(self.num_trajs, self.num_steps) #trajs is TrajCollecton object'
+        trajs = bund.getIntersect().generate_ran_trajs(self.num_trajs, self.num_steps) #trajs is TrajCollecton object'
 
         for step in range(self.num_steps):
             pca = PCA(n_components=dim)
             pca.fit(trajs[step]) #Takes point data from the (num_step)-th step of trajectories contained in TrajCollecton
 
             pca_dirs = pca.components_
-            generated_pca_dir_mat[step*dim:(step+1)*dim,] = pca_dirs
+            generated_pca_dir_mat[step*dim : (step + 1)*dim,] = pca_dirs
 
-        return generated_pca_dir_mat
+        return generated_pca_dir_mat, trajs.get_mat()

@@ -62,6 +62,31 @@ def sup_error_bounds(flowpipe1, flowpipe2, var_ind):
 
     return np.amax(np.append(max_diff, min_diff))
 
+"""
+def test_comp_ani(model, x, y, num_steps)
+
+    NUM_STEPS = 70
+    #model = VanDerPol(delta=0.08)
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+
+    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+    'PCA Strategy Parameters'
+    VDP_PCA_TRAJ_STEPS = 5 #Number of steps our sample trajectories should run.
+    VDP_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
+    VDP_PCA_DELAY = 5
+
+    pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS)
+    pca_strat = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS, pca_dirs=pca_dirs)
+    experi_input = dict(model=unit_model,
+                   strat=pca_strat,
+                   label="",
+                   num_steps=NUM_STEPS)
+
+    vdp_pca = Animation(experi_input)
+    vdp_pca.execute()
+    vdp_pca.animate(0,1, pca_strat)
+"""
+
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
@@ -81,7 +106,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1):
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats")
+    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name}")
     experi.execute(num_trials)
 
 def test_one_one_strat_pca(model, num_steps, num_trials=1):
@@ -102,7 +127,7 @@ def test_one_one_strat_pca(model, num_steps, num_trials=1):
                              num_steps=NUM_STEPS)
         inputs.append(experi_input1)
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials")
+    experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name}")
     experi.execute(num_trials)
 
 def test_one_one_strat_lin(model, num_steps, num_trials=1):
@@ -122,10 +147,10 @@ def test_one_one_strat_lin(model, num_steps, num_trials=1):
                             num_steps=NUM_STEPS)
         inputs.append(experi_input1)
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials")
+    experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name}")
     experi.execute(num_trials)
 
-def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, filename="SLIDINGPCA"):
+def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=1 , filename="SLIDINGPCA"):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life

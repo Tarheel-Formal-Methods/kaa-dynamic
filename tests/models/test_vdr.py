@@ -122,9 +122,9 @@ def test_delayed_pca_VDP():
 
     Timer.generate_stats()
 
-def test_ani_pca_VDP():
+def test_ani_lin_comp_VDP():
 
-    NUM_STEPS = 70
+    NUM_STEPS = 10
     #model = VanDerPol(delta=0.08)
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
@@ -134,16 +134,26 @@ def test_ani_pca_VDP():
     VDP_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
     VDP_PCA_DELAY = 5
 
-    pca_dirs = GeneratedPCADirs(unit_model, VDP_PCA_NUM_TRAJ, NUM_STEPS)
-    pca_strat = PCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, iter_steps=VDP_PCA_ITER_STEPS, pca_dirs=pca_dirs)
-    experi_input = dict(model=unit_model,
-                   strat=pca_strat,
-                   label="",
-                   num_steps=NUM_STEPS)
+    ran_pca_strat = SlidingLinStrat(unit_model, lifespan=20)
+    ran_experi_input = dict(model=unit_model,
+                            strat=ran_pca_strat,
+                            label="LinApp Pre-gen",
+                            num_steps=NUM_STEPS,
+                            num_trajs=2000,
+                            supp_point_mode=False,
+                            pregen_dir_mode=True)
 
-    vdp_pca = Animation(experi_input)
-    vdp_pca.execute()
-    vdp_pca.animate(0,1, pca_strat)
+    supp_pca_strat = SlidingLinStrat(unit_model, lifespan=20)
+    supp_experi_input = dict(model=unit_model,
+                            strat=supp_pca_strat,
+                            label="LinApp Supp Points",
+                            num_steps=NUM_STEPS,
+                            num_trajs=2000,
+                            supp_point_mode=True,
+                            pregen_dir_mode=False)
+                             
+    vdp_pca = CompAniExperiment(ran_experi_input, supp_experi_input)
+    vdp_pca.execute(0, 1, 1, 10)
 
     Timer.generate_stats()
 

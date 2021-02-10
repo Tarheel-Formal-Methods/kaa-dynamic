@@ -43,10 +43,8 @@ class Bundle:
 
     @property
     def T(self):
-
         curr_T = self.__get_row(self.labeled_T)
         gen_T = np.empty((self.num_temp, self.dim))
-        #print(f"L: {self.labeled_L}")
 
         for row_idx, row_labels in enumerate(curr_T):
             for col_idx, row_label in enumerate(row_labels):
@@ -62,6 +60,12 @@ class Bundle:
     @property
     def ptopes(self):
         return [self.getParallelotope(i) for i in range(self.num_temp)]
+
+    """
+    Get parallelotope described by ith row of self.T matrix.
+    """
+    def ptope(self, idx):
+        return self.getParalleltope(idx) if idx <= self.num_temp - 1 else None
 
     """
     Returns linear constraints representing the polytope defined by bundle.
@@ -314,16 +318,14 @@ class BundleTransformer:
     def bound_worker(self, row_ind, row, bund, L, output_queue):
         'Find the generator of the parallelotope.'
         ptope = bund.getParallelotope(row_ind)
-        #print(f"Ptope {row_ind}\n")
 
         'Toggle iterators between OFO/AFO'
         direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
-        #print(f"Num of directions: {bund.num_dir}")
 
-        for column in direct_iter:
-            curr_L = L[column]
+        for l_row in direct_iter:
+            curr_L = L[l_row]
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
-            output_queue.put((column, ub, lb))
+            output_queue.put((l_row, ub, lb))
 
     """
     Transforms the bundle according to the dynamics governing the system. (dictated by self.f)
@@ -350,9 +352,9 @@ class BundleTransformer:
                 row_ind, row, bund, L, output_queue = param
                 self.bound_worker(row_ind, row, bund, L, output_queue)
 
-        for column, ub, lb in self.queue_to_list(output_queue):
-            new_offu[column] = min(ub, new_offu[column])
-            new_offl[column] = min(lb, new_offl[column])
+        for l_row, ub, lb in self.queue_to_list(output_queue):
+            new_offu[l_row] = min(ub, new_offu[l_row])
+            new_offl[l_row] = min(lb, new_offl[l_row])
 
         bund.offu = new_offu
         bund.offl = new_offl
@@ -376,8 +378,6 @@ class BundleTransformer:
 
         'Create subsitutions tuples.'
         var_sub = [(var, genFun[var_ind]) for var_ind, var in enumerate(self.vars)]
-
-        #print(f"Variable Sub for {dir_vec}: {var_sub}")
 
         Timer.start('Functional Composition')
         fog = [func.subs(var_sub, simultaneous=True) for func in self.f]

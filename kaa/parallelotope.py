@@ -26,6 +26,10 @@ class Parallelotope(LinearSystem):
         base_vertex = self.__computeBaseVertex()
         return base_vertex, self.__computeGenerators(base_vertex)
 
+    @property
+    def generatorVecs(self):
+        return self.__get_generators()[1]
+    
     """
     Return list of functions transforming the n-unit-box over the parallelotope.
     @returns list of transfomation from unitbox over the parallelotope.
