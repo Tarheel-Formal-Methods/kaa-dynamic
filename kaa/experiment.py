@@ -26,8 +26,8 @@ class DirSaveLoader:
     @staticmethod
     def load_dirs(model, num_steps, num_trajs, seed):
         pca_dirs_from_file = np.load(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
-        lin_dirs_from_file = np.load(model, os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
-        samp_pts_from_file = np.load(model, num_steps, os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
+        lin_dirs_from_file = np.load(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
+        samp_pts_from_file = np.load(os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
 
         pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file, samp_pts_from_file)
         lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file, samp_pts_from_file)
@@ -111,6 +111,7 @@ class Experiment(ABC):
 
     """
     Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
+    TODO Use naampledtuples for readbility
     """
     def __generate_dirs(self, num_steps, num_trajs, num_trials):
         generated_dirs = []
@@ -121,7 +122,7 @@ class Experiment(ABC):
 
             sampled_points = gen_pca_dirs.sampled_points
 
-            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs))
+            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs)) #FIX THIS. Causes compat issues in current state.
             update_seed()
 
         reset_seed()

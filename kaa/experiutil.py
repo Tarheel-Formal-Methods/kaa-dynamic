@@ -231,14 +231,16 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=1):
     experi.execute(num_trials)
 
 def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
-
     for num_trajs in range(1000, max_num_trajs, 1000):
         generated_dirs = []
         for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
-            generated_dirs.append((gen_pca_dirs, gen_lin_dirs))
+            
+            sampled_points = gen_pca_dirs.sampled_points
+
+            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs))
             update_seed()
 
         reset_seed()

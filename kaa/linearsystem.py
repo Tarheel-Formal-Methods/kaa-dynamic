@@ -176,7 +176,7 @@ class LinearSystem:
         p.close()
         p.join()
 
-        return TrajCollection(self.queue_to_list(output_queue))
+        return TrajCollection(self.model, self.queue_to_list(output_queue))
 
     """
     Worker for trajectory generation using support points.
@@ -203,7 +203,7 @@ class LinearSystem:
         p.close()
         p.join()
 
-        return TrajCollection(self.queue_to_list(output_queue))
+        return TrajCollection(self.model, self.queue_to_list(output_queue))
 
     
     """

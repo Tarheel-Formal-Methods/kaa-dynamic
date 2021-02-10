@@ -110,10 +110,10 @@ class TrajCollection:
         traj_pts_mat = []
 
         for step in range(self.max_traj_len):
-            step_mat = np.empty(self.num_trajs, self.model.dim)
+            step_mat = np.empty((self.num_trajs, self.model.dim))
 
             for idx, traj in enumerate(self.traj_list):
-                step_mat[idx] = traj_list[step]
+                step_mat[idx] = traj[step]
 
             traj_pts_mat.append(step_mat)
 

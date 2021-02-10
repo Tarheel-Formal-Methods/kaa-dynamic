@@ -46,7 +46,7 @@ class AbstractPCAStrat(TempStrategy):
         return pca_dirs_mat, ptope_dir_labels
 
 
-    #This traj_data checking should be part of TempStrategy. In fact, pre-generated dir handling logic should be in TempStrategy. Revise this.
+    #This traj_data checking should be part of TempStrategy. In fact, pre-generated dir handling logic should be in TempStrategy. Revise this. Revise experiment.py
     def fetch_traj_data(self):
         if pca_dirs is None:
             return super().fetch_traj_data()
