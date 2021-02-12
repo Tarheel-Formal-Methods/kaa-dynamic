@@ -12,7 +12,7 @@ Abstract linear approximation strategy.
 """
 class AbstractLinStrat(TempStrategy):
 
-    def __init__(self, model, num_trajs, cond_threshold, dirs):
+    def __init__(self, model, num_trajs, cond_threshold):
         super().__init__(model)
         self.unit_dir_mat = initialize_unit_mat(self.dim)
         self.cond_threshold = cond_threshold
@@ -117,7 +117,7 @@ class SlidingLinStrat(AbstractLinStrat):
     def __init__(self, model, lifespan=1, num_trajs=-1, cond_threshold=7):
         num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
         super().__init__(model, num_trajs, cond_threshold)
-        self.lin_ptope_life_data = {}
+        self.lin_ptope_life_counter = {}
         self.lifespan = lifespan
 
     """
@@ -128,12 +128,12 @@ class SlidingLinStrat(AbstractLinStrat):
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label in list(self.lin_ptope_life_data.keys()):
-            self.lin_ptope_life_data[ptope_label] -= 1
+        for ptope_label in list(self.lin_ptope_life_counter.keys()):
+            self.lin_ptope_life_counter[ptope_label] -= 1
             
-            if self.lin_ptope_life_data[ptope_label] == 0:
+            if self.lin_ptope_life_counter[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
-                self.lin_ptope_life_data.pop(ptope_label)
+                self.lin_ptope_life_counter.pop(ptope_label)
 
     """
     Auxiliary method to generate LinApp. directions and add them as
@@ -145,7 +145,7 @@ class SlidingLinStrat(AbstractLinStrat):
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.lin_ptope_life_data[new_ptope_label] = self.lifespan #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life_counter[new_ptope_label] = self.lifespan #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 

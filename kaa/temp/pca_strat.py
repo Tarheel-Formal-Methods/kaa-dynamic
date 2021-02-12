@@ -100,7 +100,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
     def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label in list(self.pca_ptope_life_data.keys()):
-            self.pca_ptope_life_data[ptope_label] -= 1
+            self.pca_ptope_life_counter[ptope_label] -= 1
             
             if self.pca_ptope_life_counter[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)

@@ -246,6 +246,7 @@ class Plot:
 
         vertices = sys.vertices
         proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
+        center_pt = sys.chebyshev_center.center
 
         'Sort by polar coordinates to ensure proper plotting of boundary'
         proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
@@ -294,12 +295,13 @@ class CompareAnimation(Plot):
         self.flowpipes = flowpipes
         self.model = flowpipes[0].model
 
-    def animate(self, x, y, ptope_order, steps):
+    def animate(self, x, y, ptope_order):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
+        num_plots = len(self.flowpipes)
 
-        ptope_order_offset = ptope_order + model.dim
+        ptope_order_offset = ptope_order + 1
         figure = plt.figure(figsize=PlotSettings.fig_size)
-        ax_list = [figure.add_subplot(1, len(strats), i) for i, in enumerate(strats)]
+        ax_list = [figure.add_subplot(1, num_plots, i+1) for i in range(num_plots)]
 
         for ax in ax_list:
             ax.set_xlabel(f"{x_var}")
@@ -308,6 +310,9 @@ class CompareAnimation(Plot):
 
         'Fetch all the trajectory data for plotting.'
         traj_data_list = [flowpipe.traj_data for flowpipe in self.flowpipes]
+        num_steps = min([len(flowpipe) for flowpipe in self.flowpipes]) - 1
+
+        #print(f"NUM STEPS: {num_steps}")
 
         def update(i):
             'Gets the ith bundle and fetches the ptope associated to the supplied ptope order input'
@@ -316,21 +321,24 @@ class CompareAnimation(Plot):
             if None not in ptope_list:
                 for ax_idx, ax in enumerate(ax_list):
                     ax_ptope = ptope_list[ax_idx]
-                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=ptope_idx)
+                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0)
 
                     initial_points = traj_data_list[ax_idx].initial_points[i]
                     image_points = traj_data_list[ax_idx].image_points[i]
 
-                    ax.scatter(initial_points[:,0], initial_points[:,1], color='r', label='Initial Points') #Plot initial points.
-                    ax.scatter(image_points[:,0], image_points[:,1], color='b', label='Image Points') #Plot image points.
+                    print(f"I index: {i}")
+                    print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
+                    print(f"Image Points Shape: {image_points.shape}")
+
+                    ax.scatter(initial_points[:,x], initial_points[:,y], color='r', label='Initial Points') #Plot initial points.
+                    ax.scatter(image_points[:,x], image_points[:,y], color='b', label='Image Points') #Plot image points.
 
                     'Matrix of rows representing generator vectors for ax_ptope'
                     gen_vecs = ax_ptope.generatorVecs
 
                     self.__draw_comp_stats(ax, ax_idx, gen_vecs)
 
-
-        ani = animate.FuncAnimation(figure, update, frames=steps)
+        ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
         Writer = animate.writers['ffmpeg']
         writer = Writer(fps=7,bitrate=-1)
@@ -338,9 +346,9 @@ class CompareAnimation(Plot):
         filename = f"{self.model.name}: COMP"
         ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
 
-        def __draw_comp_stats(self, ax, ax_idx, gen_vecs):
-            patch = [pat.Patch(color='g', label='str(gen_vecs)')]
-            ax.legend(handles=patch, loc='upper right')
+    def __draw_comp_stats(self, ax, ax_idx, gen_vecs):
+        patch = [pat.Patch(color='g', label='str(gen_vecs)')]
+        ax.legend(handles=patch, loc='upper right')
 
 
 class TempAnimation(Plot):

@@ -44,7 +44,7 @@ class DirSaveLoader:
 
         pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file, samp_pts_from_file)
         lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file, samp_pts_from_file)
-
+        
         gen_dirs_list = []
         for pca_gendir_obj, lin_gendir_obj in zip(pca_gendir_obj_list, lin_gendir_obj_list):
             gen_dirs_tuple = GenDirsTuple(pca_gendir_obj, lin_gendir_obj)
@@ -101,8 +101,11 @@ class DirSaveLoader:
     def wrap_pca_dirs(model, pca_dir_mat_list, sampled_pts_list):
         gen_pca_dirs_list = []
 
+        #print(f"Sample Points Matrix List dim: sampled_pts_list.shape}")
+
         for mat_idx, pca_mat in enumerate(pca_dir_mat_list):
-            samped_pts_mat = sampled_pts_list[mat_idx]
+            sampled_pts_mat = sampled_pts_list[mat_idx]
+            #print(f"Sample Points Matrix dim: {sampled_pts_mat.shape}")
             gen_pca_dirs = GeneratedPCADirs(model, -1, -1,
                                             dir_mat = pca_mat,
                                             sampled_points = sampled_pts_mat)
@@ -125,8 +128,8 @@ class DirSaveLoader:
         gen_lin_dirs_list = []
 
         for mat_idx, lin_mat in enumerate(lin_dir_mat_list):
-            samped_pts_mat = sampled_pts_list[mat_idx]
-            gen_pca_dirs = GeneratedLinDirs(model, -1, -1,
+            sampled_pts_mat = sampled_pts_list[mat_idx]
+            gen_lin_dirs = GeneratedLinDirs(model, -1, -1,
                                             dir_mat = lin_mat,
                                             sampled_points = sampled_pts_mat)
 
@@ -160,7 +163,7 @@ class Experiment(ABC):
     """
     def assign_dirs(self, strat, trial_num, gen_dirs_list):
 
-        if gen_dirs is not None:
+        if gen_dirs_list is not None:
             if isinstance(strat, MultiStrategy):
                 for st in strat.strats:
                     self.__assign_dirs_by_strat(st, trial_num, gen_dirs_list)
@@ -350,12 +353,18 @@ class Experiment(ABC):
         experi_supp_mode = experi_input['supp_mode']
         experi_pregen_mode = experi_input['pregen_mode']
         experi_num_trajs = experi_input['num_trajs']
-        experi_num_steps = experi_input['num_steps']
+        experi_num_steps = experi_input['max_steps']
 
         loaded_dirs = None
         
         if experi_supp_mode:
-            experi_strat.use_supp_point = True
+
+            if isinstance(experi_strat, MultiStrategy):
+                for strat in experi_strat.strats:
+                    strat.use_supp_points = True
+            else:
+                experi_strat.use_supp_points = True
+
         elif experi_pregen_mode:
             loaded_dirs = self.load_dirs(experi_num_steps, experi_num_trajs, num_trials)
             self.assign_dirs(experi_strat, 0, loaded_dirs)
@@ -447,14 +456,14 @@ class CompAniExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs, label="CompAni")
 
-    def execute(self, x , y, ptope_order, max_step):
+    def execute(self, x , y, ptope_order):
         flowpipes = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipes.append(self.calc_flowpipe(experi_input))
         
         animation = CompareAnimation(*flowpipes)
-        animation.animate(x, y, ptope_order, max_step)
+        animation.animate(x, y, ptope_order)
 
 """
 Find corner vertices for an initial box along with midpoints between the corners.

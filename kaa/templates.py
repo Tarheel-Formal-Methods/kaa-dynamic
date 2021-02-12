@@ -5,7 +5,7 @@ from kaa.settings import KaaSettings
 
 class SampledTrajData:
 
-    def __init__(self, initial_points, image_points, offsets):
+    def __init__(self, initial_points, image_points):
         self.initial_points = initial_points
         self.image_points = image_points
 
@@ -27,10 +27,11 @@ class TempStrategy(ABC):
         self.ptope_hash = {}
         self.ptope_counter = 0
         self.strat_order = stratorder
-        self.inital_points = []
+        self.initial_points = []
         self.image_points = []
         self.use_supp_points = use_supp_points
         self.pregen_dirs = None
+        self.dirs = None
 
 
     """
@@ -112,7 +113,7 @@ class TempStrategy(ABC):
     @returns TrajCollection object wrapping generated Traj objects.
     """
     def generate_trajs(self, bund, num_trajs):
-
+        
         if self.use_supp_points:
             trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:
@@ -127,13 +128,14 @@ class TempStrategy(ABC):
     @returns TrajData object containing all relevant data
     """
     def fetch_traj_data(self):
-
-        if dirs is None:
+        
+        if self.dirs is None:
             return SampledTrajData(self.initial_points, self.image_points)
         else:
-            sampled_traj_pts = dirs.sampled_points
+            sampled_traj_pts = self.dirs.sampled_points
+            #print(f"Shape of Sampled Points: {self.dirs.sampled_points.shape}")
             return SampledTrajData(sampled_traj_pts,
-                                   sampled_traj_pts[1:])
+                                   sampled_traj_pts[:,1:,:]) #Edge cases here to consider.
 
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.

@@ -65,7 +65,7 @@ class Bundle:
     Get parallelotope described by ith row of self.T matrix.
     """
     def ptope(self, idx):
-        return self.getParalleltope(idx) if idx <= self.num_temp - 1 else None
+        return self.getParallelotope(idx) if idx <= self.num_temp - 1 else None
 
     """
     Returns linear constraints representing the polytope defined by bundle.

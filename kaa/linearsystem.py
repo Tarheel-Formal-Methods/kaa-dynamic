@@ -53,12 +53,15 @@ class LinearSystem:
     def volume(self):
         try:
             return ConvexHull(self.vertices).volume
+
         except QhullError:
             envelop_box = self.__calc_envelop_box()
             num_samples = KaaSettings.VolumeSamples
 
+            sampled_points = [self.__sample_box_point(envelop_box) for _  in range(num_samples)]
+
             check_point_membership = lambda point: 1 if self.check_membership(point) else 0
-            point_value = map(check_point_membership, [self.__sample_box_point(envelop_box) for _  in range(num_samples)])
+            point_value = map(check_point_membership, sampled_points)
             num_contained_points = reduce(add, point_value)
 
             return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
@@ -197,7 +200,7 @@ class LinearSystem:
         for dir_vec in dir_vecs:
             input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
 
-        #print(f"Number of Directons: {len(input_params)}")
+        #print(f"Number of Directions: {len(input_params)}")
         p = mp.Pool(processes=12)
         p.starmap(self.generate_supp_worker, input_params)
         p.close()
