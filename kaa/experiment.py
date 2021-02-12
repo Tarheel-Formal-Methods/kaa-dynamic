@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 import numpy as np
 import os
 
-
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation, CompareAnimation
 from kaa.trajectory import Traj, TrajCollection
@@ -16,7 +15,6 @@ from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
 from kaa.log import Output
 from kaa.timer import Timer
-
 
 GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
 
@@ -28,6 +26,16 @@ class SpreadSheet:
 
 class DirSaveLoader:
 
+    """
+    Loads pregenerated directions and sampled points used in calculating the directions from path specified
+    in KaaSettings.DataDir. Returns a list of GenDirsTuples with initialized GeneratedDirs objects.
+    @params model: Model object
+            num_steps: Number of steps computed
+            num_trajs: Number of trajectories used to compute directions
+            seed: Random seed used to sample trajectory starting points in the initial box.
+    
+    @returns List of GenDirsTuples ordered by trial number
+    """
     @staticmethod
     def load_dirs(model, num_steps, num_trajs, seed):
         pca_dirs_from_file = np.load(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"))
@@ -37,8 +45,23 @@ class DirSaveLoader:
         pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file, samp_pts_from_file)
         lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file, samp_pts_from_file)
 
-        return list(zip(pca_gendir_obj_list, lin_gendir_obj_list))
+        gen_dirs_list = []
+        for pca_gendir_obj, lin_gendir_obj in zip(pca_gendir_obj_list, lin_gendir_obj_list):
+            gen_dirs_tuple = GenDirsTuple(pca_gendir_obj, lin_gendir_obj)
+            gen_dirs_list.append(gen_dirs_tuple)
 
+        return gen_dirs_list
+
+    """
+    Saves pregenerated directions to path specified by KaaSettings.DataDir. The files will be .npy files and their names will be designated according to
+    the number of steps used in the direction computation, the number of trajectories used to compute the directions, and the random seed used to
+    pick starting points within the initial box.
+    @params model: Model object
+            num_steps: Number of steps
+            num_trajs: Number of trajectories
+            seed: random seed
+            gen_dirs_list: List of GenDirsTuple ordered by trial number (See above for definition.)
+    """
     @staticmethod
     def save_dirs(model, num_steps, num_trajs, seed, gen_dirs_list):
 
@@ -65,6 +88,16 @@ class DirSaveLoader:
         np.save(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), lin_dirs_by_trial)
         np.save(os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), sampled_pts_by_trial)
 
+
+    """
+    Takes list of pregenerated PCA directions fetched from disk and initializes a GeneratedPCADirs
+    object with the required starting data.
+    @params model: Model object
+            pca_dir_mat_list: List of PCA directions matrices ordered by trial. Each trial should have different random seed.
+            sampled_pts_list: List of sampled point matrices.
+
+    @returns List of GeneratedPCADirs objects ordered by trial number.
+    """
     def wrap_pca_dirs(model, pca_dir_mat_list, sampled_pts_list):
         gen_pca_dirs_list = []
 
@@ -72,13 +105,22 @@ class DirSaveLoader:
             samped_pts_mat = sampled_pts_list[mat_idx]
             gen_pca_dirs = GeneratedPCADirs(model, -1, -1,
                                             dir_mat = pca_mat,
-                                            sampled_points = samped_pts_mat)
+                                            sampled_points = sampled_pts_mat)
 
             gen_pca_dirs_list.append(gen_pca_dirs)
 
         return gen_pca_dirs_list
 
 
+    """
+    Takes list of pregenerated LinApp directions fetched from disk and initializes a GeneratedLinDirs
+    object with the required starting data.
+    @params model: Model object
+            pca_lin_mat_list: List of LinApp directions matrices ordered by trial. Each trial should have different random seed.
+            sampled_pts_list: List of sampled points
+
+    @returns List of GeneratedLinDirs objects ordered by trial number.
+    """
     def wrap_lin_dirs(model, lin_dir_mat_list, sampled_pts_list):
         gen_lin_dirs_list = []
 
@@ -86,7 +128,7 @@ class DirSaveLoader:
             samped_pts_mat = sampled_pts_list[mat_idx]
             gen_pca_dirs = GeneratedLinDirs(model, -1, -1,
                                             dir_mat = lin_mat,
-                                            sampled_points = samped_pts_mat)
+                                            sampled_points = sampled_pts_mat)
 
             gen_lin_dirs_list.append(gen_lin_dirs)
 
@@ -112,6 +154,9 @@ class Experiment(ABC):
 
     """
     Assign directions based on pre-generated directions for each trial.
+    @params strat: TempStrategy object
+            trial_num: Trial number
+            gen_dirs_list: List of GenDirsTuples ordered by trial number.
     """
     def assign_dirs(self, strat, trial_num, gen_dirs_list):
 
@@ -124,6 +169,9 @@ class Experiment(ABC):
 
     """
     Auxiliary method to assign directions based on strategy type.
+    @params strat: TempStrategy object
+            trial_num: Trial number
+            gen_dirs_list: List of GenDirsTuples ordered by trial number
     """
     def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs_list):
         
@@ -138,7 +186,11 @@ class Experiment(ABC):
 
     """
     Method to load pre-generated directions from data directory. If not, pre-generate with supplied parameters and save to the data directory.
-    model
+    @params num_steps: Number of steps to be used for computation.
+            num_trajs: Number of trajectories used during computation.
+            seed: Random seed used for computation.
+
+    @returns List of GenDirsTuples ordered by trial number.
     """
     def load_dirs(self, num_steps, num_trajs, num_trials):
         try:
@@ -156,7 +208,11 @@ class Experiment(ABC):
 
     """
     Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
-    TODO Use naampledtuples for readbility
+    @params num_steps: Number of steps to propagate trajectories according to system dynamics
+            num_trajs: Number of trajectories to use to generate directions.
+            num_trials: Number of trials to increment seed and generate new set of directions.
+    
+    @returns List of GenDirsTuples ordered by trial number.
     """
     def __generate_dirs(self, num_steps, num_trajs, num_trials):
         generated_dirs = []
