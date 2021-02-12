@@ -10,11 +10,10 @@ Abstract PCA class containing all of the tools PCA strats need.
 """
 class AbstractPCAStrat(TempStrategy):
 
-    def __init__(self, model, num_trajs, pca_dirs):
+    def __init__(self, model, num_trajs):
         assert pca_dirs is None or isinstance(pca_dirs, GeneratedPCADirs), "PCA Strategies may only take pre-generated PCA directions."
         super().__init__(model)
         self.num_trajs = num_trajs
-        self.pca_dirs = pca_dirs
 
     def open_strat(self, bund, step_num):
         pass
@@ -31,8 +30,10 @@ class AbstractPCAStrat(TempStrategy):
              and the second component being the corresponding labels to identify each direction generated.
     """
     def generate_pca_dir(self, bund, step_num):
-        if self.pca_dirs is None:
-            trajs = self.generate_trajs(bund, self.num_trajs) #Get trajs
+        
+        if self.dirs is None:
+            
+            trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
 
             pca = PCA(n_components=self.dim) #Run PCA
@@ -45,22 +46,13 @@ class AbstractPCAStrat(TempStrategy):
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
 
-
-    #This traj_data checking should be part of TempStrategy. In fact, pre-generated dir handling logic should be in TempStrategy. Revise this. Revise experiment.py
-    def fetch_traj_data(self):
-        if pca_dirs is None:
-            return super().fetch_traj_data()
-        else:
-            traj_pts = pca_dirs.sampled_points
-            return SampledTrajData(traj_pts, traj_pts[1:])
-
 """
 Implementation of creating templates through PCA
 """
 class PCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, num_trajs=300, iter_steps=1, pca_dirs=None):
-        super().__init__(model, num_trajs, pca_dirs)
+    def __init__(self, model, num_trajs=300, iter_steps=1):
+        super().__init__(model, num_trajs)
         self.iter_steps = iter_steps
         self.last_ptope = None
 
@@ -96,9 +88,10 @@ Delayed PCA
 """
 class SlidingPCAStrat(AbstractPCAStrat):
 
-    def __init__(self, model, num_steps=70, num_trajs=300, lifespan=3,  pca_dirs=None):
-        super().__init__(model, num_trajs, pca_dirs)
-        self.pca_ptope_life_data = {}
+    def __init__(self, model, num_steps=70, num_trajs=300, lifespan=3):
+        super().__init__(model, num_trajs)
+        
+        self.pca_ptope_life_counter = {}
         self.life_span = lifespan
 
     def open_strat(self, bund, step_num):
@@ -109,9 +102,9 @@ class SlidingPCAStrat(AbstractPCAStrat):
         for ptope_label in list(self.pca_ptope_life_data.keys()):
             self.pca_ptope_life_data[ptope_label] -= 1
             
-            if self.pca_ptope_life_data[ptope_label] == 0:
+            if self.pca_ptope_life_counter[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
-                self.pca_ptope_life_data.pop(ptope_label)
+                self.pca_ptope_life_counter.pop(ptope_label)
 
     """
     Auxiliary method to generate PCA directions and add them as
@@ -123,7 +116,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
     def __add_new_ptope(self, bund, step_num):
         new_pca_dirs, new_dir_labels = self.generate_pca_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_pca_dirs, new_dir_labels)
-        self.pca_ptope_life_data[new_ptope_label] = self.life_span #Add fresh ptope and lifespan to step list
+        self.pca_ptope_life_counter[new_ptope_label] = self.life_span #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 

@@ -1,9 +1,11 @@
 from plotly.offline import plot
 from openpyxl import Workbook
+from collections import namedtuple
 from abc import ABC, abstractmethod
 import plotly.graph_objects as go
 import numpy as np
 import os
+
 
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot, TempAnimation, CompareAnimation
@@ -14,6 +16,9 @@ from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
 from kaa.log import Output
 from kaa.timer import Timer
+
+
+GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
 
 class SpreadSheet:
 
@@ -36,22 +41,56 @@ class DirSaveLoader:
 
     @staticmethod
     def save_dirs(model, num_steps, num_trajs, seed, gen_dirs_list):
-        sampled_points, pca_dir_stack, lin_dir_stack = zip(*gen_dirs_list)
 
-        pca_dir_by_trial = [gen_dirs.dir_mat for gen_dirs in pca_dir_stack]
-        lin_dir_by_trial = [gen_dirs.dir_mat for gen_dirs in lin_dir_stack]
+        pca_dirs_by_trial = []
+        lin_dirs_by_trial = []
+        sampled_pts_by_trial = []
+        
+        for gen_dirs_tup in gen_dirs_list:
+            gen_pca_dirs = gen_dirs_tup.GenPCADirs
+            gen_lin_dirs = gen_dirs_tup.GenLinDirs
 
-        sampled_points = sampled_points[0]
+            pca_dirs_mat = gen_pca_dirs.dir_mat
+            lin_dirs_mat = gen_lin_dirs.dir_mat
 
-        np.save(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), pca_dir_by_trial)
-        np.save(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), lin_dir_by_trial)
-        np.save(os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), sampled_points)
+            sampled_points_mat = gen_pca_dirs.sampled_points
 
-    def wrap_pca_dirs(model, pca_dir_mat_list, sampled_points):
-        return [GeneratedPCADirs(model, -1, -1, dir_mat=mat, sampled_points=sampled_points) for mat in pca_dir_mat_list]
+            pca_dirs_by_trial.append(pca_dirs_mat)
+            lin_dirs_by_trial.append(lin_dirs_mat)
+            sampled_pts_by_trial.append(sampled_points_mat)
 
-    def wrap_lin_dirs(model, lin_dir_mat_list, sampled_points):
-        return [GeneratedLinDirs(model, -1, -1, dir_mat=mat, sampled_points=sampled_points) for mat in lin_dir_mat_list]
+        #print(np.asarray(sampled_pts_by_trial).shape)
+
+        np.save(os.path.join(KaaSettings.DataDir, f"PCA{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), pca_dirs_by_trial)
+        np.save(os.path.join(KaaSettings.DataDir, f"Lin{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), lin_dirs_by_trial)
+        np.save(os.path.join(KaaSettings.DataDir, f"SamPts{model}(T:{num_trajs})(Steps:{num_steps})(Seed:{seed}).npy"), sampled_pts_by_trial)
+
+    def wrap_pca_dirs(model, pca_dir_mat_list, sampled_pts_list):
+        gen_pca_dirs_list = []
+
+        for mat_idx, pca_mat in enumerate(pca_dir_mat_list):
+            samped_pts_mat = sampled_pts_list[mat_idx]
+            gen_pca_dirs = GeneratedPCADirs(model, -1, -1,
+                                            dir_mat = pca_mat,
+                                            sampled_points = samped_pts_mat)
+
+            gen_pca_dirs_list.append(gen_pca_dirs)
+
+        return gen_pca_dirs_list
+
+
+    def wrap_lin_dirs(model, lin_dir_mat_list, sampled_pts_list):
+        gen_lin_dirs_list = []
+
+        for mat_idx, lin_mat in enumerate(lin_dir_mat_list):
+            samped_pts_mat = sampled_pts_list[mat_idx]
+            gen_pca_dirs = GeneratedLinDirs(model, -1, -1,
+                                            dir_mat = lin_mat,
+                                            sampled_points = samped_pts_mat)
+
+            gen_lin_dirs_list.append(gen_lin_dirs)
+
+        return gen_lin_dirs_list
 
 
 class Experiment(ABC):
@@ -74,22 +113,26 @@ class Experiment(ABC):
     """
     Assign directions based on pre-generated directions for each trial.
     """
-    def assign_dirs(self, strat, trial_num, gen_dirs):
+    def assign_dirs(self, strat, trial_num, gen_dirs_list):
+
         if gen_dirs is not None:
             if isinstance(strat, MultiStrategy):
                 for st in strat.strats:
-                    self.__assign_dirs_by_strat(st, trial_num, gen_dirs)
+                    self.__assign_dirs_by_strat(st, trial_num, gen_dirs_list)
             else:
-                self.__assign_dirs_by_strat(strat, trial_num, gen_dirs)
+                self.__assign_dirs_by_strat(strat, trial_num, gen_dirs_list)
 
     """
     Auxiliary method to assign directions based on strategy type.
     """
-    def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs):
+    def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs_list):
+        
         if isinstance(strat, AbstractPCAStrat):
-            strat.pca_dirs = gen_dirs[trial_num][0]
+            strat.dirs = gen_dirs_list[trial_num].GenPCADirs
+
         elif isinstance(strat, AbstractLinStrat):
-            strat.lin_dirs = gen_dirs[trial_num][1]
+            strat.dirs = gen_dirs_list[trial_num].GenLinDirs
+            
         else:
             raise RuntimeError("Strategies have to be of either PCA, LinApp type.")
 
@@ -99,15 +142,17 @@ class Experiment(ABC):
     """
     def load_dirs(self, num_steps, num_trajs, num_trials):
         try:
-            gen_dirs = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
+            gen_dirs_list = DirSaveLoader.load_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed)
             Output.prominent(f"Loaded directions from {KaaSettings.DataDir}")
+
         except IOError:
             Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
-            gen_dirs = self.__generate_dirs(num_steps, num_trajs, num_trials)
+            gen_dirs_list = self.__generate_dirs(num_steps, num_trajs, num_trials)
+            
             Output.prominent("SAVING TO DISK.")
-            DirSaveLoader.save_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs)
+            DirSaveLoader.save_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs_list)
 
-        return gen_dirs
+        return gen_dirs_list
 
     """
     Generate directions for each trial by incrementing random seed and generating both PCA and LinApp directions.
@@ -115,14 +160,15 @@ class Experiment(ABC):
     """
     def __generate_dirs(self, num_steps, num_trajs, num_trials):
         generated_dirs = []
+        
         for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(self.model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(self.model, num_steps, num_trajs)
 
-            sampled_points = gen_pca_dirs.sampled_points
-
-            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs)) #FIX THIS. Causes compat issues in current state.
+            gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
+            generated_dirs.append(gen_dirs_tuple)
+            
             update_seed()
 
         reset_seed()
@@ -210,8 +256,10 @@ class Experiment(ABC):
     """
     def plot_results(self, *var_tup, plottrajs=True):
         border_sim_trajs = self.__simulate_border_points(self.max_num_steps)
+
         if plottrajs:
            self.plot.add(border_sim_trajs)
+           
         self.plot.plot(*var_tup)
 
     """
@@ -236,14 +284,15 @@ class Experiment(ABC):
     def __simulate_border_points(self, num_steps):
         init_box_inter = self.__get_init_box()
         border_points = __get_init_box_borders(init_box_inter)
+
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
         
         return TrajCollection(trajs)
 
     def initialize_strat(self, experi_input, num_trials):
         experi_strat = experi_input['strat']
-        experi_supp_mode = experi_input['supp_point_mode']
-        experi_pregen_mode = experi_input['pregen_dir_mode']
+        experi_supp_mode = experi_input['supp_mode']
+        experi_pregen_mode = experi_input['pregen_mode']
         experi_num_trajs = experi_input['num_trajs']
         experi_num_steps = experi_input['num_steps']
 
@@ -392,33 +441,3 @@ Reset global random seed.
 """
 def reset_seed():
     KaaSettings.RandSeed = 897987178
-
-"""
-Wraps around a batch of Experiments for coalesed output retrival.
-TODO Get rid of this class. Redundent and can easily be factored into Experiment.
-"""
-class ExperimentBatch:
-
-    def __init__(self, label=""):
-        self.experiments = []
-        self.vol_data = []
-        self.label = label
-
-    def add_experi(self, experiment):
-        assert isinstance(experiment, Experiment), "Only takes Experiment objects."
-        self.experiments.append(experiment)
-
-    def execute(self):
-        assert len(self.experiments) != 0, "Must add Experiments to ExperimentBatch before executing the batch."
-        for experi in self.experiments:
-            print(f"\n Executing Experiment {experi.label} \n")
-            experi.execute()
-
-    """
-    Returns total volume results from consitutent experiments in order which they were added in ExperimentBatch
-    """
-    def get_vol_data(self):
-        return [(str(experi.inputs[0]['strat']), experi.get_total_vol_results()) for experi in self.experiments]
-
-    def get_strat_labels(self):
-        return [str(experi.inputs[0]['strat']) for experi in self.experiments]

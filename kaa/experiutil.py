@@ -87,7 +87,7 @@ def test_comp_ani(model, x, y, num_steps)
     vdp_pca.animate(0,1, pca_strat)
 """
 
-def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1):
+def test_strat_comb_pregen(model, step_tup, num_steps, num_trajs, num_trials=10):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     MAX_STEP = max(step_tup)
@@ -102,6 +102,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=1):
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"PCA Step {pca_step} and Lin Step {lin_step}",
+                            pregen_mode = True,
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS)
         inputs.append(experi_input)
@@ -208,7 +209,6 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_i
     experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJ:{NUM_TRAJ}")
     experi.execute(num_trials)
 
-
 def test_comb_stdev_reduction(model, num_steps, num_trials=1):
     NUM_STEPS = num_steps
     MAX_STEP = 1
@@ -231,16 +231,16 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=1):
     experi.execute(num_trials)
 
 def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
-    for num_trajs in range(1000, max_num_trajs, 1000):
+    for num_trajs in range(1000, max_num_trajs+1000, 1000):
         generated_dirs = []
         for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
             
-            sampled_points = gen_pca_dirs.sampled_points
+            gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
+            generated_dirs.append(gen_dirs_tuple)
 
-            generated_dirs.append((sampled_points, gen_pca_dirs, gen_lin_dirs))
             update_seed()
 
         reset_seed()

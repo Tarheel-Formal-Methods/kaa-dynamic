@@ -30,6 +30,8 @@ class TempStrategy(ABC):
         self.inital_points = []
         self.image_points = []
         self.use_supp_points = use_supp_points
+        self.pregen_dirs = None
+
 
     """
     Method called before the transformation operation and maximization over parallotopes are performed.
@@ -46,7 +48,7 @@ class TempStrategy(ABC):
         pass
 
     """
-    Method to reset all local tabular atributes.
+    Method to reset all local tabular attributes.
     """
     @abstractmethod
     def reset(self):
@@ -110,6 +112,7 @@ class TempStrategy(ABC):
     @returns TrajCollection object wrapping generated Traj objects.
     """
     def generate_trajs(self, bund, num_trajs):
+
         if self.use_supp_points:
             trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:
@@ -124,8 +127,14 @@ class TempStrategy(ABC):
     @returns TrajData object containing all relevant data
     """
     def fetch_traj_data(self):
-        return SampledTrajData(self.initial_points, self.image_points)
- 
+
+        if dirs is None:
+            return SampledTrajData(self.initial_points, self.image_points)
+        else:
+            sampled_traj_pts = dirs.sampled_points
+            return SampledTrajData(sampled_traj_pts,
+                                   sampled_traj_pts[1:])
+
 """
 This would just be the static strategy where we do not touch any of the bundles after initializing them.
 """
