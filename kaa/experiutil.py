@@ -87,10 +87,9 @@ def test_comp_ani(model, x, y, num_steps)
     vdp_pca.animate(0,1, pca_strat)
 """
 
-def test_strat_comb_pregen(model, step_tup, num_steps, num_trajs, num_trials=10):
-    NUM_STEPS = num_steps
-    NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
-    MAX_STEP = max(step_tup)
+def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
+    if use_supp:
+        num_trials = 1
 
     pca_iter_steps = step_tup
     lin_iter_steps = step_tup
@@ -102,19 +101,20 @@ def test_strat_comb_pregen(model, step_tup, num_steps, num_trajs, num_trials=10)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"PCA Step {pca_step} and Lin Step {lin_step}",
-                            pregen_mode = True,
-                            num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
+                            num_trajs=num_trajs,
+                            num_steps=num_steps,
+                            max_steps=num_steps)
+        
         inputs.append(experi_input)
 
     experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name}")
     experi.execute(num_trials)
 
-def test_one_one_strat_pca(model, num_steps, num_trials=1):
-    NUM_STEPS = num_steps
-    NUM_TRAJ = 300 #Number of sample trajectories we should use for the PCA routine.
-    LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
-    PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
+def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
+    if use_supp:
+        num_trials = 1
 
     inputs = []
     for pca_step in range(2,6): #model tossed around too many times.
@@ -124,18 +124,21 @@ def test_one_one_strat_pca(model, num_steps, num_trials=1):
         experi_input1 = dict(model=model,
                              strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
                              label=f"PCA with Box and 1-1 Temp for {pca_step} steps",
-                             num_trajs=NUM_TRAJ,
-                             num_steps=NUM_STEPS)
+                             supp_mode = use_supp,
+                             pregen_mode = use_pregen,
+                             num_trajs=num_trajs,
+                             num_steps=num_steps,
+                             max_steps=num_steps)
+        
         inputs.append(experi_input1)
 
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name}")
     experi.execute(num_trials)
 
-def test_one_one_strat_lin(model, num_steps, num_trials=1):
-    NUM_STEPS = num_steps
-    NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
-    MAX_STEP = max_step
-
+def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
+    if use_supp:
+        num_trials = 1
+        
     inputs = []
     for lin_step in range(2,max_step+1): #model tossed around too many times.
         pca_strat1 = PCAStrat(model, iter_steps=1)
@@ -144,14 +147,18 @@ def test_one_one_strat_lin(model, num_steps, num_trials=1):
         experi_input1 = dict(model=model,
                             strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
                             label=f"PCA with Box and 1-1 Temp for {lin_step} steps",
-                            num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                             supp_mode = use_supp,
+                             pregen_mode = use_pregen,
+                             num_trajs=num_trajs,
+                             num_steps=num_steps,
+                             max_steps=num_steps)
+        
         inputs.append(experi_input1)
 
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name}")
     experi.execute(num_trials)
 
-def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=1 , filename="SLIDINGPCA"):
+def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10 , use_supp=False, use_pregen=True):
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
@@ -163,8 +170,11 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
         experi_input = dict(model=model,
                             strat=experi_strat,
                             label=f"SlidingPCA with Window Size:{lifespan}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                            num_steps=NUM_STEPS,
+                            max_steps=NUM_STEPS)
         inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
@@ -172,29 +182,35 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
         experi_input = dict(model=model,
                             strat=experi_strat,
                             label=f"SlidingPCA with Window Size:{lifespan}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                            num_steps=NUM_STEPS,
+                            max_steps=NUM_STEPS)
+        
         inputs.append(experi_input)
 
 
     experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ}")
     experi.execute(num_trials)
 
-def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_incre=5, filename="SLIDINGLIN"):
+def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, use_supp=False, use_pregen=True):
     NUM_STEPS = num_steps
-    NUM_TRAJ = 1000 #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
     LIFE_INCREMENT = life_incre
 
     inputs = []
-
     for lifespan in range(LIFE_MAX, 0, -LIFE_INCREMENT): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
                             label=f"SlidingLin with Window Size:{lifespan}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                            num_steps=NUM_STEPS,
+                            max_steps=NUM_STEPS)
+        
         inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
@@ -202,28 +218,31 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, num_trials=1, life_i
         experi_input = dict(model=model,
                             strat=experi_strat,
                             label=f"SlidingLin with Window Size:{lifespan}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS)
+                            num_steps=NUM_STEPS,
+                            max_steps=NUM_STEPS)
+        
         inputs.append(experi_input)
 
     experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJ:{NUM_TRAJ}")
     experi.execute(num_trials)
 
-def test_comb_stdev_reduction(model, num_steps, num_trials=1):
+def test_comb_stdev_reduction(model, num_steps, num_trials=10):
     NUM_STEPS = num_steps
-    MAX_STEP = 1
-    PCA_ITER_STEPS = 1
-    LIN_ITER_STEPS = 1
-
+    
     inputs = []
     for num_trajs in range(1000,4000,1000): #model tossed around too many times.
-        pca_strat = PCAStrat(model, iter_steps=PCA_ITER_STEPS)
-        lin_strat = LinStrat(model, iter_steps=LIN_ITER_STEPS)
+        pca_strat = PCAStrat(model, iter_steps=1)
+        lin_strat = LinStrat(model, iter_steps=1)
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
+                            pregen_mode = True,
                             num_trajs=num_trajs,
-                            num_steps=NUM_STEPS)
+                            num_steps=NUM_STEPS,
+                            max_steps=NUM_STEPS)
 
         inputs.append(experi_input)
 
@@ -240,21 +259,23 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
             
             gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
             generated_dirs.append(gen_dirs_tuple)
-
+            
             update_seed()
 
         reset_seed()
         DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
 
-def find_pca_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label=""):
+def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, label=""):
     inputs = []
     for num_trajs in range(1000, max_num_trajs+1000, 1000):
         experi_input = dict(model=model,
                             strat=None,
                             label= f"PCA from {num_trajs} TRAJS",
                             num_trajs=num_trajs,
-                            num_steps=num_steps
-                            )
+                            pregen_mode = True,
+                            num_steps=num_steps,
+                            max_steps=num_steps)
+        
         inputs.append(experi_input)
 
     experi = DeviationExperiment(*inputs, "PCADev", label=label)
@@ -266,9 +287,10 @@ def find_lin_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label
         experi_input = dict(model=model,
                             strat=None,
                             label= f"LinApp from {num_trajs} TRAJS",
+                            pregen_mode = True,
                             num_trajs=num_trajs,
-                            num_steps=num_steps
-                            )
+                            num_steps=num_steps,
+                            max_steps=num_steps)
         inputs.append(experi_input)
 
     experi = DeviationExperiment(*inputs, "LinDev", label=label)

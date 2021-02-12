@@ -35,7 +35,6 @@ class AbstractLinStrat(TempStrategy):
     def generate_lin_dir(self, bund, step_num):
 
         if self.dirs is None:
-            
             inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
             lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
             

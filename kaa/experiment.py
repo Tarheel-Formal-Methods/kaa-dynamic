@@ -389,7 +389,7 @@ class VolumeExperiment(Experiment):
         spreadsheet = self.generate_sheet(num_trials)
 
         for experi_input in self.inputs:
-            loaded_dirs = self.initialize_strat(experi_strat, num_trials)
+            loaded_dirs = self.initialize_strat(experi_input, num_trials)
             experi_strat = experi_input['strat']
 
             for trial_num in range(1, num_trials):

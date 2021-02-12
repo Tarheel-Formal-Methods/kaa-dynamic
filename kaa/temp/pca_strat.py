@@ -11,7 +11,6 @@ Abstract PCA class containing all of the tools PCA strats need.
 class AbstractPCAStrat(TempStrategy):
 
     def __init__(self, model, num_trajs):
-        assert pca_dirs is None or isinstance(pca_dirs, GeneratedPCADirs), "PCA Strategies may only take pre-generated PCA directions."
         super().__init__(model)
         self.num_trajs = num_trajs
 
@@ -32,7 +31,6 @@ class AbstractPCAStrat(TempStrategy):
     def generate_pca_dir(self, bund, step_num):
         
         if self.dirs is None:
-            
             trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
 
@@ -41,7 +39,7 @@ class AbstractPCAStrat(TempStrategy):
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.pca_dirs.get_dirs_at_step(step_num + 1) #Else fetch pre-generated directions.
+            pca_dirs_mat = self.dirs.get_dirs_at_step(step_num + 1) #Else fetch pre-generated directions.
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
