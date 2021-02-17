@@ -456,14 +456,14 @@ class CompAniExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs, label="CompAni")
 
-    def execute(self, x , y, ptope_order):
+    def execute(self, x , y, ptope_order, plot_pts=True):
         flowpipes = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipes.append(self.calc_flowpipe(experi_input))
         
         animation = CompareAnimation(*flowpipes)
-        animation.animate(x, y, ptope_order)
+        animation.animate(x, y, ptope_order, plot_pts)
 
 """
 Find corner vertices for an initial box along with midpoints between the corners.

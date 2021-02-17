@@ -55,10 +55,8 @@ class LinearSystem:
             return ConvexHull(self.vertices).volume
 
         except QhullError:
-            envelop_box = self.__calc_envelop_box()
             num_samples = KaaSettings.VolumeSamples
-
-            sampled_points = [self.__sample_box_point(envelop_box) for _  in range(num_samples)]
+            sampled_points = self.sample_ran_pts_envelop_box(envelop_box, num_samples)
 
             check_point_membership = lambda point: 1 if self.check_membership(point) else 0
             point_value = map(check_point_membership, sampled_points)
@@ -125,6 +123,12 @@ class LinearSystem:
 
         return box_interval
 
+    """
+    Calculate the volume of the box described by a list of tuples.
+    @params box_intervals: List of tuples where the first component is the lower end
+                           and the second component is the upper end.
+    @returns volume of box
+    """
     def __calc_box_volume(self, box_intervals):
         box_dim = [end - start for start,end in box_intervals]
         return reduce(mul, box_dim)
@@ -134,9 +138,10 @@ class LinearSystem:
     @params box_intervals: list of lists defining box
     @returns random point sampled within box
     """
-    def __sample_box_point(self, box_intervals):
+    def __sample_box_points(self, box_intervals, num_points):
         assert len(box_intervals) == self.dim, "Number of intervals defining box must match dimension of system."
-        return [self.randgen.uniform(start, end) for start, end in box_intervals]
+        return [[self.randgen.uniform(start, end) for start, end in box_intervals] for _ in range(num_points)]
+
     """
     Create a trajectory at certain point in system and propagate it forward according
     to system dynamics. Add to shared Queue after initialization is finished.
@@ -169,7 +174,7 @@ class LinearSystem:
     """
     def generate_ran_trajs(self, num_trajs, steps, resample=False):
         #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
-        initial_points = self.gen_ran_pts_box(num_trajs)
+        initial_points = self.sample_ran_pts_envelop_box(num_trajs)
         output_queue = mp.Manager().Queue()
         input_params = [(point, steps, output_queue) for point in initial_points]
 
@@ -208,7 +213,11 @@ class LinearSystem:
 
         return TrajCollection(self.model, self.queue_to_list(output_queue))
 
-    
+
+    def sample_ran_pts_envelop_box(self, num_trajs):
+        box_intervals = self.__calc_envelop_box()
+        return self.__sample_box_points(box_intervals, num_trajs)
+
     """
     Generates random points contained within the tightest enveloping parallelotope of the Chevyshev sphere.
     @params bund: Bundle object
@@ -216,15 +225,22 @@ class LinearSystem:
             shrinkfactor: factor to shrink the radius of the sphere. This allows a box with smaller dimensions
     @returns list of generated random points.
     """
-    def gen_ran_pts_box(self, num_trajs, shrinkfactor=1):
+    def sample_ran_pts_centered_box(self, num_trajs, shrinkfactor=1):
         chebycenter = self.chebyshev_center
 
         center = chebycenter.center
         radius = chebycenter.radius
         box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
 
-        gen_points = []
-        for _ in range(num_trajs):
-            gen_points.append([self.randgen.uniform(bound[0], bound[1]) for bound in box_intervals])
+        return self.__sample_box_points(box_intervals, num_trajs)
 
-        return gen_points
+def intersect(model, *lin_sys):
+    assert all(isinstance(sys, LinearSystem) for sys in lin_sys), "Intersection operation only viable with another LinearSystem object."
+
+    all_A = [sys.A for sys in lin_sys]
+    all_b = [sys.b for sys in lin_sys]
+
+    new_A = np.concatenate(all_A, axis=0)
+    new_b = np.concatenate(all_b, axis=0)
+
+    return LinearSystem(model, new_A, new_b)

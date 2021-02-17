@@ -45,7 +45,7 @@ class AbstractLinStrat(TempStrategy):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
         else:
-            lin_dir_mat = self.dirs.get_dirs_at_step(step_num + 1)
+            lin_dir_mat = self.dirs.get_dirs_at_step(step_num)
 
         lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
         

@@ -104,7 +104,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
-                            num_steps=num_steps,
+                            num_steps=num_steps-1,
                             max_steps=num_steps)
         
         inputs.append(experi_input)
@@ -127,7 +127,7 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
                              supp_mode = use_supp,
                              pregen_mode = use_pregen,
                              num_trajs=num_trajs,
-                             num_steps=num_steps,
+                             num_steps=num_steps-1,
                              max_steps=num_steps)
         
         inputs.append(experi_input1)
@@ -150,7 +150,7 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
                              supp_mode = use_supp,
                              pregen_mode = use_pregen,
                              num_trajs=num_trajs,
-                             num_steps=num_steps,
+                             num_steps=num_steps-1,
                              max_steps=num_steps)
         
         inputs.append(experi_input1)
@@ -173,7 +173,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS,
+                            num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         inputs.append(experi_input)
 
@@ -185,7 +185,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS,
+                            num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         
         inputs.append(experi_input)
@@ -208,7 +208,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS,
+                            num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         
         inputs.append(experi_input)
@@ -221,7 +221,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
-                            num_steps=NUM_STEPS,
+                            num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         
         inputs.append(experi_input)

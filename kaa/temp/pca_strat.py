@@ -39,7 +39,7 @@ class AbstractPCAStrat(TempStrategy):
             pca_dirs_mat = pca.components_
 
         else:
-            pca_dirs_mat = self.dirs.get_dirs_at_step(step_num + 1) #Else fetch pre-generated directions.
+            pca_dirs_mat = self.dirs.get_dirs_at_step(step_num) #Else fetch pre-generated directions.
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
@@ -97,7 +97,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
     def close_strat(self, bund, step_num):
         'Remove dead templates'
-        for ptope_label in list(self.pca_ptope_life_data.keys()):
+        for ptope_label in list(self.pca_ptope_life_counter.keys()):
             self.pca_ptope_life_counter[ptope_label] -= 1
             
             if self.pca_ptope_life_counter[ptope_label] == 0:

@@ -4,10 +4,9 @@ import multiprocessing as mp
 import warnings
 from enum import Enum
 
-
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
-from kaa.linearsystem import LinearSystem
+from kaa.linearsystem import LinearSystem, intersect
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.timer import Timer
@@ -58,14 +57,20 @@ class Bundle:
 
     "Returns list of Parallelotope objects defining this bundle. WARNING: superfluous calls to getParallelotope for now"
     @property
-    def ptopes(self):
+    def all_ptopes(self):
         return [self.getParallelotope(i) for i in range(self.num_temp)]
 
     """
-    Get parallelotope described by ith row of self.T matrix.
+    Get parallelotope described by ith row of self.T matrix and the intersection of the other ptopes.
     """
     def ptope(self, idx):
-        return self.getParallelotope(idx) if idx <= self.num_temp - 1 else None
+        if idx > self.num_temp - 1: return None
+
+        ptopes = self.all_ptopes
+        complement_ptopes = ptopes[:idx] + ptopes[idx+1:]
+
+        comp_ptope_intersect = intersect(self.model, *complement_ptopes) if complement_ptopes else None
+        return self.getParallelotope(idx), comp_ptope_intersect
 
     """
     Returns linear constraints representing the polytope defined by bundle.

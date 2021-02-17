@@ -239,7 +239,10 @@ class Plot:
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
-    def plot_halfspace(self, x, y, ax, sys, idx_offset=0):
+    def plot_halfspace(self, x, y, ax, sys, idx_offset=0, alpha=0.4):
+
+        'Routines in Bundle give None values for queries of non-existent ptopes'
+        if sys is None: return sys
 
         dim = self.model.dim
         comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
@@ -251,7 +254,7 @@ class Plot:
         'Sort by polar coordinates to ensure proper plotting of boundary'
         proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
 
-        ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=0.4)
+        ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=alpha)
         ax.add_patch(ptope)
 
         inter_x, inter_y = zip(*proj_vertices)
@@ -295,7 +298,7 @@ class CompareAnimation(Plot):
         self.flowpipes = flowpipes
         self.model = flowpipes[0].model
 
-    def animate(self, x, y, ptope_order):
+    def animate(self, x, y, ptope_order, plot_pts):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
         num_plots = len(self.flowpipes)
 
@@ -303,10 +306,10 @@ class CompareAnimation(Plot):
         figure = plt.figure(figsize=PlotSettings.fig_size)
         ax_list = [figure.add_subplot(1, num_plots, i+1) for i in range(num_plots)]
 
-        for ax in ax_list:
+        for ax, flowpipe in zip(ax_list, self.flowpipes):
             ax.set_xlabel(f"{x_var}")
             ax.set_ylabel(f"{y_var}")
-            ax.set_title("Phase Plot for {}".format(self.model.name))
+            ax.set_title("Phase Plot for {}".format(flowpipe.label))
 
         'Fetch all the trajectory data for plotting.'
         traj_data_list = [flowpipe.traj_data for flowpipe in self.flowpipes]
@@ -316,27 +319,28 @@ class CompareAnimation(Plot):
 
         def update(i):
             'Gets the ith bundle and fetches the ptope associated to the supplied ptope order input'
-            ptope_list = [flowpipe[i].ptope(ptope_order_offset) for flowpipe in self.flowpipes]
+            ptope_list = [flowpipe[i].ptope(i) for flowpipe in self.flowpipes]
 
-            if None not in ptope_list:
-                for ax_idx, ax in enumerate(ax_list):
-                    ax_ptope = ptope_list[ax_idx]
-                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0)
+            for ax_idx, ax in enumerate(ax_list):
+                ax_ptope, comple_ax_ptope = ptope_list[ax_idx]
+                self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
+                self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.2) #Plot intersection of all the other existing ptopes.
 
+                if plot_pts:
                     initial_points = traj_data_list[ax_idx].initial_points[i]
                     image_points = traj_data_list[ax_idx].image_points[i]
 
-                    print(f"I index: {i}")
-                    print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
-                    print(f"Image Points Shape: {image_points.shape}")
+                    #print(f"I index: {i}")
+                    #print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
+                    #print(f"Image Points Shape: {image_points.shape}")
 
                     ax.scatter(initial_points[:,x], initial_points[:,y], color='r', label='Initial Points') #Plot initial points.
                     ax.scatter(image_points[:,x], image_points[:,y], color='b', label='Image Points') #Plot image points.
 
-                    'Matrix of rows representing generator vectors for ax_ptope'
-                    gen_vecs = ax_ptope.generatorVecs
+                'Matrix of rows representing generator vectors for ax_ptope'
+                gen_vecs = ax_ptope.generatorVecs
 
-                    self.__draw_comp_stats(ax, ax_idx, gen_vecs)
+                self.__draw_comp_stats(ax, ax_idx, gen_vecs)
 
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 

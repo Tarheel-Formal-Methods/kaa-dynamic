@@ -63,7 +63,7 @@ class TempStrategy(ABC):
     """
     def __hash_ptope(self, dir_label_list, name=None):
         assert len(dir_label_list) == self.dim, "Number of directions associated to a parallelotope must match the dimension of the system."
-        
+
         key = self.__generate_unique_key() if name is None else name
         self.ptope_hash[key] = dir_label_list
         return key
@@ -172,6 +172,7 @@ class MultiStrategy(TempStrategy):
             strat.strat_order = self.strat_freq[type(strat)]
             self.strat_list.append(strat)
 
+
     @property
     def strats(self):
         return self.strat_list
@@ -183,6 +184,10 @@ class MultiStrategy(TempStrategy):
     def close_strat(self, bund, step_num):
         for strat in self.strat_list:
             strat.close_strat(bund, step_num)
+
+    """
+    def fetch_traj_data(self):
+    """
 
     def reset(self):
         for strat in self.strat_list:
