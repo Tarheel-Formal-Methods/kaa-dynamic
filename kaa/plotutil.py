@@ -299,6 +299,8 @@ class CompareAnimation(Plot):
         self.model = flowpipes[0].model
 
     def animate(self, x, y, ptope_order, plot_pts):
+        assert len(plot_pts) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
+
         x_var, y_var = self.model.vars[x], self.model.vars[y]
         num_plots = len(self.flowpipes)
 
@@ -326,7 +328,7 @@ class CompareAnimation(Plot):
                 self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
                 self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.2) #Plot intersection of all the other existing ptopes.
 
-                if plot_pts:
+                if plot_pts[ax_idx]:
                     initial_points = traj_data_list[ax_idx].initial_points[i]
                     image_points = traj_data_list[ax_idx].image_points[i]
 

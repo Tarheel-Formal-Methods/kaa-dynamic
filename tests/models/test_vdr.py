@@ -124,12 +124,12 @@ def test_delayed_pca_VDP():
 
 def test_ani_pca_comp_VDP():
 
-    NUM_STEPS = 20
+    NUM_STEPS = 40
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     ran_pca_strat = SlidingPCAStrat(unit_model, lifespan=20)
-    ran_experi_input = dict(model=unit_model,
+    ran_experi_input = dict(model=unit_model, #Encompass strat initilizations?
                             strat=ran_pca_strat,
                             label="LinApp Pre-gen",
                             num_steps=NUM_STEPS,
@@ -149,18 +149,18 @@ def test_ani_pca_comp_VDP():
                             pregen_mode=False)
 
     vdp_pca = CompAniExperiment(ran_experi_input, supp_experi_input)
-    vdp_pca.execute(0, 1, 1, plot_pts=False)
+    vdp_pca.execute(0, 1, 1, plot_pts=[False, True])
 
     Timer.generate_stats()
 
 
 def test_ani_lin_comp_VDP():
 
-    NUM_STEPS = 20
+    NUM_STEPS = 40
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
-    ran_pca_strat = SlidingLinStrat(unit_model, lifespan=20)
+    ran_pca_strat = SlidingLinStrat(unit_model, lifespan=20, num_trajs=NUM_TRAJS)
     ran_experi_input = dict(model=unit_model,
                             strat=ran_pca_strat,
                             label="LinApp Pre-gen",
@@ -181,7 +181,7 @@ def test_ani_lin_comp_VDP():
                             pregen_mode=False)
                              
     vdp_pca = CompAniExperiment(ran_experi_input, supp_experi_input)
-    vdp_pca.execute(0, 1, 1)
+    vdp_pca.execute(0, 1, 1, plot_pts=[False, True])
 
     Timer.generate_stats()
 

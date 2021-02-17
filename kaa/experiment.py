@@ -356,6 +356,7 @@ class Experiment(ABC):
         experi_num_steps = experi_input['max_steps']
 
         loaded_dirs = None
+        experi_strat.num_trajs =  experi_num_trajs 
         
         if experi_supp_mode:
 
@@ -456,7 +457,9 @@ class CompAniExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs, label="CompAni")
 
-    def execute(self, x , y, ptope_order, plot_pts=True):
+    def execute(self, x , y, ptope_order, plot_pts=None):
+        if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]
+
         flowpipes = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
@@ -472,7 +475,6 @@ Find corner vertices for an initial box along with midpoints between the corners
 @returns list of border points.
 """
 def __get_init_box_borders(init_box):
-
     midpoints = [start + (end - start) / 2 for start, end in init_box]
     border_points = list(product(*init_box))
 
