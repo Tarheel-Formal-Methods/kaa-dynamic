@@ -9,6 +9,13 @@ from kaa.templates import StaticStrat
 
 bolden = lambda string: colored(string, 'white', attrs=['bold'])
 
+class ReachError:
+
+    def __init__(self, msg, total_steps):
+        self.message = msg
+        self.total_steps = total_steps
+
+
 """
 Object handling all reachable flowpipe computations.
 """
@@ -60,6 +67,8 @@ class ReachSet:
             'Check volume of enveloping box and stop loop if the volume becomes too large.'
             if self.check_reach_size(trans_bund, init_box_vol_thres):
                 print("Bundle volume grown to too large of volume. Ending reachable set computation.")
+                err = ReachError("Volume too large.", step)
+                flowpipe.error = err
                 break
 
         self.flowpipe.traj_data = self.strat.fetch_traj_data()

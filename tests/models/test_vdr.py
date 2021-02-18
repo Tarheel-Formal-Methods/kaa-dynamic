@@ -98,50 +98,43 @@ def test_pca_lin_VDP():
 
     Timer.generate_stats()
 
-def test_delayed_pca_VDP():
-
+def plot_sliding_lin_VDP():
     NUM_STEPS = 70
-    VDP_LIN_ITER_STEPS = 1 #Number of steps between each recomputation of LinApp Templates.
-    VDP_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    'PCA Strategy Parameters'
-    VDP_PCA_TRAJ_STEPS = 2 #Number of steps our sample trajectories should run.
-    VDP_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
-    #
-    VDP_PCA_LIFE_SPAN = 3
-
-    model = VanDerPol(delta=0.08)
+    NUM_TRAJS = 5000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
-    lin_strat = MultiStrategy(LinStrat(unit_model, iter_steps=VDP_LIN_ITER_STEPS), \
-                              DelayedPCAStrat(unit_model, traj_steps=VDP_PCA_TRAJ_STEPS, num_trajs=VDP_PCA_NUM_TRAJ, lifespan=VDP_PCA_LIFE_SPAN))
+    ran_pca_strat = SlidingLinStrat(unit_model, lifespan=20)
+    ran_experi_input = dict(model=unit_model, #Encompass strat initilizations?
+                            strat=ran_pca_strat,
+                            label="Lin         Pre-gen 10 Lifespan",
+                            num_steps=NUM_STEPS,
+                            max_steps=70,
+                            num_trajs=NUM_TRAJS,
+                            supp_mode=False,
+                            pregen_mode=True)
 
-    inputs = [ExperimentInput(model, label="VDP Sapo"), ExperimentInput(unit_model, strat=lin_strat, label="VDP Kaa Delay")]
-    vdp_pca = PhasePlotExperiment(inputs)
-    vdp_pca.execute(NUM_STEPS)
-    vdp_pca.plot_results(0,1)
-
-    Timer.generate_stats()
+    vdp_pca = PhasePlotExperiment(ran_experi_input)
+    vdp_pca.execute(0,1)
 
 def test_ani_pca_comp_VDP():
-
-    NUM_STEPS = 40
-    NUM_TRAJS = 1000
+    NUM_STEPS = 20
+    NUM_TRAJS = 5000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
     ran_pca_strat = SlidingPCAStrat(unit_model, lifespan=20)
     ran_experi_input = dict(model=unit_model, #Encompass strat initilizations?
                             strat=ran_pca_strat,
-                            label="LinApp Pre-gen",
+                            label="PCA Pre-gen",
                             num_steps=NUM_STEPS,
                             max_steps=70,
                             num_trajs=NUM_TRAJS,
                             supp_mode=False,
-                            pregen_mode=False)
+                            pregen_mode=True)
 
     supp_pca_strat = SlidingPCAStrat(unit_model, lifespan=20)
     supp_experi_input = dict(model=unit_model,
                             strat=supp_pca_strat,
-                            label="LinApp Supp Points",
+                            label="PCA Supp Points",
                             num_steps=NUM_STEPS,
                             max_steps=70,
                             num_trajs=NUM_TRAJS,
@@ -155,7 +148,6 @@ def test_ani_pca_comp_VDP():
 
 
 def test_ani_lin_comp_VDP():
-
     NUM_STEPS = 40
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)

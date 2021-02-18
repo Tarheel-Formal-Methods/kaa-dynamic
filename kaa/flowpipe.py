@@ -17,6 +17,7 @@ class FlowPipe:
         self.dim = model.dim
         self.label = label
         self.traj_data = None
+        self.error = None
 
     """
     Returns a list of strategies which were acting during the reachable set

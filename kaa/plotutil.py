@@ -112,7 +112,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate=False, lims=None):
+    def plot2DPhase(self, x, y, separate, lims=None, volume_chart=False, plot_samp_pts=True):
         assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
 
         Timer.start('Phase')
@@ -130,8 +130,9 @@ class Plot:
         self.__plot_trajs(x, y, phase_ax)
         self.__phase_plot_legend(x, y, phase_ax, lims)
 
-        'Add volume data'
-        self.__plot_volume(vol_ax)
+        if volume_chart:
+            'Add volume data'
+            self.__plot_volume(vol_ax)
 
         figure_name = "Kaa{}Phase{}.png".format(flowpipe.model.name, self.__create_var_str([x,y]))
         self.__plot_figure(figure, figure_name)
@@ -292,19 +293,18 @@ class Plot:
             plt.show()
 
 
-class CompareAnimation(Plot):
+class SlideCompareAnimation(Plot):
 
     def __init__(self, *flowpipes):
         self.flowpipes = flowpipes
         self.model = flowpipes[0].model
 
-    def animate(self, x, y, ptope_order, plot_pts):
-        assert len(plot_pts) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
+    def animate(self, x, y, ptope_order, plot_samp_pts, show_recent=True):
+        assert len(plot_samp_pts) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
 
         x_var, y_var = self.model.vars[x], self.model.vars[y]
         num_plots = len(self.flowpipes)
 
-        ptope_order_offset = ptope_order + 1
         figure = plt.figure(figsize=PlotSettings.fig_size)
         ax_list = [figure.add_subplot(1, num_plots, i+1) for i in range(num_plots)]
 
@@ -321,15 +321,19 @@ class CompareAnimation(Plot):
 
         def update(i):
             'Gets the ith bundle and fetches the ptope associated to the supplied ptope order input'
+            lifespan = max([flowpipe.strat.lifespan for flowpipe in self.flowpipes])
+            ptope_idx = (i % lifespan) + 1 if show_recent else ptope_order
+
             ptope_list = [flowpipe[i].ptope(i) for flowpipe in self.flowpipes]
 
-            if None not in ptope_list:
+            if None not in ptope_list:                
+                gen_vecs_list = []
                 for ax_idx, ax in enumerate(ax_list):
                     ax_ptope, comple_ax_ptope = ptope_list[ax_idx]
                     self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
                     self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.8) #Plot intersection of all the other existing ptopes.
 
-                    if plot_pts[ax_idx]:
+                    if plot_samp_pts[ax_idx]:
                         initial_points = traj_data_list[ax_idx].initial_points[i]
                         image_points = traj_data_list[ax_idx].image_points[i]
 
@@ -341,9 +345,9 @@ class CompareAnimation(Plot):
                         ax.scatter(image_points[:,x], image_points[:,y], color='b', label='Image Points') #Plot image points.
 
                     'Matrix of rows representing generator vectors for ax_ptope'
-                    gen_vecs = ax_ptope.generatorVecs
+                    gen_vecs_list.append(ax_ptope.generatorVecs)
 
-                    self.__draw_comp_stats(ax, ax_idx, gen_vecs)
+                self.__draw_comp_stats(ax_list[0], gen_vecs_list)
 
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
@@ -353,9 +357,17 @@ class CompareAnimation(Plot):
         filename = f"{self.model.name}: COMP"
         ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
 
-    def __draw_comp_stats(self, ax, ax_idx, gen_vecs):
-        patch = [pat.Patch(color='g', label='str(gen_vecs)')]
-        ax.legend(handles=patch, loc='upper right')
+    def __draw_comp_stats(self, ax, gen_vecs_list):
+        norm_val = []
+        
+        for vec1, vec2 in zip(*gen_vecs_list):
+            vec_diff = np.subtract(vec1, vec2)
+            norm_val.append(np.linalg.norm(vec_diff))
+
+        max_diff = max(norm_val)
+        
+        patch = [pat.Patch(color='g', label=f"Largest Deviaton: {max_diff}")]
+        ax.legend(handles=patch, loc='upper right', bbox_to_anchor=(1.15, 1))
 
 
 class TempAnimation(Plot):

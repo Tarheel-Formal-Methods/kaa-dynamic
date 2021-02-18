@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 from kaa.reach import ReachSet
-from kaa.plotutil import Plot, TempAnimation, CompareAnimation
+from kaa.plotutil import *
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import PlotSettings, KaaSettings
 from kaa.templates import MultiStrategy, GeneratedDirs
@@ -305,7 +305,7 @@ class Experiment(ABC):
     def gather_vol_data(self, experi_input):
         try:
             flowpipe = self.calc_flowpipe(experi_input)
-            return (flowpipe.label, flowpipe.total_volume)
+            return flowpipe
         except Exception as excep:
             raise
             return (experi_input['label'], str(excep))
@@ -396,7 +396,12 @@ class VolumeExperiment(Experiment):
             for trial_num in range(1, num_trials):
                 Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
 
-                flow_label, flow_vol = self.gather_vol_data(experi_input)
+                flowpipe = self.gather_vol_data(experi_input)
+                flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
+
+                if not flowpipe.err:
+                    pass
+
                 self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)
 
@@ -449,8 +454,12 @@ class PhasePlotExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs)
 
-    def plot_results(self, *var_tup, separate=False):
-        self.plot.plot2DPhase(*var_tup, separate=separate)
+    def execute(self, *var_tup, separate=False):
+        for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10)
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        self.plot.plot2DPhase(*var_tup, separate)
 
 class CompAniExperiment(Experiment):
 
@@ -460,12 +469,12 @@ class CompAniExperiment(Experiment):
     def execute(self, x , y, ptope_order, plot_pts=None):
         if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]
 
-
+        flowpipes = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipes.append(self.calc_flowpipe(experi_input))
         
-        animation = CompareAnimation(*flowpipes)
+        animation = SlideCompareAnimation(*flowpipes)
         animation.animate(x, y, ptope_order, plot_pts)
 
 """
