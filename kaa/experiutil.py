@@ -197,6 +197,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
 def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, use_supp=False, use_pregen=True):
     NUM_STEPS = num_steps
     LIFE_MAX = max_life
+    NUM_TRAJS = num_trajs
     LIFE_INCREMENT = life_incre
 
     inputs = []
@@ -207,7 +208,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             label=f"SlidingLin with Window Size:{lifespan}",
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
-                            num_trajs=NUM_TRAJ,
+                            num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         
@@ -220,13 +221,13 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             label=f"SlidingLin with Window Size:{lifespan}",
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
-                            num_trajs=NUM_TRAJ,
+                            num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
         
         inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJ:{NUM_TRAJ}")
+    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJS:{NUM_TRAJS}")
     experi.execute(num_trials)
 
 def test_comb_stdev_reduction(model, num_steps, num_trials=10):

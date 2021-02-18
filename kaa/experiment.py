@@ -2,7 +2,7 @@ from plotly.offline import plot
 from openpyxl import Workbook
 from collections import namedtuple
 from abc import ABC, abstractmethod
-import plotly.graph_objects as go
+#import plotly.graph_objects as go
 import numpy as np
 import os
 
@@ -460,7 +460,7 @@ class CompAniExperiment(Experiment):
     def execute(self, x , y, ptope_order, plot_pts=None):
         if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]
 
-        flowpipes = []
+
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipes.append(self.calc_flowpipe(experi_input))

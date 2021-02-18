@@ -56,7 +56,7 @@ class LinearSystem:
 
         except QhullError:
             num_samples = KaaSettings.VolumeSamples
-            sampled_points = self.sample_ran_pts_envelop_box(envelop_box, num_samples)
+            sampled_points = self.sample_ran_pts_envelop_box(num_samples)
 
             check_point_membership = lambda point: 1 if self.check_membership(point) else 0
             point_value = map(check_point_membership, sampled_points)
@@ -64,6 +64,9 @@ class LinearSystem:
 
             return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
 
+    """
+    Find vertices of this linear system.
+    """
     @property
     def vertices(self):
         phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
@@ -74,6 +77,13 @@ class LinearSystem:
         vertices = np.asarray(hs.intersections)
 
         return vertices
+
+    """
+    Calculate the volume of the smallest enveloping box of linear system.
+    """
+    def calc_vol_envelop_box(self):
+        envelop_box = self.__calc_envelop_box()
+        return self.__calc_box_volume(envelop_box)
 
     """
     Maxmize optimization function y over Ax \leq b

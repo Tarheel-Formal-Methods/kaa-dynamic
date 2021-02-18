@@ -168,7 +168,7 @@ def test_ani_lin_comp_VDP():
                             max_steps=70,
                             num_trajs=NUM_TRAJS,
                             supp_mode=False,
-                            pregen_mode=False)
+                            pregen_mode=True)
 
     supp_pca_strat = SlidingLinStrat(unit_model, lifespan=20)
     supp_experi_input = dict(model=unit_model,

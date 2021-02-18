@@ -323,26 +323,27 @@ class CompareAnimation(Plot):
             'Gets the ith bundle and fetches the ptope associated to the supplied ptope order input'
             ptope_list = [flowpipe[i].ptope(i) for flowpipe in self.flowpipes]
 
-            for ax_idx, ax in enumerate(ax_list):
-                ax_ptope, comple_ax_ptope = ptope_list[ax_idx]
-                self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
-                self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.2) #Plot intersection of all the other existing ptopes.
+            if None not in ptope_list:
+                for ax_idx, ax in enumerate(ax_list):
+                    ax_ptope, comple_ax_ptope = ptope_list[ax_idx]
+                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
+                    self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.8) #Plot intersection of all the other existing ptopes.
 
-                if plot_pts[ax_idx]:
-                    initial_points = traj_data_list[ax_idx].initial_points[i]
-                    image_points = traj_data_list[ax_idx].image_points[i]
+                    if plot_pts[ax_idx]:
+                        initial_points = traj_data_list[ax_idx].initial_points[i]
+                        image_points = traj_data_list[ax_idx].image_points[i]
 
-                    #print(f"I index: {i}")
-                    #print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
-                    #print(f"Image Points Shape: {image_points.shape}")
+                        #print(f"I index: {i}")
+                        #print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
+                        #print(f"Image Points Shape: {image_points.shape}")
 
-                    ax.scatter(initial_points[:,x], initial_points[:,y], color='r', label='Initial Points') #Plot initial points.
-                    ax.scatter(image_points[:,x], image_points[:,y], color='b', label='Image Points') #Plot image points.
+                        ax.scatter(initial_points[:,x], initial_points[:,y], color='r', label='Initial Points') #Plot initial points.
+                        ax.scatter(image_points[:,x], image_points[:,y], color='b', label='Image Points') #Plot image points.
 
-                'Matrix of rows representing generator vectors for ax_ptope'
-                gen_vecs = ax_ptope.generatorVecs
+                    'Matrix of rows representing generator vectors for ax_ptope'
+                    gen_vecs = ax_ptope.generatorVecs
 
-                self.__draw_comp_stats(ax, ax_idx, gen_vecs)
+                    self.__draw_comp_stats(ax, ax_idx, gen_vecs)
 
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
