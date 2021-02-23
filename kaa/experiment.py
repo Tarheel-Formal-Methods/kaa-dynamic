@@ -1,8 +1,8 @@
 from plotly.offline import plot
 from openpyxl import Workbook
 from collections import namedtuple
+from itertools import product
 from abc import ABC, abstractmethod
-#import plotly.graph_objects as go
 import numpy as np
 import os
 
@@ -154,6 +154,14 @@ class Experiment(ABC):
     @abstractmethod
     def execute(self, num_trials):
         pass
+
+    @property
+    def max_num_steps(self):
+        return max([experi_input['num_steps'] for experi_input in self.inputs])
+
+    @property
+    def max_num_trajs(self):
+        return max([experi_input['num_trajs'] for experi_input in self.inputs])
 
     """
     Assign directions based on pre-generated directions for each trial.
@@ -340,13 +348,29 @@ class Experiment(ABC):
     """
     Sample points from the edges of the box and propagate them for a number of steps.
     """
-    def __simulate_border_points(self, num_steps):
+    def simulate_border_points(self, num_steps):
         init_box_inter = self.__get_init_box()
-        border_points = __get_init_box_borders(init_box_inter)
+        border_points = self.__get_init_box_borders(init_box_inter)
 
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
         
-        return TrajCollection(trajs)
+        return TrajCollection(self.model, trajs)
+
+    """
+    Find corner vertices for an initial box along with midpoints between the corners.
+    @params init_box : intervals of the box given as a list of lists where each member's left,right value
+                       are the start,end points respectively for the intervals of the box.
+    @returns list of border points.
+    """
+    def __get_init_box_borders(self, init_box):
+        midpoints = [start + (end - start) / 2 for start, end in init_box]
+        border_points = list(product(*init_box))
+
+        for point_idx, point in enumerate(midpoints):
+            half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box)]
+            border_points += list(product(*half_points))
+
+        return border_points
 
     def initialize_strat(self, experi_input, num_trials):
         experi_strat = experi_input['strat']
@@ -384,8 +408,8 @@ class VolumeExperiment(Experiment):
         super().__init__(*inputs, label=label)
 
     def execute(self, num_trials):
-        num_steps = max([input['num_steps'] for input in self.inputs])
-        num_trajs = max([input['num_trajs'] for input in self.inputs])
+        num_steps = self.max_num_steps
+        num_trajs = self.max_num_trajs
 
         spreadsheet = self.generate_sheet(num_trials)
 
@@ -464,9 +488,9 @@ class PhasePlotExperiment(Experiment):
 class CompAniExperiment(Experiment):
 
     def __init__(self, *inputs):
-        super().__init__(*inputs, label="CompAni")
+        super().__init__(*inputs)
 
-    def execute(self, x , y, ptope_order, plot_pts=None):
+    def execute(self, x , y, ptope_order, filename, plot_pts=None):
         if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]
 
         flowpipes = []
@@ -475,23 +499,11 @@ class CompAniExperiment(Experiment):
             flowpipes.append(self.calc_flowpipe(experi_input))
         
         animation = SlideCompareAnimation(*flowpipes)
-        animation.animate(x, y, ptope_order, plot_pts)
 
-"""
-Find corner vertices for an initial box along with midpoints between the corners.
-@params init_box : intervals of the box given as a list of lists where each member's left,right value
-                   are the start,end points respectively for the intervals of the box.
-@returns list of border points.
-"""
-def __get_init_box_borders(init_box):
-    midpoints = [start + (end - start) / 2 for start, end in init_box]
-    border_points = list(product(*init_box))
-
-    for point_idx, point in enumerate(midpoints):
-        half_points = [init_inter if point_idx != inter_idx else [point] for inter_idx, init_inter in enumerate(init_box)]
-        border_points += list(product(*half_points))
-
-    return border_points
+        border_trajs = self.simulate_border_points(self.max_num_steps)
+        animation.add(border_trajs)
+        
+        animation.animate(x, y, ptope_order, plot_pts, filename)
 
 def exec_plot_vol_results(experi, filename):
     labels, vol_data = zip(*experi.gather_vol_only())

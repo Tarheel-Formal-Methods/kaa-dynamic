@@ -90,7 +90,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
         super().__init__(model, num_trajs)
         
         self.pca_ptope_life_counter = {}
-        self.life_span = lifespan
+        self.lifespan = lifespan
 
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
@@ -114,7 +114,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
     def __add_new_ptope(self, bund, step_num):
         new_pca_dirs, new_dir_labels = self.generate_pca_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_pca_dirs, new_dir_labels)
-        self.pca_ptope_life_counter[new_ptope_label] = self.life_span #Add fresh ptope and lifespan to step list
+        self.pca_ptope_life_counter[new_ptope_label] = self.lifespan #Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 
@@ -125,7 +125,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
          self.pca_ptope_life_data = {}
 
     def __str__(self):
-        return f"SlidingPCAStrat(Lifespan:{self.life_span})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}(Lifespan:{self.life_span})"
+        return f"SlidingPCAStrat(Lifespan:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}(Lifespan:{self.lifespan})"
 
 class GeneratedPCADirs(GeneratedDirs):
 
