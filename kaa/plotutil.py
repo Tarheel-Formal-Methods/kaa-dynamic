@@ -298,6 +298,11 @@ class Plot:
         else:
             plt.show()
 
+class CombinedPlot:
+
+    def __init__(self):
+        intersectPlot = None
+        sampledTrajPlot = None
 
 class SlideCompareAnimation(Plot):
 
@@ -309,73 +314,71 @@ class SlideCompareAnimation(Plot):
     def animate(self, x, y, ptope_order, plot_samp_pts_flags, filename, show_recent=False):
         assert len(plot_samp_pts_flags) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
 
-        x_var, y_var = self.model.vars[x], self.model.vars[y]
-        num_plots = len(self.flowpipes)
-
-        figure = plt.figure(figsize=PlotSettings.fig_size)
-        ax_list = [figure.add_subplot(1, num_plots, i+1) for i in range(num_plots)]
-
-        for ax, flowpipe in zip(ax_list, self.flowpipes):
-            ax.set_xlabel(f"{x_var}")
-            ax.set_ylabel(f"{y_var}")
-            ax.set_title("Phase Plot for {}".format(flowpipe.label))
+        figure, ax_list = self.__init_subplots(x, y, plot_samp_pts_flags)
 
         'Fetch all the trajectory data for plotting.'
-        traj_data_list = [flowpipe.traj_data for flowpipe in self.flowpipes]
         num_steps = min([len(flowpipe) for flowpipe in self.flowpipes]) - 1
 
         'Gets the ith bundle and fetches the ptope associated to the supplied ptope order input'
         lifespan = max([flowpipe.strat.lifespan for flowpipe in self.flowpipes])
 
-        #print(f"NUM STEPS: {num_steps}")
-
         prev_line_objs = None
 
         def update(i):
             ptope_idx = (i % lifespan) if show_recent else ptope_order
-            ptope_by_flowpipe = [flowpipe[i].ptope(ptope_idx) for flowpipe in self.flowpipes]
-
+            
             nonlocal prev_line_objs
 
-            if None not in ptope_by_flowpipe:
-                gen_vecs_list = []
-                line_objs_by_ax = []
-                
-                for ax_idx, ax in enumerate(ax_list):
-                    
-                    ax_ptope, comple_ax_ptope = ptope_by_flowpipe[ax_idx]
-                    flowpipe_traj_data = traj_data_list[ax_idx]
-                    plot_samp_pt_flag = plot_samp_pts_flags[ax_idx]
+            gen_vecs_list = []
+            line_objs_by_ax = []
+            
+            for ax_idx, ax in enumerate(ax_list):
 
-                    'Plot parallelotopes'
-                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0) #Plot desired ptope.
-                    self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.8) #Plot intersection of all the other existing ptopes.
+                flowpipe = self.flowpipes[ax_idx]
+                flowpipe_ptope = flowpipe[i].ptope(ptope_order)
 
-                    if plot_samp_pt_flag: #Check plotting flags
+                flowpipe_traj_data = self.flowpipes[ax_idx].traj_data
+                plot_samp_pt_flag = plot_samp_pts_flags[ax_idx]
 
-                        if i and prev_line_objs:
-                            for line in prev_line_objs[ax_idx]: line.remove()
+                if not flowpipe_ptope:
+                    continue
 
-                        initial_points = flowpipe_traj_data.initial_points[i]
-                        image_points = flowpipe_traj_data.image_points[i]
+                ax_ptope, comple_ax_ptope = flowpipe_ptope
 
-                        #print(f"I index: {i}")
-                        #print(f"Initial Points Shape: {initial_points.shape} {ax_idx}")
-                        #print(f"Image Points Shape: {image_points.shape}")
+                if plot_samp_pt_flag: #Check plotting flags
 
-                        line_obj_list = self.__plot_samp_trajs(ax, x, y, initial_points, image_points)
-                        line_objs_by_ax.append(line_obj_list)
-                        
-                        self.plot_trajs(x, y, ax, num_steps=i+1)
-                        
-                    else:
-                        line_objs_by_ax.append([]) #Placeholder for plots not having trajectory data plotted
-                         
-                    'Matrix of rows representing generator vectors for ax_ptope'
-                    gen_vecs_list.append(ax_ptope.generatorVecs)
+                    intersectPlot = ax.intersectPlot
+                    sampledTrajPlot = ax.sampledTrajPlot
 
-                self.__draw_comp_stats(ax_list[0], gen_vecs_list)
-                prev_line_objs = line_objs_by_ax #Store current line objects for removal during next step
+                    'Remove trajectory lines from last iteration.'
+                    if i and prev_line_objs:
+                        for line in prev_line_objs[ax_idx]: line.remove()
+
+                    'Plot ptope and its complement.'
+                    self.plot_halfspace(x, y, intersectPlot, ax_ptope, idx_offset=0)
+                    self.plot_halfspace(x, y, intersectPlot, comple_ax_ptope, idx_offset=2)
+
+                    'Plot ptope and its sampled trajectory data.'
+                    initial_points = flowpipe_traj_data.initial_points[i]
+                    image_points = flowpipe_traj_data.image_points[i]
+
+                    self.plot_halfspace(x, y, sampledTrajPlot, ax_ptope, idx_offset=0) #Plot desired ptope.
+
+                    line_obj_list = self.__plot_samp_trajs(sampledTrajPlot, x, y, initial_points, image_points)
+                    line_objs_by_ax.append(line_obj_list)
+
+                    self.plot_trajs(x, y, intersectPlot, num_steps=i+1)
+
+                else:
+                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0)
+                    self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2)
+                    line_objs_by_ax.append([]) #Placeholder for plots not having trajectory data plotted
+
+                'Matrix of rows representing generator vectors for ax_ptope'
+                gen_vecs_list.append(ax_ptope.generatorVecs)
+
+            #self.__draw_comp_stats(ax_list[0], gen_vecs_list)
+            prev_line_objs = line_objs_by_ax #Store current line objects for removal during next step
                 
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
@@ -384,7 +387,45 @@ class SlideCompareAnimation(Plot):
 
         ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
 
+    def __init_subplots(self, x, y, plot_samp_pts_flags):
+        x_var, y_var = self.model.vars[x], self.model.vars[y]
 
+        figure = plt.figure(figsize=PlotSettings.fig_size)
+        num_plots = sum([1 if plot_flag else 2 for plot_flag in plot_samp_pts_flags])
+
+        ax_list = []
+        
+        for plot_idx, plot_flag in enumerate(plot_samp_pts_flags):
+
+            if plot_flag:
+                subplot = CombinedPlot()
+                subplot.intersectPlot = figure.add_subplot(1, num_plots, plot_idx+1)
+                subplot.sampledTrajPlot = figure.add_subplot(1, num_plots, plot_idx+2)
+            else:
+                subplot = figure.add_subplot(1, num_plots, plot_idx+1)
+                
+            ax_list.append(subplot)
+
+        for ax_idx, (ax, flowpipe) in enumerate(zip(ax_list, self.flowpipes)):
+
+            plot_flag = plot_samp_pts_flags[ax_idx]
+
+            if plot_flag:
+                ax.intersectPlot.set_xlabel(f"{x_var}")
+                ax.intersectPlot.set_ylabel(f"{y_var}")
+                ax.intersectPlot.set_title("Phase Plot for {}".format(flowpipe.label))
+
+                ax.sampledTrajPlot.set_xlabel(f"{x_var}")
+                ax.sampledTrajPlot.set_ylabel(f"{y_var}")
+                ax.sampledTrajPlot.set_title("Phase Plot for {}".format(flowpipe.label))
+
+            else:
+                ax.set_xlabel(f"{x_var}")
+                ax.set_ylabel(f"{y_var}")
+                ax.set_title("Phase Plot for {}".format(flowpipe.label))
+                
+        return figure, ax_list
+            
     def __plot_samp_trajs(self, ax, x, y, init_pts, img_pts):
         'Plot sampled trajectory lines'
         line_obj_list = []

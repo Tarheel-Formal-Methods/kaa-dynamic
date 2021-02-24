@@ -117,7 +117,7 @@ def plot_sliding_lin_VDP():
     vdp_pca.execute(0,1)
 
 def test_ani_pca_comp_VDP():
-    NUM_STEPS = 10
+    NUM_STEPS = 5
     NUM_TRAJS = 5000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
