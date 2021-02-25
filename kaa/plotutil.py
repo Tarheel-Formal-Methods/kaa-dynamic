@@ -199,7 +199,7 @@ class Plot:
                 x_coord = x_coord[:num_steps]
                 y_coord = y_coord[:num_steps]
 
-            ax.plot(x_coord, y_coord, color="k", linewidth=1)
+            ax.plot(x_coord, y_coord, color="k", linewidth=0.3)
             ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=1)
 
 
@@ -324,7 +324,7 @@ class SlideCompareAnimation(Plot):
         self.flowpipes = flowpipes
         self.model = flowpipes[0].model
 
-    def animate(self, x, y, ptope_order, plot_samp_pts_flags, filename, show_recent=False):
+    def animate(self, x, y, ptope_order, plot_samp_pts_flags, filename, show_recent=True):
         assert len(plot_samp_pts_flags) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
 
         figure, ax_list = self.__init_subplots(x, y, plot_samp_pts_flags)
@@ -348,13 +348,13 @@ class SlideCompareAnimation(Plot):
             for ax_idx, ax in enumerate(ax_list):
 
                 flowpipe = self.flowpipes[ax_idx]
-                flowpipe_ptope = flowpipe[i].ptope(ptope_order)
+                flowpipe_ptope = flowpipe[i].ptope(ptope_idx)
 
                 flowpipe_traj_data = self.flowpipes[ax_idx].traj_data
                 plot_samp_pt_flag = plot_samp_pts_flags[ax_idx]
 
-                if not flowpipe_ptope:
-                    continue
+                #if not flowpipe_ptope:
+                #    continue
 
                 ax_ptope, comple_ax_ptope = flowpipe_ptope
 
@@ -367,9 +367,14 @@ class SlideCompareAnimation(Plot):
                     if i and prev_line_objs:
                         for line in prev_line_objs[ax_idx]: line.remove()
 
-                    'Plot ptope and its complement.'
-                    self.plot_halfspace(x, y, intersectPlot, ax_ptope, idx_offset=0)
-                    self.plot_halfspace(x, y, intersectPlot, comple_ax_ptope, idx_offset=2)
+                    'If valid ptope index, plot the plot in blue and intersection of the other ptopes in green.'
+                    if ptope_order < 0 and not show_recent:
+                        total_intersect = flowpipe[i].getIntersect()
+                        self.plot_halfspace(x, y, intersectPlot, total_intersect, idx_offset=0)
+                    else:
+                        'Plot ptope and its complement.'
+                        self.plot_halfspace(x, y, intersectPlot, ax_ptope, idx_offset=0, alpha=0.7)
+                        self.plot_halfspace(x, y, intersectPlot, comple_ax_ptope, idx_offset=2,alpha=0.4)
 
                     'Plot ptope and its sampled trajectory data.'
                     initial_points = flowpipe_traj_data.initial_points[i]
@@ -383,8 +388,8 @@ class SlideCompareAnimation(Plot):
                     self.plot_trajs(x, y, intersectPlot, num_steps=i+1)
 
                 else:
-                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0)
-                    self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2)
+                    self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0, alpha=0.7)
+                    self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.4)
                     line_objs_by_ax.append([]) #Placeholder for plots not having trajectory data plotted
 
                 'Matrix of rows representing generator vectors for ax_ptope'
@@ -445,9 +450,9 @@ class SlideCompareAnimation(Plot):
         for init_pt, img_pt in zip(init_pts, img_pts):
             traj_line_pts = np.asarray([init_pt, img_pt])
 
-            line, = ax.plot(traj_line_pts[:,x], traj_line_pts[:,y], c="r") #Plot lines.
+            line, = ax.plot(traj_line_pts[:,x], traj_line_pts[:,y], c="r", linewidth=0.3) #Plot lines.
             start_pt = ax.scatter(traj_line_pts[0,x], traj_line_pts[0,y])
-            end_pt = ax.scatter(traj_line_pts[1,x], traj_line_pts[1,y], marker='x', s=1.3)
+            end_pt = ax.scatter(traj_line_pts[1,x], traj_line_pts[1,y], marker='x')
 
             traj_line_obj = TrajLine(line,
                                      start_pt,

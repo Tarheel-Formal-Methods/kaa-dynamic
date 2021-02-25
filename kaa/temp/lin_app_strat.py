@@ -35,8 +35,8 @@ class AbstractLinStrat(TempStrategy):
     def generate_lin_dir(self, bund, step_num):
 
         if self.dirs is None:
-            print(f"Ran points gen. {self.num_trajs}")
-            print(f"STORED MAT: {self.unit_dir_mat}")
+            #print(f"Ran points gen. {self.num_trajs}")
+            #print(f"STORED MAT: {self.unit_dir_mat}")
             inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
             lin_dir_mat = np.matmul(self.unit_dir_mat, inv_A)
 
@@ -49,8 +49,8 @@ class AbstractLinStrat(TempStrategy):
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
 
-
             #print(f"Cal Lin Directions Matrix: {lin_dir_mat}")
+            self.unit_dir_mat = lin_dir_mat #This makes senese for now as we assume we generate directions once per step.
         else:
             lin_dir_mat = self.dirs.get_dirs_at_step(step_num)
 
@@ -103,7 +103,6 @@ class LinStrat(AbstractLinStrat):
 
             'Add the components to the bundle and save last generated ptope data.'
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
-            self.unit_dir_mat = lin_dir
             self.ptope_queue.append(ptope_label)
 
         return bund

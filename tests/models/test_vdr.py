@@ -147,7 +147,7 @@ def test_ani_pca_comp_VDP():
     Timer.generate_stats()
 
 def test_ani_lin_comp_VDP():
-    NUM_STEPS = 4
+    NUM_STEPS = 10
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
@@ -231,7 +231,7 @@ def test_strat_comb_stdev_VDP():
 
 def gen_save_dirs_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    gen_save_dirs(unit_model, 3, max_num_trajs=1000, num_trials=2)
+    gen_save_dirs(unit_model, 70, max_num_trajs=2000, num_trials=10)
 
 def find_pca_variation_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
