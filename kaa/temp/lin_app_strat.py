@@ -35,15 +35,22 @@ class AbstractLinStrat(TempStrategy):
     def generate_lin_dir(self, bund, step_num):
 
         if self.dirs is None:
+            print(f"Ran points gen. {self.num_trajs}")
+            print(f"STORED MAT: {self.unit_dir_mat}")
             inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
-            lin_dir_mat = np.dot(self.unit_dir_mat, inv_A)
-            
+            lin_dir_mat = np.matmul(self.unit_dir_mat, inv_A)
+
+
             cond_num = np.linalg.cond(lin_dir_mat)
 
             if cond_num > self.cond_threshold:
+                print("Using Normalization method.")
                 norm_lin_dir = normalize_mat(lin_dir_mat)
                 closest_dirs = find_closest_dirs(norm_lin_dir)
                 lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+
+
+            #print(f"Cal Lin Directions Matrix: {lin_dir_mat}")
         else:
             lin_dir_mat = self.dirs.get_dirs_at_step(step_num)
 
@@ -64,7 +71,10 @@ class AbstractLinStrat(TempStrategy):
 
         try:
             approx_A = approx_lin_trans(start_end_tup, self.dim)
+            #print(f"LEAST SQ Matrix Output: {approx_A}")
+
             inv_A = np.linalg.inv(approx_A)
+            #print(f"INV Matrix Output: {inv_A}")
             
         except np.linalg.LinAlgError:
             Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
@@ -82,7 +92,7 @@ class LinStrat(AbstractLinStrat):
         num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
         super().__init__(model, num_trajs, cond_threshold)
         self.iter_steps = iter_steps
-        self.last_ptope = None
+        self.ptope_queue = []
 
     """
     Opening LinApp routine
@@ -93,14 +103,14 @@ class LinStrat(AbstractLinStrat):
 
             'Add the components to the bundle and save last generated ptope data.'
             ptope_label = self.add_ptope_to_bund(bund, lin_dir, lin_dir_labels)
-            self.last_ptope = ptope_label
             self.unit_dir_mat = lin_dir
+            self.ptope_queue.append(ptope_label)
 
         return bund
 
     def close_strat(self, bund, step_num):
         if not step_num % self.iter_steps and step_num > 0:
-                self.rm_ptope_from_bund(bund, self.last_ptope)
+                self.rm_ptope_from_bund(bund, self.ptope_queue.pop(0))
 
     """
     Reset the strategy for a new round of computation.
@@ -303,11 +313,10 @@ Normalizes the row of input matrix
 @returns normalized matrix.
 """
 def normalize_mat(mat):
-    
     return mat / np.linalg.norm(mat, ord=2, axis=1, keepdims=True)
 
 def initialize_unit_mat(dim):
-    mat = np.empty((dim, dim))
+    mat = np.zeros((dim, dim))
     for i in range(dim):
         mat[i][i] = 1
     return mat

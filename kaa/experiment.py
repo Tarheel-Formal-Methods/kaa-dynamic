@@ -478,7 +478,11 @@ class PhasePlotExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs)
 
-    def execute(self, *var_tup, separate=False):
+    def execute(self, *var_tup, separate=False, plot_border_traj=True):
+
+        if plot_border_traj:
+            self.plot.add(self.simulate_border_points(10))
+
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))

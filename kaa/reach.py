@@ -29,7 +29,7 @@ class ReachSet:
     """
     Compute reachable set for the alloted number of time steps.
     @params time_steps: number of time steps to carry out the reachable set computation.
-            TempStrat: template loading strategy to use during this reachable set computation.
+            TempStrat: template n  loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
     def computeReachSet(self, time_steps, transmode=BundleMode.AFO):

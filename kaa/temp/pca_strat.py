@@ -52,7 +52,7 @@ class PCAStrat(AbstractPCAStrat):
     def __init__(self, model, num_trajs=300, iter_steps=1):
         super().__init__(model, num_trajs)
         self.iter_steps = iter_steps
-        self.last_ptope = None
+        self.ptope_queue = []
 
     """
     Opening PCA routine
@@ -63,14 +63,14 @@ class PCAStrat(AbstractPCAStrat):
 
             'Add the components to the bundle and save last generated ptope data.'
             ptope_label = self.add_ptope_to_bund(bund, pca_comps, pca_comp_labels)
-            self.last_ptope = ptope_label
+            self.ptope_queue.append(ptope_label)
 
     """
     Closing PCA routine
     """
     def close_strat(self, bund, step_num):
         if not step_num % self.iter_steps and step_num > 0:
-                self.rm_ptope_from_bund(bund, self.last_ptope)
+            self.rm_ptope_from_bund(bund, self.ptope_queue.pop(0))
 
     """
     Reset the strategy for a new round of computation.

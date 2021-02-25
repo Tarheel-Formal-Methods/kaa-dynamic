@@ -112,7 +112,7 @@ class Plot:
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
-    def plot2DPhase(self, x, y, separate, lims=None, volume_chart=False, plot_samp_pts=True):
+    def plot2DPhase(self, x, y, separate, lims=None, volume_chart=False):
         assert len(self.flowpipes) != 0, "Plot Object must have at least one flowpipe to plot for 2DPhase."
 
         Timer.start('Phase')
@@ -200,7 +200,7 @@ class Plot:
                 y_coord = y_coord[:num_steps]
 
             ax.plot(x_coord, y_coord, color="k", linewidth=1)
-            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=0.5)
+            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=1)
 
 
     def support_plot(self, flowpipe, flow_idx, x, y, ax):
@@ -240,7 +240,7 @@ class Plot:
                 'Temp patch. Revise to start using LinearSystems for future work.'
                 self.plot_halfspace(x, y, ax, bund.getIntersect(), idx_offset=flow_idx)
             else:
-                for ptope_idx, ptope in enumerate(bund.ptopes):
+                for ptope_idx, ptope in enumerate(bund.all_ptopes):
                     self.plot_halfspace(x, y, ax, ptope, idx_offset=flow_idx+ptope_idx)
 
     """
@@ -252,7 +252,7 @@ class Plot:
         if sys is None: return sys
 
         dim = self.model.dim
-        comple_dim = np.asarray([ True if i in [x,y] else False for i in range(dim) ])
+        comple_dim = np.asarray([True if i in [x,y] else False for i in range(dim)])
 
         vertices = sys.vertices
         proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
@@ -301,8 +301,21 @@ class Plot:
 class CombinedPlot:
 
     def __init__(self):
-        intersectPlot = None
-        sampledTrajPlot = None
+        self.intersectPlot = None
+        self.sampledTrajPlot = None
+
+class TrajLine:
+
+    def __init__(self, line, start_point, end_point):
+        self.line = line
+        self.start_point = start_point
+        self.end_point = end_point
+
+    def remove(self):
+        self.line.remove()
+        self.start_point.remove()
+        self.end_point.remove()
+
 
 class SlideCompareAnimation(Plot):
 
@@ -430,9 +443,17 @@ class SlideCompareAnimation(Plot):
         'Plot sampled trajectory lines'
         line_obj_list = []
         for init_pt, img_pt in zip(init_pts, img_pts):
-            traj_line = np.asarray([init_pt, img_pt])
-            line, = ax.plot(traj_line[:,x], traj_line[:,y], c="r") #Plot lines.
-            line_obj_list.append(line)
+            traj_line_pts = np.asarray([init_pt, img_pt])
+
+            line, = ax.plot(traj_line_pts[:,x], traj_line_pts[:,y], c="r") #Plot lines.
+            start_pt = ax.scatter(traj_line_pts[0,x], traj_line_pts[0,y])
+            end_pt = ax.scatter(traj_line_pts[1,x], traj_line_pts[1,y], marker='x', s=1.3)
+
+            traj_line_obj = TrajLine(line,
+                                     start_pt,
+                                     end_pt)
+
+            line_obj_list.append(traj_line_obj)
 
         return line_obj_list
 
