@@ -109,7 +109,14 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
         
         inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name}")
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+        
+    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -132,7 +139,14 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
         
         inputs.append(experi_input1)
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name}")
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+        
+    experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -155,7 +169,14 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
         
         inputs.append(experi_input1)
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name}")
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+        
+    experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10 , use_supp=False, use_pregen=True):
@@ -190,8 +211,14 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
         
         inputs.append(experi_input)
 
-
-    experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ}")
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+        
+    experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, use_supp=False, use_pregen=True):
@@ -224,10 +251,18 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
-        
-        inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJS:{NUM_TRAJS}")
+
+        inputs.append(experi_input)
+        
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+        
+    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJS:{NUM_TRAJS} {file_identifier}")
     experi.execute(num_trials)
 
 def test_comb_stdev_reduction(model, num_steps, num_trials=10):

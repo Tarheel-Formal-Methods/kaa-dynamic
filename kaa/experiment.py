@@ -417,14 +417,14 @@ class VolumeExperiment(Experiment):
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
             experi_strat = experi_input['strat']
 
-            for trial_num in range(1, num_trials):
+            for trial_num in range(num_trials):
                 Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
 
                 flowpipe = self.gather_vol_data(experi_input)
                 flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
 
-                if not flowpipe.err:
-                    pass
+                if not flowpipe.error:
+                    flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
 
                 self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)

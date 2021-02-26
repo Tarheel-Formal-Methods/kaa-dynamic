@@ -44,4 +44,4 @@ class PlotSettings:
     default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
 
     'Figure dimensions'
-    fig_size = (30,20)
+    fig_size = (40,20)

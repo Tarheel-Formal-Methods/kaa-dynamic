@@ -5,7 +5,7 @@ from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
-from kaa.templates import StaticStrat
+from kaa.templates import StaticStrat, MultiStrategy
 
 bolden = lambda string: colored(string, 'white', attrs=['bold'])
 
@@ -67,11 +67,13 @@ class ReachSet:
             'Check volume of enveloping box and stop loop if the volume becomes too large.'
             if self.check_reach_size(trans_bund, init_box_vol_thres):
                 print("Bundle volume grown to too large of volume. Ending reachable set computation.")
-                err = ReachError("Volume too large.", step)
-                flowpipe.error = err
+                error = ReachError("Volume too large.", step)
+                self.flowpipe.error = error
                 break
 
-        self.flowpipe.traj_data = self.strat.fetch_traj_data()
+            if not isinstance(self.strat, MultiStrategy):
+                self.flowpipe.traj_data = self.strat.fetch_traj_data()
+                
         return self.flowpipe
 
 

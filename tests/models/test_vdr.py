@@ -146,8 +146,8 @@ def test_ani_pca_comp_VDP():
 
     Timer.generate_stats()
 
-def test_ani_lin_comp_VDP():
-    NUM_STEPS = 10
+def test_ani_lin_ wd wdcomp_VDP():
+    NUM_STEPS = 40
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)
 
