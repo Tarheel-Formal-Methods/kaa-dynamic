@@ -423,7 +423,7 @@ class VolumeExperiment(Experiment):
                 flowpipe = self.gather_vol_data(experi_input)
                 flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
 
-                if not flowpipe.error:
+                if flowpipe.error:
                     flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
 
                 self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
