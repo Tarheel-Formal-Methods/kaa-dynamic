@@ -97,7 +97,7 @@ class TempStrategy(ABC):
         bund.add_temp(self, dir_labels, ptope_name)
 
         return ptope_name
-        
+
     """
     Generates a unique key for a ptope.
     @returns unique label for ptope
@@ -105,7 +105,7 @@ class TempStrategy(ABC):
     def __generate_unique_key(self):
         self.ptope_counter += 1
         return "Ptope" + str(self.ptope_counter)
-    
+
     """
     Generate trajectories according to scheme defined in KaaSettings
     @params bund: Bundle object
@@ -113,7 +113,7 @@ class TempStrategy(ABC):
     @returns TrajCollection object wrapping generated Traj objects.
     """
     def generate_trajs(self, bund, num_trajs):
-        
+
         if self.use_supp_points:
             trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:
@@ -122,13 +122,13 @@ class TempStrategy(ABC):
         self.initial_points.append(trajs.start_points)
         self.image_points.append(trajs.end_points)
         return trajs
-    
+
     """
     Fetch data containing the initial points of the trajectories used and the points where they were propagated.
     @returns TrajData object containing all relevant data
     """
     def fetch_traj_data(self):
-        
+
         if self.dirs is None:
             return SampledTrajData(self.initial_points, self.image_points)
         else:
@@ -172,10 +172,6 @@ class MultiStrategy(TempStrategy):
             strat.strat_order = self.strat_freq[type(strat)]
             self.strat_list.append(strat)
 
-    @property
-    def strats(self):
-        return self.strat_list
-
     def open_strat(self, bund, step_num):
         for strat in self.strat_list:
             strat.open_strat(bund, step_num)
@@ -184,16 +180,16 @@ class MultiStrategy(TempStrategy):
         for strat in self.strat_list:
             strat.close_strat(bund, step_num)
 
-    """
-    def fetch_traj_data(self):
-    """
-
     def reset(self):
         for strat in self.strat_list:
             strat.reset()
 
     def __str__(self):
         return ' and '.join([str(strat) for strat in self.strat_list])
+
+    def __iter__(self):
+        return iter(self.strat_list)
+
 
 """
 Wrapper over matrix of pre-generated dirs.

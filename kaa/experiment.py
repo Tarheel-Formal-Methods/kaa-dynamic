@@ -18,12 +18,19 @@ from kaa.timer import Timer
 
 GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
 
+
+"""
+Data class for storing objects relevant to saving data to openpyxl spreadsheets
+"""
 class SpreadSheet:
 
     def __init__(self, workbook, row_dict):
         self.workbook = workbook
         self.row_dict = row_dict
 
+"""
+Class responsible for saving/oading pre-generated directions from disk.
+"""
 class DirSaveLoader:
 
     """
@@ -33,7 +40,7 @@ class DirSaveLoader:
             num_steps: Number of steps computed
             num_trajs: Number of trajectories used to compute directions
             seed: Random seed used to sample trajectory starting points in the initial box.
-    
+
     @returns List of GenDirsTuples ordered by trial number
     """
     @staticmethod
@@ -44,7 +51,7 @@ class DirSaveLoader:
 
         pca_gendir_obj_list = DirSaveLoader.wrap_pca_dirs(model, pca_dirs_from_file, samp_pts_from_file)
         lin_gendir_obj_list = DirSaveLoader.wrap_lin_dirs(model, lin_dirs_from_file, samp_pts_from_file)
-        
+
         gen_dirs_list = []
         for pca_gendir_obj, lin_gendir_obj in zip(pca_gendir_obj_list, lin_gendir_obj_list):
             gen_dirs_tuple = GenDirsTuple(pca_gendir_obj, lin_gendir_obj)
@@ -68,7 +75,7 @@ class DirSaveLoader:
         pca_dirs_by_trial = []
         lin_dirs_by_trial = []
         sampled_pts_by_trial = []
-        
+
         for gen_dirs_tup in gen_dirs_list:
             gen_pca_dirs = gen_dirs_tup.GenPCADirs
             gen_lin_dirs = gen_dirs_tup.GenLinDirs
@@ -137,7 +144,10 @@ class DirSaveLoader:
 
         return gen_lin_dirs_list
 
-
+"""
+Class containing all routines to conduct experiments with various strategies, extract
+their output data, and plot/compare them.
+"""
 class Experiment(ABC):
 
     def __init__(self, *inputs, label=""):
@@ -170,10 +180,9 @@ class Experiment(ABC):
             gen_dirs_list: List of GenDirsTuples ordered by trial number.
     """
     def assign_dirs(self, strat, trial_num, gen_dirs_list):
-
         if gen_dirs_list is not None:
             if isinstance(strat, MultiStrategy):
-                for st in strat.strats:
+                for st in strat:
                     self.__assign_dirs_by_strat(st, trial_num, gen_dirs_list)
             else:
                 self.__assign_dirs_by_strat(strat, trial_num, gen_dirs_list)
@@ -185,13 +194,12 @@ class Experiment(ABC):
             gen_dirs_list: List of GenDirsTuples ordered by trial number
     """
     def __assign_dirs_by_strat(self, strat, trial_num, gen_dirs_list):
-        
         if isinstance(strat, AbstractPCAStrat):
             strat.dirs = gen_dirs_list[trial_num].GenPCADirs
 
         elif isinstance(strat, AbstractLinStrat):
             strat.dirs = gen_dirs_list[trial_num].GenLinDirs
-            
+
         else:
             raise RuntimeError("Strategies have to be of either PCA, LinApp type.")
 
@@ -211,7 +219,7 @@ class Experiment(ABC):
         except IOError:
             Output.warning("WARNING: PRE-GENERATED DIRECTIONS NOT FOUND ON DISK. GENERATING DIRECTIONS FOR EXPERIMENT.")
             gen_dirs_list = self.__generate_dirs(num_steps, num_trajs, num_trials)
-            
+
             Output.prominent("SAVING TO DISK.")
             DirSaveLoader.save_dirs(self.model, num_steps, num_trajs, KaaSettings.RandSeed, gen_dirs_list)
 
@@ -222,12 +230,12 @@ class Experiment(ABC):
     @params num_steps: Number of steps to propagate trajectories according to system dynamics
             num_trajs: Number of trajectories to use to generate directions.
             num_trials: Number of trials to increment seed and generate new set of directions.
-    
+
     @returns List of GenDirsTuples ordered by trial number.
     """
     def __generate_dirs(self, num_steps, num_trajs, num_trials):
         generated_dirs = []
-        
+
         for trial_num in range(num_trials):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(self.model, num_steps, num_trajs)
@@ -235,7 +243,7 @@ class Experiment(ABC):
 
             gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
             generated_dirs.append(gen_dirs_tuple)
-            
+
             update_seed()
 
         reset_seed()
@@ -326,7 +334,7 @@ class Experiment(ABC):
 
         if plottrajs:
            self.plot.add(border_sim_trajs)
-           
+
         self.plot.plot(*var_tup)
 
     """
@@ -353,7 +361,7 @@ class Experiment(ABC):
         border_points = self.__get_init_box_borders(init_box_inter)
 
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
-        
+
         return TrajCollection(self.model, trajs)
 
     """
@@ -380,12 +388,11 @@ class Experiment(ABC):
         experi_num_steps = experi_input['max_steps']
 
         loaded_dirs = None
-        experi_strat.num_trajs =  experi_num_trajs 
-        
-        if experi_supp_mode:
+        experi_strat.num_trajs =  experi_num_trajs
 
+        if experi_supp_mode:
             if isinstance(experi_strat, MultiStrategy):
-                for strat in experi_strat.strats:
+                for strat in experi_strat:
                     strat.use_supp_points = True
             else:
                 experi_strat.use_supp_points = True
@@ -415,10 +422,19 @@ class VolumeExperiment(Experiment):
 
         for experi_input in self.inputs:
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
+
             experi_strat = experi_input['strat']
+            experi_supp_mode = experi_input['supp_mode']
+            experi_pregen_mode = experi_input['pregen_mode']
+            experi_num_trajs = experi_input['num_trajs']
 
             for trial_num in range(num_trials):
-                Output.prominent(f"\n RUNNING EXPERIMENT {experi_input['label']} TRIAL:{trial_num} \n")
+                Output.prominent(f"Running Experiment {experi_input['label']} Trial:{trial_num}")
+                Output.prominent(f"Using following parameters for experiments:")
+                Output.prominent(f"Use Support Points: {experi_supp_mode}")
+                Output.prominent(f"Use Pre-gen Points: {experi_pregen_mode}")
+                if experi_pregen_mode:
+                    Output.prominent(f"Number of Trajectories Used: {experi_num_trajs}")
 
                 flowpipe = self.gather_vol_data(experi_input)
                 flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
@@ -501,12 +517,12 @@ class CompAniExperiment(Experiment):
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipes.append(self.calc_flowpipe(experi_input))
-        
+
         animation = SlideCompareAnimation(*flowpipes)
 
         border_trajs = self.simulate_border_points(self.max_num_steps)
         animation.add(border_trajs)
-        
+
         animation.animate(x, y, ptope_order, plot_pts, filename)
 
 def exec_plot_vol_results(experi, filename):

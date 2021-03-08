@@ -146,7 +146,7 @@ def test_ani_pca_comp_VDP():
 
     Timer.generate_stats()
 
-def test_ani_lin_ wd wdcomp_VDP():
+def test_ani_lin_comp_VDP():
     NUM_STEPS = 40
     NUM_TRAJS = 1000
     unit_model = VanDerPol_UnitBox(delta=0.08)
@@ -170,7 +170,7 @@ def test_ani_lin_ wd wdcomp_VDP():
                             num_trajs=NUM_TRAJS,
                             supp_mode=True,
                             pregen_mode=False)
-                             
+
     vdp_pca = CompAniExperiment(ran_experi_input, supp_experi_input)
     vdp_pca.execute(0, 1, 0, "VDPLinComp", plot_pts=[False, True])
 
@@ -207,7 +207,11 @@ def test_ani_pca_lin_VDP():
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_strat_comb(unit_model, (1,3,5), 70, 4000)
+    test_strat_comb(unit_model, (1,3,5), 70, 4000, use_supp=True, use_pregen=False)
+
+def test_sliding_strat_comb_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_sliding_strat_comb(unit_model, 70, 4000, use_supp=True, use_pregen=False)
 
 def test_one_one_strat_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

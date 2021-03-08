@@ -87,6 +87,36 @@ def test_comp_ani(model, x, y, num_steps)
     vdp_pca.animate(0,1, pca_strat)
 """
 
+def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp=True, use_pregen=False):
+    if use_supp:
+        num_trials = 1
+
+    inputs = []
+    for window_size in range(10,0,-2):
+        pca_strat = SlidingPCAStrat(model, lifespan=window_size)
+        lin_strat = SlidingLinStrat(model, lifespan=window_size)
+
+        experi_input = dict(model=model,
+                            strat=MultiStrategy(pca_strat, lin_strat),
+                            label=f"Sliding PCA Step {window_size} and Sliding Lin Step {window_size}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
+                            num_trajs=num_trajs,
+                            num_steps=num_steps-1,
+                            max_steps=num_steps)
+
+        inputs.append(experi_input)
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name} {file_identifier}")
+    experi.execute(num_trials)
+
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:
         num_trials = 1
@@ -106,7 +136,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
                             num_trajs=num_trajs,
                             num_steps=num_steps-1,
                             max_steps=num_steps)
-        
+
         inputs.append(experi_input)
 
     if use_supp:
@@ -115,7 +145,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
         file_identifier = "(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
-        
+
     experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name} {file_identifier}")
     experi.execute(num_trials)
 
@@ -136,7 +166,7 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
                              num_trajs=num_trajs,
                              num_steps=num_steps-1,
                              max_steps=num_steps)
-        
+
         inputs.append(experi_input1)
 
     if use_supp:
@@ -145,14 +175,14 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
         file_identifier = "(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
-        
+
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:
         num_trials = 1
-        
+
     inputs = []
     for lin_step in range(2,max_step+1): #model tossed around too many times.
         pca_strat1 = PCAStrat(model, iter_steps=1)
@@ -166,7 +196,7 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
                              num_trajs=num_trajs,
                              num_steps=num_steps-1,
                              max_steps=num_steps)
-        
+
         inputs.append(experi_input1)
 
     if use_supp:
@@ -175,7 +205,7 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
         file_identifier = "(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
-        
+
     experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
@@ -208,7 +238,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
-        
+
         inputs.append(experi_input)
 
     if use_supp:
@@ -217,7 +247,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
         file_identifier = "(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
-        
+
     experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ} {file_identifier}")
     experi.execute(num_trials)
 
@@ -238,7 +268,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
-        
+
         inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
@@ -254,20 +284,20 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
 
 
         inputs.append(experi_input)
-        
+
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
         file_identifier = "(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
-        
+
     experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJS:{NUM_TRAJS} {file_identifier}")
     experi.execute(num_trials)
 
 def test_comb_stdev_reduction(model, num_steps, num_trials=10):
     NUM_STEPS = num_steps
-    
+
     inputs = []
     for num_trajs in range(1000,4000,1000): #model tossed around too many times.
         pca_strat = PCAStrat(model, iter_steps=1)
@@ -292,10 +322,10 @@ def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
             Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
             gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
             gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
-            
+
             gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
             generated_dirs.append(gen_dirs_tuple)
-            
+
             update_seed()
 
         reset_seed()
@@ -311,7 +341,7 @@ def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, labe
                             pregen_mode = True,
                             num_steps=num_steps,
                             max_steps=num_steps)
-        
+
         inputs.append(experi_input)
 
     experi = DeviationExperiment(*inputs, "PCADev", label=label)

@@ -171,7 +171,7 @@ class Plot:
 
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            for strat_idx, strat in enumerate(flowpipe.strats):
+            for strat_idx, strat in enumerate(flowpipe):
                 axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
 
         phase_ax.legend(handles=axis_patches)
@@ -190,7 +190,7 @@ class Plot:
         if not self.trajs: return
 
         x_var, y_var = self.model.vars[x], self.model.vars[y]
-        
+
         for traj_idx, traj in enumerate(self.trajs):
             x_coord = traj.get_proj(x_var)
             y_coord = traj.get_proj(y_var)
@@ -339,12 +339,12 @@ class SlideCompareAnimation(Plot):
 
         def update(i):
             ptope_idx = (i % lifespan) if show_recent else ptope_order
-            
+
             nonlocal prev_line_objs
 
             gen_vecs_list = []
             line_objs_by_ax = []
-            
+
             for ax_idx, ax in enumerate(ax_list):
 
                 flowpipe = self.flowpipes[ax_idx]
@@ -397,7 +397,7 @@ class SlideCompareAnimation(Plot):
 
             #self.__draw_comp_stats(ax_list[0], gen_vecs_list)
             prev_line_objs = line_objs_by_ax #Store current line objects for removal during next step
-                
+
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
         Writer = animate.writers['ffmpeg']
@@ -412,7 +412,7 @@ class SlideCompareAnimation(Plot):
         num_plots = sum([1 if plot_flag else 2 for plot_flag in plot_samp_pts_flags])
 
         ax_list = []
-        
+
         for plot_idx, plot_flag in enumerate(plot_samp_pts_flags):
 
             if plot_flag:
@@ -421,7 +421,7 @@ class SlideCompareAnimation(Plot):
                 subplot.sampledTrajPlot = figure.add_subplot(1, num_plots, plot_idx+2)
             else:
                 subplot = figure.add_subplot(1, num_plots, plot_idx+1)
-                
+
             ax_list.append(subplot)
 
         for ax_idx, (ax, flowpipe) in enumerate(zip(ax_list, self.flowpipes)):
@@ -441,9 +441,9 @@ class SlideCompareAnimation(Plot):
                 ax.set_xlabel(f"{x_var}")
                 ax.set_ylabel(f"{y_var}")
                 ax.set_title("Phase Plot for {}".format(flowpipe.label))
-                
+
         return figure, ax_list
-            
+
     def __plot_samp_trajs(self, ax, x, y, init_pts, img_pts):
         'Plot sampled trajectory lines'
         line_obj_list = []
@@ -464,13 +464,13 @@ class SlideCompareAnimation(Plot):
 
     def __draw_comp_stats(self, ax, gen_vecs_list):
         norm_val = []
-        
+
         for vec1, vec2 in zip(*gen_vecs_list):
             vec_diff = np.subtract(vec1, vec2)
             norm_val.append(np.linalg.norm(vec_diff))
 
         max_diff = max(norm_val)
-        
+
         patch = [pat.Patch(color='g', label=f"Largest Deviaton: {max_diff}")]
         ax.legend(handles=patch, loc='upper right', bbox_to_anchor=(1.15, 1))
 

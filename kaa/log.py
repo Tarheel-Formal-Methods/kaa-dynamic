@@ -51,8 +51,8 @@ class Output:
 
     @staticmethod
     def warning(output):
-        cprint(output.upper(), 'red', attrs=['blink'])
+        cprint(''.join((output.upper(), '\n')), 'red', attrs=['blink'])
 
     @staticmethod
     def prominent(output):
-        cprint(output.upper(), 'white', attrs=['bold'])
+        cprint(''.join((output.upper(), '\n')), 'white', attrs=['bold'])

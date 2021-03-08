@@ -52,7 +52,7 @@ class ReachSet:
                 #    save_flowpipe_to_disk(self.flowpipe) #Implement this
                 #else:
                 raise
-            
+
             #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
             #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
 
@@ -70,14 +70,12 @@ class ReachSet:
 
                 error = ReachError("Volume too large.", step)
                 self.flowpipe.error = error
-                
                 break
 
             if not isinstance(self.strat, MultiStrategy):
                 self.flowpipe.traj_data = self.strat.fetch_traj_data()
-                
-        return self.flowpipe
 
+        return self.flowpipe
 
     def check_reach_size(self, bund, threshold):
         envelop_box_vol = bund.getIntersect().calc_vol_envelop_box()
