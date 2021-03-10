@@ -57,11 +57,15 @@ def test_pca_lin_Rossler():
 
 def test_strat_comb_Rossler():
     model = Rossler_UnitBox(delta=0.5)
-    test_strat_comb(model, (1,3,5), 150, -1)
+    test_strat_comb(model, (1,3,5), 150, )
 
 def test_sliding_strat_comb_Rossler():
     model = Rossler_UnitBox(delta=0.08)
     test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
+
+def test_skewed_sliding_strat_comb_Rossler():
+    model = SIR_UnitBox(delta=0.08)
+    test_skewed_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
 
 def test_sliding_pca_Rossler():
     model = Rossler_UnitBox(delta=0.5)

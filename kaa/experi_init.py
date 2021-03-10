@@ -106,6 +106,38 @@ def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp
     experi = VolumeExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
     experi.execute(num_trials)
 
+def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp=True, use_pregen=False):
+    if use_supp:
+        num_trials = 1
+
+    inputs = []
+    for pca_window_size in range(5,20,5):
+        lin_window_size = 20 - pca_window_size
+
+        pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+
+        experi_input = dict(model=model,
+                            strat=MultiStrategy(pca_strat, lin_strat),
+                            label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
+                            num_trajs=num_trajs,
+                            num_steps=num_steps-1,
+                            max_steps=num_steps)
+
+        inputs.append(experi_input)
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = "(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = VolumeExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    experi.execute(num_trials)
+
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:
         num_trials = 1

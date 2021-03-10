@@ -29,9 +29,6 @@ class KaaSettings:
     'Path for data directory to save all xlsx files from experiments.'
     DataDir = "/Users/edwardkim/Work/kaa-optimize/data"
 
-    'Use pre-generated directions for all experiments.'
-    UsePreGenDirs = False
-
     'Flag to trigger enveloping box threshold checking'
     UseThreshold = False
 

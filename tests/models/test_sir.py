@@ -62,8 +62,8 @@ def test_sir_lin_pca_strat():
         sir_plot.add(traj)
 
    # sir_plot.plot2DPhase(0,1,separate=False, plotvertices=True)
-    sir_plot.plot2DPhase(1,2,separate=False, plotvertices=True)
-    sir_plot.plot2DPhase(0,2,separate=False, plotvertices=True)
+    sir_plot.plot2DPhase(1, 2, separate=False, plotvertices=True)
+    sir_plot.plot2DPhase(0, 2, separate=False, plotvertices=True)
 
     Timer.generate_stats()
 
@@ -71,9 +71,13 @@ def test_strat_comb_SIR():
     model = SIR_UnitBox(delta=0.5)
     test_strat_comb(model, (1,3,5), 150, -1)
 
+def test_skewed_sliding_strat_comb_SIR():
+    model = SIR_UnitBox(delta=0.08)
+    test_skewed_sliding_strat_comb(model, 150, 5000, use_supp=True, use_pregen=False)
+
 def test_sliding_strat_comb_SIR():
     model = SIR_UnitBox(delta=0.08)
-    test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
+    test_sliding_strat_comb(model, 150, 5000, use_supp=True, use_pregen=False)
 
 def test_one_one_strat_pca_SIR():
     model = SIR_UnitBox(delta=0.08)
@@ -85,11 +89,11 @@ def test_one_one_strat_lin_SIR():
 
 def test_sliding_pca_SIR():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_pca(model, 20, 150, -1)
+    test_sliding_pca(model, 20, 150, 5000, use_supp=True, use_pregen=False)
 
 def test_sliding_lin_SIR():
     model = SIR_UnitBox(delta=0.5)
-    test_sliding_lin(model, 20, 150, -1)
+    test_sliding_lin(model, 20, 150, 5000, use_supp=True, use_pregen=False)
 
 def gen_save_dirs_SIR():
     model = SIR_UnitBox(delta=0.5)
