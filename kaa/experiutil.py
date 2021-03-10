@@ -98,7 +98,7 @@ def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp
 
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
-                            label=f"Sliding PCA Step {window_size} and Sliding Lin Step {window_size}",
+                            label=f"SlidingPCA Step {window_size} and SlidingLin Step {window_size}",
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
@@ -114,7 +114,7 @@ def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -146,7 +146,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats {model.name} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"Combination with PCA and Lin Strats {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -176,7 +176,7 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base PCA Trials {model.name} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"1-1 Strat Base PCA Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -206,10 +206,13 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label="1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10 , use_supp=False, use_pregen=True):
+    if use_supp:
+        num_trials = 1
+
     NUM_STEPS = num_steps
     NUM_TRAJ = num_trajs #Number of sample trajectories we should use for the PCA routine.
     LIFE_MAX = max_life
@@ -248,10 +251,13 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} with NUM_TRAJ:{NUM_TRAJ} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, use_supp=False, use_pregen=True):
+    if use_supp:
+        num_trials = 1
+
     NUM_STEPS = num_steps
     LIFE_MAX = max_life
     NUM_TRAJS = num_trajs
@@ -282,7 +288,6 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             num_steps=NUM_STEPS-1,
                             max_steps=NUM_STEPS)
 
-
         inputs.append(experi_input)
 
     if use_supp:
@@ -292,10 +297,13 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} with NUM_TRAJS:{NUM_TRAJS} {file_identifier}")
+    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_comb_stdev_reduction(model, num_steps, num_trials=10):
+    if use_supp:
+        num_trials = 1
+
     NUM_STEPS = num_steps
 
     inputs = []

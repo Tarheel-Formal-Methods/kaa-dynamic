@@ -34,7 +34,9 @@ class ReachSet:
     """
     def computeReachSet(self, time_steps, transmode=BundleMode.AFO):
         transformer = BundleTransformer(self.model, transmode)
-        init_box_vol_thres = (1000 * self.model.dim) * self.model.bund.getIntersect().volume
+        init_box_vol_thres = ((1000 * self.model.dim) * self.model.bund.getIntersect().volume
+                                if KaaSettings.UseThreshold
+                                else -1)
 
         for step in range(time_steps):
             Timer.start('Reachable Set Computation')
@@ -65,7 +67,7 @@ class ReachSet:
             self.flowpipe.append(trans_bund)
 
             'Check volume of enveloping box and stop loop if the volume becomes too large.'
-            if self.check_reach_size(trans_bund, init_box_vol_thres):
+            if  KaaSettings.UseThreshold and self.check_reach_size(trans_bund, init_box_vol_thres):
                 print("Bundle volume grown to too large of volume. Ending reachable set computation.")
 
                 error = ReachError("Volume too large.", step)

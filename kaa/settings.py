@@ -32,6 +32,8 @@ class KaaSettings:
     'Use pre-generated directions for all experiments.'
     UsePreGenDirs = False
 
+    'Flag to trigger enveloping box threshold checking'
+    UseThreshold = False
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

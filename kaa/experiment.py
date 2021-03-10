@@ -3,6 +3,8 @@ from openpyxl import Workbook
 from collections import namedtuple
 from itertools import product
 from abc import ABC, abstractmethod
+from datetime import date
+from pathlib import Path
 import numpy as np
 import os
 
@@ -18,15 +20,15 @@ from kaa.timer import Timer
 
 GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
 
-
 """
 Data class for storing objects relevant to saving data to openpyxl spreadsheets
 """
 class SpreadSheet:
 
-    def __init__(self, workbook, row_dict):
+    def __init__(self, workbook, row_dict, data_pwd):
         self.workbook = workbook
         self.row_dict = row_dict
+        self.data_pwd = data_pwd
 
 """
 Class responsible for saving/oading pre-generated directions from disk.
@@ -255,6 +257,7 @@ class Experiment(ABC):
     def save_data_into_sheet(self, spreadsheet, trial_num, num_trials, flow_label, data):
         workbook = spreadsheet.workbook
         row_dict = spreadsheet.row_dict
+        data_pwd = spreadsheet.data_pwd
 
         column_offset = trial_num
         row_offset = row_dict[flow_label]
@@ -266,7 +269,16 @@ class Experiment(ABC):
             sheet[chr(66 + num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
             sheet[chr(66 + num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
 
-        workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
+        workbook.save(filename=os.path.join(data_pwd, self.label + '.xlsx'))
+
+    """
+    Generates directory path used to save spreadsheet into disk.
+    @returns total path to data directory
+    """
+    def __gen_data_directory(self):
+        data_pwd = os.path.join(PlotSettings.default_fig_path, date.today().isoformat(), str(self.model))
+        Path(data_pwd).mkdir(parents=True, exist_ok=True)
+        return data_pwd
 
     """
     Initializes openpyxl spreadsheet to dump resulting data.
@@ -284,8 +296,9 @@ class Experiment(ABC):
             row = row_dict[flow_label]
             sheet['A' + str(row)] = flow_label
 
-        workbook.save(filename=os.path.join(PlotSettings.default_fig_path, self.label + '.xlsx'))
-        return SpreadSheet(workbook, row_dict)
+        data_pwd = self.__gen_data_directory()
+        workbook.save(filename=os.path.join(data_pwd, self.label + '.xlsx'))
+        return SpreadSheet(workbook, row_dict, data_pwd)
 
     """
     Execute the reachable set simulations and add the flowpipes to the Plot.
@@ -304,7 +317,6 @@ class Experiment(ABC):
             self.plot.add(mod_flow)
             self.output_flowpipes.append(mod_flow)
             self.max_num_steps = max(self.max_num_steps, num_steps)
-
 
     def calc_flowpipe(self, experi_input):
         model = experi_input['model']
@@ -380,6 +392,12 @@ class Experiment(ABC):
 
         return border_points
 
+    """
+    Initialize strategies based on input paramters supplied to Experiment object. Flags and some attributes
+    must be initialized for the strategies to function properly during the reachable set computation.
+    @params experi_input: dictionary containing experi_input
+            num_trials: number of trials for experiment
+    """
     def initialize_strat(self, experi_input, num_trials):
         experi_strat = experi_input['strat']
         experi_supp_mode = experi_input['supp_mode']
@@ -433,6 +451,7 @@ class VolumeExperiment(Experiment):
                 Output.prominent(f"Using following parameters for experiments:")
                 Output.prominent(f"Use Support Points: {experi_supp_mode}")
                 Output.prominent(f"Use Pre-gen Points: {experi_pregen_mode}")
+
                 if experi_pregen_mode:
                     Output.prominent(f"Number of Trajectories Used: {experi_num_trajs}")
 

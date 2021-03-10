@@ -78,8 +78,8 @@ class Plot:
         figure.subplots_adjust(hspace=0.3,wspace=0.2)
 
         'Hackish way of adding subplots to Figure objects.'
-        ax = [ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ] if overlap else \
-             [[figure.add_subplot(num_flowpipes, num_var, (y*num_var)+(i+1)) for i in range(num_var)] for y in range(num_flowpipes)]
+        ax = ([ figure.add_subplot(1, num_var, i+1) for i in range(num_var) ] if overlap else
+             [[figure.add_subplot(num_flowpipes, num_var, (y*num_var)+(i+1)) for i in range(num_var)] for y in range(num_flowpipes)])
 
         for ax_idx, var_ind in enumerate(var_tup):
 
