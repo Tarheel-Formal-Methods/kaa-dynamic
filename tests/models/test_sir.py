@@ -7,7 +7,7 @@ from kaa.templates import MultiStrategy
 
 from kaa.timer import Timer
 from kaa.trajectory import Traj
-from kaa.experiutil import *
+from kaa.experi_init import *
 
 from kaa.bundle import BundleMode
 
@@ -70,6 +70,10 @@ def test_sir_lin_pca_strat():
 def test_strat_comb_SIR():
     model = SIR_UnitBox(delta=0.5)
     test_strat_comb(model, (1,3,5), 150, -1)
+
+def test_sliding_strat_comb_SIR():
+    model = SIR_UnitBox(delta=0.08)
+    test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
 
 def test_one_one_strat_pca_SIR():
     model = SIR_UnitBox(delta=0.08)

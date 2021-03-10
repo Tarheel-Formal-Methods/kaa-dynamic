@@ -3,8 +3,6 @@ from kaa.plotutil import Plot
 from models.rossler import Rossler, Rossler_UnitBox
 from kaa.trajectory import Traj
 from kaa.temp.pca_lin_strat import PCALinStrat
-
-
 from kaa.timer import Timer
 
 def test_Rossler():
@@ -19,7 +17,6 @@ def test_Rossler():
 
     Timer.generate_stats()
 
-
 def test_rossler_phase():
 
     model = Rossler()
@@ -31,7 +28,6 @@ def test_rossler_phase():
     rossler_plot.plot2DPhase(0,1)
 
     Timer.generate_stats()
-
 
 def test_pca_lin_Rossler():
     NUM_STEPS = 5
@@ -59,18 +55,22 @@ def test_pca_lin_Rossler():
     rossler_plot.plot2DPhase(0,1,separate=True, plotvertices=True)
     Timer.generate_stats()
 
-def test_strat_comb_sir():
+def test_strat_comb_Rossler():
     model = Rossler_UnitBox(delta=0.5)
     test_strat_comb(model, (1,3,5), 150, -1)
 
-def test_sliding_pca_sir():
+def test_sliding_strat_comb_Rossler():
+    model = Rossler_UnitBox(delta=0.08)
+    test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
+
+def test_sliding_pca_Rossler():
     model = Rossler_UnitBox(delta=0.5)
     test_sliding_pca(model, 20, 150, -1)
 
-def test_sliding_lin_sir():
+def test_sliding_lin_Rossler():
     model = Rossler_UnitBox(delta=0.5)
     test_sliding_lin(model, 20, 150, -1)
 
-def gen_save_dirs_sir():
+def gen_save_dirs_Rossler():
     model = Rossler_UnitBox(delta=0.5)
     gen_save_dirs(model, 150)

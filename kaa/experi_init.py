@@ -7,20 +7,9 @@ from itertools import product, chain
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
-from kaa.experiment import *
+from kaa.experi_lib import *
 from kaa.settings import KaaSettings
 from kaa.log import Output
-
-"""
-Generate random trajectories from initial set (initial bundle) of model.
-@params model: Model
-        num: number of trajectories to generate.
-        time_steps: number of time steps to generate trajs.
-@returns list of Traj objects representing num random trajectories.
-"""
-def generate_init_traj(model, num, time_steps):
-    bund = model.bund
-    return bund.generate_traj(num, time_steps)
 
 """
 Generates random points through the generators of the initial box and checking membership. Could be extremely time-consuming if the intersection is thin.
