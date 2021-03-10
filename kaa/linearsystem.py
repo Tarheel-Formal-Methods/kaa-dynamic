@@ -62,7 +62,7 @@ class LinearSystem:
             point_value = map(check_point_membership, sampled_points)
             num_contained_points = reduce(add, point_value)
 
-            return (num_contained_points / num_samples) * self.__calc_box_volume(envelop_box)
+            return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
 
     """
     Find vertices of this linear system.
@@ -202,7 +202,7 @@ class LinearSystem:
     def generate_supp_worker(self, dir_vec, steps, output_queue):
         supp_point = self.max_opt(dir_vec).x
         self.create_traj(supp_point, steps, output_queue)
-    
+
     """
     Generates trajectories based on support points of provided directions.
     @params dir_vecs: Matrix of directions stored as rows.
