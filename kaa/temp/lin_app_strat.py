@@ -55,7 +55,7 @@ class AbstractLinStrat(TempStrategy):
             lin_dir_mat = self.dirs.get_dirs_at_step(step_num)
 
         lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
-        
+
         return lin_dir_mat, lin_dir_labels
 
     """
@@ -75,7 +75,7 @@ class AbstractLinStrat(TempStrategy):
 
             inv_A = np.linalg.inv(approx_A)
             #print(f"INV Matrix Output: {inv_A}")
-            
+
         except np.linalg.LinAlgError:
             Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
             inv_A = approx_inv_lin_trans(start_end_tup, self.dim)
@@ -88,7 +88,7 @@ Local linear approximation strategy.
 class LinStrat(AbstractLinStrat):
 
     def __init__(self, model, iter_steps=1, num_trajs=-1, cond_threshold=7):
-        
+
         num_trajs = 2*model.dim if num_trajs < 0 else num_trajs
         super().__init__(model, num_trajs, cond_threshold)
         self.iter_steps = iter_steps
@@ -107,6 +107,9 @@ class LinStrat(AbstractLinStrat):
 
         return bund
 
+    """
+    Closing LinApp routine
+    """
     def close_strat(self, bund, step_num):
         if not step_num % self.iter_steps and step_num > 0:
                 self.rm_ptope_from_bund(bund, self.ptope_queue.pop(0))
@@ -133,15 +136,20 @@ class SlidingLinStrat(AbstractLinStrat):
     """
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
-
+        
+    """
+    Closing LinApp routine
+    """
     def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label in list(self.lin_ptope_life_counter.keys()):
             self.lin_ptope_life_counter[ptope_label] -= 1
-            
+
             if self.lin_ptope_life_counter[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.lin_ptope_life_counter.pop(ptope_label)
+
+        assert len(self.lin_ptope_life_counter) <= self.lifespan, f"More than {self.lifespan} templates still in the ptope_life_counter."
 
     """
     Auxiliary method to generate LinApp. directions and add them as
@@ -169,7 +177,7 @@ class SlidingLinStrat(AbstractLinStrat):
 class GeneratedLinDirs(GeneratedDirs):
 
     def __init__(self, model, num_steps, num_trajs, cond_threshold=7, dir_mat=None, sampled_points=None):
-        
+
         if dir_mat is None or sampled_points is None: #dir_mat is set if pre-generated directions are used during computation.
             self.unit_dir_mat = initialize_unit_mat(model.dim)
             self.cond_threshold = cond_threshold
@@ -203,7 +211,7 @@ class GeneratedLinDirs(GeneratedDirs):
             try:
                 approx_A = approx_lin_trans(start_end_tup, dim)
                 inv_A = np.linalg.inv(approx_A)
-                
+
             except np.linalg.LinAlgError:
                 Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
                 inv_A = approx_inv_lin_trans(start_end_tup, dim)
@@ -270,7 +278,7 @@ which is orthogonal to resulting set of vectors.
 @returns new directions matrix with merged directions
 """
 def merge_closest_dirs(dir_mat, closest_dirs, dim):
-    
+
     randgen = rand.Random(KaaSettings.RandSeed)
     first_dir, second_dir = (0,1)
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2

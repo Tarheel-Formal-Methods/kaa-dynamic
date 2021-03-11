@@ -15,7 +15,6 @@ class ReachError:
         self.message = msg
         self.total_steps = total_steps
 
-
 """
 Object handling all reachable flowpipe computations.
 """

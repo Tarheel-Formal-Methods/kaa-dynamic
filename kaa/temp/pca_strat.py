@@ -29,7 +29,7 @@ class AbstractPCAStrat(TempStrategy):
              and the second component being the corresponding labels to identify each direction generated.
     """
     def generate_pca_dir(self, bund, step_num):
-        
+
         if self.dirs is None:
             trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
@@ -88,7 +88,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
     def __init__(self, model, num_steps=70, num_trajs=300, lifespan=3):
         super().__init__(model, num_trajs)
-        
+
         self.pca_ptope_life_counter = {}
         self.lifespan = lifespan
 
@@ -99,10 +99,12 @@ class SlidingPCAStrat(AbstractPCAStrat):
         'Remove dead templates'
         for ptope_label in list(self.pca_ptope_life_counter.keys()):
             self.pca_ptope_life_counter[ptope_label] -= 1
-            
+
             if self.pca_ptope_life_counter[ptope_label] == 0:
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.pca_ptope_life_counter.pop(ptope_label)
+
+        assert len(self.pca_ptope_life_counter) <= self.lifespan, f"More than {self.lifespan} templates still in the ptope_life_counter."
 
     """
     Auxiliary method to generate PCA directions and add them as

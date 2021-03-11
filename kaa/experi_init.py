@@ -99,7 +99,7 @@ def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -111,7 +111,7 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
         num_trials = 1
 
     inputs = []
-    for pca_window_size in range(5,20,5):
+    for pca_window_size in range(2,20,2):
         lin_window_size = 20 - pca_window_size
 
         pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
@@ -131,7 +131,7 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -163,7 +163,7 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -193,7 +193,7 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -223,7 +223,7 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -268,7 +268,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
@@ -314,7 +314,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     if use_supp:
         file_identifier = "(SUPP)"
     elif use_pregen:
-        file_identifier = "(PREGEN: {num_trajs})"
+        file_identifier = f"(PREGEN: {num_trajs})"
     else:
         file_identifier = "(RAND)"
 
