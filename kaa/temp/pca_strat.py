@@ -95,7 +95,6 @@ class SlidingPCAStrat(AbstractPCAStrat):
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
 
-    def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label in list(self.pca_ptope_life_counter.keys()):
             self.pca_ptope_life_counter[ptope_label] -= 1
@@ -106,6 +105,9 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
         assert len(self.pca_ptope_life_counter) == min(step_num + 1, self.lifespan), f"Number of templates don't match. {len(self.pca_ptope_life_counter)} at step num {step_num}"
 
+    def close_strat(self, bund, step_num):
+        pass
+        
     """
     Auxiliary method to generate PCA directions and add them as
     directions for a new ptope every step.

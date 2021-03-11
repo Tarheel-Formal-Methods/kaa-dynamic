@@ -137,10 +137,6 @@ class SlidingLinStrat(AbstractLinStrat):
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
 
-    """
-    Closing LinApp routine
-    """
-    def close_strat(self, bund, step_num):
         'Remove dead templates'
         for ptope_label in list(self.lin_ptope_life_counter.keys()):
             self.lin_ptope_life_counter[ptope_label] -= 1
@@ -150,6 +146,12 @@ class SlidingLinStrat(AbstractLinStrat):
                 self.lin_ptope_life_counter.pop(ptope_label)
 
         assert len(self.lin_ptope_life_counter) == min(step_num+1, self.lifespan), f"Number of templates don't match. {len(self.lin_ptope_life_counter)} at step num {step_num}"
+
+    """
+    Closing LinApp routine
+    """
+    def close_strat(self, bund, step_num):
+        pass
 
     """
     Auxiliary method to generate LinApp. directions and add them as
@@ -216,7 +218,7 @@ class GeneratedLinDirs(GeneratedDirs):
                 Output.warning("USING LEAST SQ INVERSE DUE TO SINGULAR VALUE ERROR")
                 inv_A = approx_inv_lin_trans(start_end_tup, dim)
 
-            lin_dir = np.dot(self.unit_dir_mat, inv_A)
+            lin_dir = np.matmul(self.unit_dir_mat, inv_A)
             cond_num = np.linalg.cond(lin_dir)
 
             if cond_num > self.cond_threshold:
