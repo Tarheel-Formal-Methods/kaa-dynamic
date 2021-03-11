@@ -136,7 +136,7 @@ class SlidingLinStrat(AbstractLinStrat):
     """
     def open_strat(self, bund, step_num):
         self.__add_new_ptope(bund, step_num)
-        
+
     """
     Closing LinApp routine
     """
@@ -149,7 +149,7 @@ class SlidingLinStrat(AbstractLinStrat):
                 self.rm_ptope_from_bund(bund, ptope_label)
                 self.lin_ptope_life_counter.pop(ptope_label)
 
-        assert len(self.lin_ptope_life_counter) <= self.lifespan, f"More than {self.lifespan} templates still in the ptope_life_counter."
+        assert len(self.lin_ptope_life_counter) == min(step_num+1, self.lifespan), f"Number of templates don't match. {len(self.lin_ptope_life_counter)} at step num {step_num}"
 
     """
     Auxiliary method to generate LinApp. directions and add them as
@@ -161,7 +161,7 @@ class SlidingLinStrat(AbstractLinStrat):
     def __add_new_ptope(self, bund, step_num):
         new_lin_dirs, new_dir_labels = self.generate_lin_dir(bund, step_num)
         new_ptope_label = self.add_ptope_to_bund(bund, new_lin_dirs, new_dir_labels)
-        self.lin_ptope_life_counter[new_ptope_label] = self.lifespan #Add fresh ptope and lifespan to step list
+        self.lin_ptope_life_counter[new_ptope_label] = self.lifespan + 1#Add fresh ptope and lifespan to step list
 
         return new_ptope_label
 
