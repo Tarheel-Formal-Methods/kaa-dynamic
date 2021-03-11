@@ -76,7 +76,7 @@ class PCAStrat(AbstractPCAStrat):
     Reset the strategy for a new round of computation.
     """
     def reset(self):
-        self.last_ptope = None
+        self.ptope_queue = []
 
     def __str__(self):
         return f"PCAStrat(Steps:{self.iter_steps})" if self.strat_order is None else f"PCAStrat{self.strat_order}(Steps:{self.iter_steps})"
@@ -107,7 +107,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
 
     def close_strat(self, bund, step_num):
         pass
-        
+
     """
     Auxiliary method to generate PCA directions and add them as
     directions for a new ptope every step.
@@ -126,7 +126,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
     Reset the strategy for a new round of computation.
     """
     def reset(self):
-         self.pca_ptope_life_data = {}
+         self.pca_ptope_life_counter = {}
 
     def __str__(self):
         return f"SlidingPCAStrat(Lifespan:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}(Lifespan:{self.lifespan})"

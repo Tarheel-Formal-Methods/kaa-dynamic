@@ -118,7 +118,7 @@ class LinStrat(AbstractLinStrat):
     Reset the strategy for a new round of computation.
     """
     def reset(self):
-        self.last_ptope = None
+        self.ptope_queue = []
 
     def __str__(self):
         return f"LinApp(Steps:{self.iter_steps})"
@@ -171,7 +171,7 @@ class SlidingLinStrat(AbstractLinStrat):
     Reset the strategy for a new round of computation.
     """
     def reset(self):
-        self.lin_ptope_life_data = {}
+        self.lin_ptope_life_counter = {}
 
     def __str__(self):
         return f"SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
