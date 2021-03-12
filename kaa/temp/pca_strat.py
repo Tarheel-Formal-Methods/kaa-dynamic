@@ -4,6 +4,7 @@ from sklearn.decomposition import PCA
 from kaa.templates import TempStrategy, GeneratedDirs, SampledTrajData
 from kaa.bundle import Bundle
 from kaa.timer import Timer
+from kaa.log import Output
 
 """
 Abstract PCA class containing all of the tools PCA strats need.
@@ -31,15 +32,22 @@ class AbstractPCAStrat(TempStrategy):
     def generate_pca_dir(self, bund, step_num):
 
         if self.dirs is None:
+            Output.bold_write(f"Generating Directons for PCA")
             trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
+            Output.bold_write(f"Done generating directons for PCA")
 
+
+            Output.bold_write(f"Running PCA")
             pca = PCA(n_components=self.dim) #Run PCA
             pca.fit(traj_mat)
             pca_dirs_mat = pca.components_
+            Output.bold_write(f"Done with PCA")
 
         else:
+            Output.bold_write(f"Fetching Directions")
             pca_dirs_mat = self.dirs.get_dirs_at_step(step_num) #Else fetch pre-generated directions.
+            Output.bold_write(f"Done fetching Directions")
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
         return pca_dirs_mat, ptope_dir_labels
@@ -93,6 +101,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
         self.lifespan = lifespan
 
     def open_strat(self, bund, step_num):
+        Output.bold_write(f"Calling Open Strat for {str(self)}")
         self.__add_new_ptope(bund, step_num)
 
         'Remove dead templates'
@@ -106,6 +115,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
         assert len(self.pca_ptope_life_counter) == min(step_num + 1, self.lifespan), f"Number of templates don't match. {len(self.pca_ptope_life_counter)} at step num {step_num}"
 
     def close_strat(self, bund, step_num):
+        Output.bold_write(f"Calling Closing Strat for {str(self)}")
         pass
 
     """
@@ -129,7 +139,7 @@ class SlidingPCAStrat(AbstractPCAStrat):
          self.pca_ptope_life_counter = {}
 
     def __str__(self):
-        return f"SlidingPCAStrat(Lifespan:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}(Lifespan:{self.lifespan})"
+        return f"SlidingPCAStrat(Lifespan:{self.lifespan})"
 
 class GeneratedPCADirs(GeneratedDirs):
 

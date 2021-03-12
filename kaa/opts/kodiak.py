@@ -2,6 +2,7 @@ import numpy as np
 
 from kaa.pykodiak.pykodiak_interface import Kodiak
 from kaa.opts.optprod import OptimizationProd
+from kaa.log import Output
 
 class KodiakProd(OptimizationProd):
 
@@ -18,9 +19,9 @@ class KodiakProd(OptimizationProd):
         bounds = [[0,1] for _ in range(self.bund.dim)]
         jac_mat = np.zeros((self.bund.dim, self.bund.dim))
 
-        #print("Calling Kodiak")
-        #print(f"INPUT POLY: {self.poly}")
+        Output.bold_write("Calling Kodiak")
+        Output.write(f"INPUT POLY: {self.poly}")
         lb, ub, _, _ = self.kodiak.minmax_diff(self.kodiak_poly, jac_mat, 0, bounds)
-        #print("Out of Kodiak")
+        Output.bold_write("Out of Kodiak")
 
         return ub, lb

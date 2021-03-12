@@ -2,7 +2,7 @@ from models.harosc import HarOsc
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
-from kaa.experiment import Experiment, PhasePlotExperiment
+from kaa.experi_lib import PhasePlotExperiment
 
 from kaa.settings import PlotSettings
 from itertools import product
@@ -25,6 +25,21 @@ def test_pca_HarOsc():
     harosc = PhasePlotExperiment(experi_input)
     harosc.execute(0,1, separate=True)
 
+def test_sliding_lin_HarOsc():
+    model = HarOsc()
+
+    lin_strat = SlidingLinStrat(model, lifespan=5)
+    experi_input = dict(model=model, #Encompass strat initilizations?
+                            strat=lin_strat,
+                            label="HarOsc",
+                            num_steps=5,
+                            max_steps=5,
+                            num_trajs=10,
+                            supp_mode=True,
+                            pregen_mode=False)
+
+    harosc = PhasePlotExperiment(experi_input)
+    harosc.execute(0,1, separate=True)
 
 def test_lin_HarOsc():
     model = HarOsc()
@@ -85,7 +100,7 @@ def test_sliding_pca_HarOsc():
                         strat=experi_strat2,
                         label="",
                         num_steps=NUM_STEPS)
-    
+
     experi = PhasePlotExperiment(experi_input1, experi_input2)
     experi.execute()
     #print(pca_dirs.dir_mat)

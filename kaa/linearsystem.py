@@ -11,6 +11,7 @@ from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import KaaSettings
+from kaa.log import Output
 
 class ChebyCenter:
 
@@ -160,8 +161,12 @@ class LinearSystem:
             time_step: number of steps to propagate forward
             output_queue: Manager.Queue object shared between processes
     """
-    def create_traj(self, point, steps, output_queue):
-        output_queue.put(Traj(self.model, point, steps=steps))
+    def create_traj(self, point, steps, output_queue=None):
+        if output_queue:
+            output_queue.put(Traj(self.model, point, steps=steps))
+        else:
+            return Traj(self.model, point, steps=steps)
+
 
     """
     Auxiliary method to convert Manager.Queue object into list.
@@ -185,23 +190,34 @@ class LinearSystem:
     def generate_ran_trajs(self, num_trajs, steps, resample=False):
         #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
         initial_points = self.sample_ran_pts_envelop_box(num_trajs)
-        output_queue = mp.Manager().Queue()
-        input_params = [(point, steps, output_queue) for point in initial_points]
 
-        'Parallelize point propagation'
-        p = mp.Pool(processes=12)
-        p.starmap(self.create_traj, input_params)
-        p.close()
-        p.join()
+        if KaaSettings.Parallelize:
+            'Parallelize point propagation'
 
-        return TrajCollection(self.model, self.queue_to_list(output_queue))
+            output_queue = mp.Manager().Queue()
+            input_params = [(point, steps, output_queue) for point in initial_points]
+
+            p = mp.Pool(processes=12)
+            p.starmap(self.create_traj, input_params)
+            p.close()
+            p.join()
+
+            output_list = self.queue_to_list(output_queue)
+        else:
+            output_list = []
+            for point in initial_points:
+                output_list.append(self.create_traj(point, steps))
+
+        return TrajCollection(self.model, output_list)
 
     """
     Worker for trajectory generation using support points.
     """
-    def generate_supp_worker(self, dir_vec, steps, output_queue):
+    def generate_supp_worker(self, dir_vec, steps, output_queue=None):
         supp_point = self.max_opt(dir_vec).x
-        self.create_traj(supp_point, steps, output_queue)
+        neg_supp_point = self.min_opt(dir_vec).x
+        Output.write("Support Points Generated.")
+        return [self.create_traj(supp_point, steps, output_queue), self.create_traj(neg_supp_point, steps, output_queue)]
 
     """
     Generates trajectories based on support points of provided directions.
@@ -209,19 +225,34 @@ class LinearSystem:
             time_steps: number of steps to
     """
     def generate_supp_trajs(self, dir_vecs, steps):
-        output_queue = mp.Manager().Queue()
-
-        input_params = []
-        for dir_vec in dir_vecs:
-            input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
+        Output.bold_write("Generating Support Points Traj")
+        Output.write(f"DIR VEC MAT: {dir_vecs}")
 
         #print(f"Number of Directions: {len(input_params)}")
-        p = mp.Pool(processes=12)
-        p.starmap(self.generate_supp_worker, input_params)
-        p.close()
-        p.join()
+        if KaaSettings.Parallelize:
+            output_queue = mp.Manager().Queue()
 
-        return TrajCollection(self.model, self.queue_to_list(output_queue))
+            input_params = []
+            for dir_vec in dir_vecs:
+                input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
+
+            p = mp.Pool(processes=12)
+            p.starmap(self.generate_supp_worker, input_params)
+            p.close()
+            p.join()
+
+            output_list = queue_to_list(output_queue)
+        else:
+            Output.write("Non parallel routine")
+            output_list = []
+            for dir_vec in dir_vecs:
+                Output.write(f"Direction vector we are using: {dir_vec}")
+                output_list += self.generate_supp_worker(dir_vec, steps)
+                #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
+                #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
+
+        Output.bold_write("End of Generating Support Points Traj")
+        return TrajCollection(self.model, output_list)
 
 
     def sample_ran_pts_envelop_box(self, num_trajs):

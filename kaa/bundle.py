@@ -10,6 +10,7 @@ from kaa.linearsystem import LinearSystem, intersect
 from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.timer import Timer
+from kaa.log import Output
 
 OptProd = KaaSettings.OptProd
 
@@ -34,16 +35,13 @@ class Bundle:
         self.vars = model.vars
         self.dim = model.dim
 
-        self.num_dir = len(L)
-        self.num_temp = len(T)
         self.num_strat = 1
-
         self.strat_temp_id = {}
 
     @property
     def T(self):
         curr_T = self.__get_row(self.labeled_T)
-        gen_T = np.empty((self.num_temp, self.dim))
+        gen_T = np.empty((self.num_temps, self.dim))
 
         for row_idx, row_labels in enumerate(curr_T):
             for col_idx, row_label in enumerate(row_labels):
@@ -58,13 +56,21 @@ class Bundle:
     "Returns list of Parallelotope objects defining this bundle. WARNING: superfluous calls to getParallelotope for now"
     @property
     def all_ptopes(self):
-        return [self.getParallelotope(i) for i in range(self.num_temp)]
+        return [self.getParallelotope(i) for i in range(self.num_temps)]
+
+    @property
+    def num_dirs(self):
+        return len(self.labeled_L)
+
+    @property
+    def num_temps(self):
+        return len(self.labeled_T)
 
     """
     Get parallelotope described by ith row of self.T matrix and the intersection of the other ptopes.
     """
     def ptope(self, idx):
-        if idx > self.num_temp - 1: return None
+        if idx > self.num_temps - 1: return None
 
         ptopes = self.all_ptopes
         complement_ptopes = ptopes[:idx] + ptopes[idx+1:]
@@ -78,14 +84,14 @@ class Bundle:
     """
     def getIntersect(self):
         L = self.L
-        A = np.empty([2*self.num_dir, self.dim])
-        b = np.empty(2*self.num_dir)
+        A = np.empty([2*self.num_dirs, self.dim])
+        b = np.empty(2*self.num_dirs)
 
-        for ind in range(self.num_dir):
+        for ind in range(self.num_dirs):
             A[ind] = L[ind]
-            A[ind + self.num_dir] = np.negative(L[ind])
+            A[ind + self.num_dirs] = np.negative(L[ind])
             b[ind] = self.offu[ind]
-            b[ind + self.num_dir] = self.offl[ind]
+            b[ind + self.num_dirs] = self.offl[ind]
 
         return LinearSystem(self.model, A, b)
 
@@ -150,7 +156,6 @@ class Bundle:
 
         new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
         self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
-        self.num_temp = len(self.labeled_T)
 
     """
     Remove specified template entries from templates matrix.
@@ -160,7 +165,6 @@ class Bundle:
         label_indices = self.__get_label_indices(self.labeled_T, self.__get_global_labels(asso_strat, temp_label))
         self.labeled_T = np.delete(self.labeled_T, label_indices, axis=0)
         #print(f"labeled_T: {self.labeled_T}")
-        self.num_temp = len(self.labeled_T)
 
     """
     Add matrix of direction to end of directions matrix.
@@ -171,7 +175,7 @@ class Bundle:
     def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
         assert len(dir_row_mat) == len(dir_labels), "Number of input direction rows must be one-to-one with the labels"
         bund_sys = self.getIntersect()
-        prev_len = self.num_dir
+        prev_len = self.num_dirs
 
         'Update new templates to envelope current polytope'
         labeled_L_ents = zip(dir_row_mat, self.__get_global_labels(asso_strat, dir_labels))
@@ -182,7 +186,6 @@ class Bundle:
 
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
-        self.num_dir = len(self.labeled_L)
 
     """
     Remove specified direction entries from directions matrix from their labels.
@@ -197,7 +200,6 @@ class Bundle:
         #print(f"Mask: {label_indices}")
 
         self.labeled_L = np.delete(self.labeled_L, label_indices, axis=0)
-        self.num_dir = len(self.labeled_L)
 
         self.offu = np.delete(self.offu, label_indices, axis=0)
         self.offl = np.delete(self.offl, label_indices, axis=0)
@@ -313,7 +315,7 @@ class BundleTransformer:
         self.ofo_mode = mode
 
     """
-    Worker for parallelized bundle transformation. Each template's transformed is mapped to one process.
+    Worker for parallelized bundle transformation. Each template's transformation is mapped to one process.
     @params: row_ind: index of row in T matrix
              row: corresponding row in T containing row indices in directions matrix L
              bund: Bundle object
@@ -325,9 +327,10 @@ class BundleTransformer:
         ptope = bund.getParallelotope(row_ind)
 
         'Toggle iterators between OFO/AFO'
-        direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dir)
+        direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dirs)
 
         for l_row in direct_iter:
+            Output.write(f"BOUNDS FOR PTOPE {row_ind} ROW INDEX {l_row}")
             curr_L = L[l_row]
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
             output_queue.put((l_row, ub, lb))
@@ -341,8 +344,8 @@ class BundleTransformer:
     def transform(self, bund):
         L = bund.L
         T = bund.T
-        new_offu = np.full(bund.num_dir, np.inf)
-        new_offl = np.full(bund.num_dir, np.inf)
+        new_offu = np.full(bund.num_dirs, np.inf)
+        new_offl = np.full(bund.num_dirs, np.inf)
 
         output_queue = mp.Manager().Queue()
         input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]

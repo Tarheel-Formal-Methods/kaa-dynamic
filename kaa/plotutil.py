@@ -120,15 +120,15 @@ class Plot:
         dim = self.model.dim
 
         figure = plt.figure(figsize=PlotSettings.fig_size)
-        phase_ax = figure.add_subplot(1,2,1)
-        vol_ax = figure.add_subplot(1,2,2)
+        phase_ax = figure.add_subplot(1,1,1)
+        #vol_ax = figure.add_subplot(1,2,2)
 
         for flow_idx, flowpipe in enumerate(self.flowpipes):
             self.__halfspace_inter_plot(flowpipe, flow_idx, x, y, phase_ax, separate)
             #self.__support_plot(flowpipe, flow_idx,  x, y, ax)
 
         self.plot_trajs(x, y, phase_ax)
-        self.__phase_plot_legend(x, y, phase_ax, lims)
+        #self.__phase_plot_legend(x, y, phase_ax, lims)
 
         if volume_chart:
             'Add volume data'

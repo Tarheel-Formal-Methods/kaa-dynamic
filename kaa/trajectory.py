@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 
+from kaa.log import Output
 """
 Wrapper around list for representing arbitrary trajectories of a system.
 """
@@ -18,6 +19,8 @@ class Traj:
         'Initialize point and propagate for steps.'
         self.add_point(initial_point)
         self.propagate(steps)
+
+        Output.write("Propagation Done.")
 
     """
     Add a point from the system to the trajectory.

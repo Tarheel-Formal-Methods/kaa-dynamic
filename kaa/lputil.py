@@ -2,7 +2,11 @@
 Wrapper interface to GLPK
 '''
 import swiglpk as glpk
+import numpy as np
+from scipy.optimize import linprog
 from itertools import product
+
+from kaa.log import Output
 
 class LPSolution:
 
@@ -10,13 +14,28 @@ class LPSolution:
         self.x = x
         self.fun = fun
 
-minLinProg = lambda c, A, b: _linprog(c, A, b, glpk.GLP_MIN)
-maxLinProg = lambda c, A, b: _linprog(c, A, b, glpk.GLP_MAX)
+minLinProg = lambda c, A, b: __swiglpk_linprog(c, A, b, "min")
+maxLinProg = lambda c, A, b: __swiglpk_linprog(c, A, b, "max")
 
-def _linprog(c, A, b, obj):
+def __scipy_linprog(c, A, b, obj):
+    if obj == "min":
+        obj_c_vec = c
+    elif obj == "max":
+        obj_c_vec = np.negative(c)
+    else:
+        raise RuntimeException("Obj should either be min or max")
+
+    print(obj_c_vec)
+    lin_result = linprog(obj_c_vec, A_ub=A, b_ub=b, bounds=(None,None), method='revised simplex')
+    return LPSolution(lin_result.x, lin_result.fun)
+
+
+def __swiglpk_linprog(c, A, b, obj):
+    Output.bold_write(f"Started LP with c: {c}")
+    glp_obj = glpk.GLP_MIN if obj == "min" else glpk.GLP_MAX
 
     lp = glpk.glp_create_prob()
-    glpk.glp_set_obj_dir(lp, obj)
+    glpk.glp_set_obj_dir(lp, glp_obj)
 
     params = glpk.glp_smcp()
     glpk.glp_init_smcp(params)
@@ -58,4 +77,5 @@ def _linprog(c, A, b, obj):
     glpk.glp_delete_prob(lp)
     glpk.glp_free_env()
 
+    Output.bold_write(f"Ended LP with c: {c}")
     return LPSolution(x, fun)

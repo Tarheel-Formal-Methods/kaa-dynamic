@@ -6,8 +6,7 @@ from kaa.bundle import Bundle, BundleTransformer, BundleMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 from kaa.templates import StaticStrat, MultiStrategy
-
-bolden = lambda string: colored(string, 'white', attrs=['bold'])
+from kaa.log import Output
 
 class ReachError:
 
@@ -38,6 +37,9 @@ class ReachSet:
                                 else -1)
 
         for step in range(time_steps):
+            Output.write("=========================================")
+            Output.write(f"DUMP OF STEP {step}")
+
             Timer.start('Reachable Set Computation')
             starting_bund = copy.deepcopy(self.flowpipe[step])
 
@@ -61,7 +63,7 @@ class ReachSet:
 
             'TODO: Revamp Kaa.log to be output sink handling all output formatting.'
             if not KaaSettings.SuppressOutput:
-                print("Computed Step {} -- Time Elapsed: {} sec".format(bolden(step), bolden(reach_time)))
+                Output.prominent(f"Computed Step {step} -- Time Elapsed: {reach_time} sec")
 
             self.flowpipe.append(trans_bund)
 
@@ -73,8 +75,10 @@ class ReachSet:
                 self.flowpipe.error = error
                 break
 
-            if not isinstance(self.strat, MultiStrategy):
-                self.flowpipe.traj_data = self.strat.fetch_traj_data()
+            Output.write("=========================================")
+
+        if not isinstance(self.strat, MultiStrategy):
+            self.flowpipe.traj_data = self.strat.fetch_traj_data()
 
         return self.flowpipe
 

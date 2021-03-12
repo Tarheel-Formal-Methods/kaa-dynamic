@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from termcolor import cprint
+from termcolor import cprint, colored
 
 '''
 Basic logger utility module for debugging purposes.
@@ -36,9 +36,6 @@ def write_log(*args):
         f.write('\n' + spaces(debug_cat.value) + _Debug_Strings[debug_cat].format(*args) + '\n')
 
 
-
-
-
 """
 Logging class should have the following features
 - Dumping Directons/Ptope matrix into readable format
@@ -56,3 +53,13 @@ class Output:
     @staticmethod
     def prominent(output):
         cprint(''.join((output.upper(), '\n')), 'white', attrs=['bold'])
+
+    @staticmethod
+    def write(output):
+        with open('log.txt','a') as f:
+            f.write(output + '\n')
+
+    @staticmethod
+    def bold_write(output):
+            with open('log.txt','a') as f:
+                f.write(colored(output, 'white', attrs=['bold']) + '\n')

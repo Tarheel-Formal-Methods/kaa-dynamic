@@ -135,6 +135,7 @@ class SlidingLinStrat(AbstractLinStrat):
     Opening LinApp routine
     """
     def open_strat(self, bund, step_num):
+        Output.bold_write(f"Calling Open Strat for {str(self)}")
         self.__add_new_ptope(bund, step_num)
 
         'Remove dead templates'
@@ -151,6 +152,7 @@ class SlidingLinStrat(AbstractLinStrat):
     Closing LinApp routine
     """
     def close_strat(self, bund, step_num):
+        Output.bold_write(f"Calling Closing Strat for {str(self)}")
         pass
 
     """
@@ -174,7 +176,7 @@ class SlidingLinStrat(AbstractLinStrat):
         self.lin_ptope_life_counter = {}
 
     def __str__(self):
-        return f"SlidingLinStrat(Steps:{self.lifespan})" if self.strat_order is None else f"SlidingPCAStrat{self.strat_order}-"
+        return f"SlidingLinStrat(Steps:{self.lifespan})"
 
 class GeneratedLinDirs(GeneratedDirs):
 

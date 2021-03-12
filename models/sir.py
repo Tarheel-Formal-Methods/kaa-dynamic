@@ -7,7 +7,6 @@ from kaa.model import Model
 class SIR(Model):
 
   def __init__(self, delta=0.1):
-
       s, i, r = sp.Symbol('s'), sp.Symbol('i'), sp.Symbol('r')
 
       ds = s - (0.34*s*i)*delta;
@@ -93,7 +92,7 @@ class SIR_UnitBox(Model):
 
       offu[0] = 0.8
       offl[0] = -0.79
-      
+
       offu[1] = 0.2
       offl[1] = -0.19
 
