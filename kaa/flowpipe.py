@@ -64,13 +64,13 @@ class FlowPipe:
             vol_data[idx] = bund.getIntersect().volume
 
         return vol_data
-    
+
     """
     Calculates the flowpipe projection of reachable set against time t.
     @params var: The variable for the reachable set to be projected onto.
     @returns list of minimum and maximum points of projected set at each time step.
     """
-    def get2DProj(self, var_ind):
+    def getProj(self, var_ind):
         Timer.start('Proj')
         curr_var = self.vars[var_ind]
 

@@ -216,7 +216,8 @@ class LinearSystem:
     def generate_supp_worker(self, dir_vec, steps, output_queue=None):
         supp_point = self.max_opt(dir_vec).x
         neg_supp_point = self.min_opt(dir_vec).x
-        Output.write("Support Points Generated.")
+
+        #Output.write("Support Points Generated.")
         return [self.create_traj(supp_point, steps, output_queue), self.create_traj(neg_supp_point, steps, output_queue)]
 
     """
