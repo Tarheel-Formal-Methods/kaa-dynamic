@@ -39,7 +39,11 @@ def __swiglpk_linprog(c, A, b, obj):
 
     params = glpk.glp_smcp()
     glpk.glp_init_smcp(params)
-    params.msg_lev = glpk.GLP_MSG_OFF #Only print error messages from GLPK
+    params.msg_lev = glpk.GLP_MSG_ERR
+
+    #params.tm_lim = int(glpk.GLPK_TIMEOUT * 1000)
+    params.out_dly = 2 * 1000 # start printing to terminal delay
+    params.meth = glpk.GLP_DUAL
 
     num_rows = A.shape[0]
     num_cols = A.shape[1]

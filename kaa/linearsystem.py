@@ -225,8 +225,8 @@ class LinearSystem:
             time_steps: number of steps to
     """
     def generate_supp_trajs(self, dir_vecs, steps):
-        Output.bold_write("Generating Support Points Traj")
-        Output.write(f"DIR VEC MAT: {dir_vecs}")
+        #Output.bold_write("Generating Support Points Traj")
+        #Output.write(f"DIR VEC MAT: {dir_vecs}")
 
         #print(f"Number of Directions: {len(input_params)}")
         if KaaSettings.Parallelize:
@@ -241,7 +241,7 @@ class LinearSystem:
             p.close()
             p.join()
 
-            output_list = queue_to_list(output_queue)
+            output_list = self.queue_to_list(output_queue)
         else:
             Output.write("Non parallel routine")
             output_list = []
@@ -251,7 +251,7 @@ class LinearSystem:
                 #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
                 #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
 
-        Output.bold_write("End of Generating Support Points Traj")
+        #Output.bold_write("End of Generating Support Points Traj")
         return TrajCollection(self.model, output_list)
 
 

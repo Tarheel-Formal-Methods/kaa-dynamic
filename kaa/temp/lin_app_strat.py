@@ -135,7 +135,7 @@ class SlidingLinStrat(AbstractLinStrat):
     Opening LinApp routine
     """
     def open_strat(self, bund, step_num):
-        Output.bold_write(f"Calling Open Strat for {str(self)}")
+        #Output.bold_write(f"Calling Open Strat for {str(self)}")
         self.__add_new_ptope(bund, step_num)
 
         'Remove dead templates'
@@ -152,7 +152,7 @@ class SlidingLinStrat(AbstractLinStrat):
     Closing LinApp routine
     """
     def close_strat(self, bund, step_num):
-        Output.bold_write(f"Calling Closing Strat for {str(self)}")
+        #Output.bold_write(f"Calling Closing Strat for {str(self)}")
         pass
 
     """

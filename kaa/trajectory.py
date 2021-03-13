@@ -20,7 +20,7 @@ class Traj:
         self.add_point(initial_point)
         self.propagate(steps)
 
-        Output.write("Propagation Done.")
+        #Output.write("Propagation Done.")
 
     """
     Add a point from the system to the trajectory.

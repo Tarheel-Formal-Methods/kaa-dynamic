@@ -37,8 +37,8 @@ class ReachSet:
                                 else -1)
 
         for step in range(time_steps):
-            Output.write("=========================================")
-            Output.write(f"DUMP OF STEP {step}")
+            #Output.write("=========================================")
+            #Output.write(f"DUMP OF STEP {step}")
 
             Timer.start('Reachable Set Computation')
             starting_bund = copy.deepcopy(self.flowpipe[step])
@@ -75,7 +75,7 @@ class ReachSet:
                 self.flowpipe.error = error
                 break
 
-            Output.write("=========================================")
+            #Output.write("=========================================")
 
         if not isinstance(self.strat, MultiStrategy):
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
