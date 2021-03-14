@@ -8,7 +8,6 @@ Timer object containing duration data.
 class TimerData:
 
     def __init__(self, label):
-
         self.label = label
         self.start_time = 0
         self.end_time = 0
@@ -56,11 +55,11 @@ class Timer:
 
     @staticmethod
     def flush_timer_stack():
-        timer_stack = []
+        Timer.timer_stack = []
+        Timer.time_table = {}
 
     @staticmethod
     def generate_stats():
-
         for label, times in Timer.time_table.items():
             print("Average {} Duration: {} sec".format(label, Timer.avg_time(times)))
 
@@ -68,8 +67,7 @@ class Timer:
         m,s = divmod(reach_set_time, 60)
         print(f"Total Reachable Set Computation Duration: {m} Minutes and {s} Seconds")
 
-        timer_stack = []
-        time_table = {}
+        Timer.flush_timer_stack()
 
     def avg_time(times):
         return reduce(add, [t.duration for t in times]) / len(times)

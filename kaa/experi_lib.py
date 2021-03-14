@@ -94,17 +94,39 @@ class PhasePlotExperiment(Experiment):
         super().__init__(*inputs)
 
     def execute(self, *var_tup, separate=False, plot_border_traj=True):
+        num_steps = self.max_num_steps
 
         if plot_border_traj:
-            self.plot.add(self.simulate_border_points(10))
+            self.plot.add(self.simulate_border_points(num_steps))
 
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'Phase',
-                        'vars': (0,1),
+                        'vars': var_tup,
                         'separate_flag': False})
+
+"""
+Experiment to calculate and plot the projection reachable sets.
+"""
+class ProjectionPlotExperiment(Experiment):
+
+    def __init__(self, *inputs):
+        super().__init__(*inputs)
+
+    def execute(self, *var_tup, separate=False, plot_border_traj=True):
+        num_steps = self.max_num_steps
+
+        if plot_border_traj:
+            self.plot.add(self.simulate_border_points(num_steps))
+
+        for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10)
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        self.plot.plot({'type': 'Projection',
+                        'vars': var_tup})
 
 class CompAniExperiment(Experiment):
 

@@ -6,7 +6,7 @@ Simple settings file for the in-and-outs of Kaa.
 """
 class KaaSettings:
     'Should we try to parallelize the generator calculations?'
-    Parallelize = False
+    Parallelize = True
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
     OptProd = KodiakProd
@@ -31,6 +31,9 @@ class KaaSettings:
 
     'Flag to trigger enveloping box threshold checking'
     UseThreshold = False
+
+    "Number of threads to instantiate when running parallel routines."
+    ThreadCount = 6
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

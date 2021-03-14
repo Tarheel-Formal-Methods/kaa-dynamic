@@ -399,6 +399,9 @@ class Experiment(ABC):
     """
     def initialize_strat(self, experi_input, num_trials):
         experi_strat = experi_input['strat']
+
+        if not experi_strat: return #If strat is None, nothing to initialize
+
         experi_supp_mode = experi_input['supp_mode']
         experi_pregen_mode = experi_input['pregen_mode']
         experi_num_trajs = experi_input['num_trajs']

@@ -151,6 +151,9 @@ class StaticStrat(TempStrategy):
     def close_strat(self, bund, step_num):
         return bund
 
+    def reset(self):
+        pass
+
 """
 A wrapper enveloping multiple strategies working in tandem.
 """
@@ -161,7 +164,6 @@ class MultiStrategy(TempStrategy):
         self.strat_freq = {}
 
         for strat in var_tup:
-
             assert isinstance(strat, TempStrategy), "Only a list of TempStrategy objects must be passed into a MultiStrategy."
 
             if type(strat) in self.strat_freq:

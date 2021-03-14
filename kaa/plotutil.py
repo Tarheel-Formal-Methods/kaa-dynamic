@@ -15,19 +15,22 @@ from kaa.parallelotope import LinearSystem
 
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
 
+def plot_traj_proj(model, ax, trajs, x, num_steps):
+    if not trajs: return
 
-def plot_traj_proj(model, ax, x, num_steps):
     var = model.vars[x]
 
     t = np.arange(0, num_steps, 1)
 
-    for traj_idx, traj in enumerate(self.trajs):
+    for traj_idx, traj in enumerate(trajs):
         y_coord = traj.get_proj(var)
         y_coord = y_coord[:num_steps]
 
         ax.plot(t, y_coord, color="k", linewidth=0.3)
 
 def plot_trajs(model, ax, trajs, x, y, num_steps=0):
+    if not trajs: return
+
     x_var, y_var = model.vars[x], model.vars[y]
 
     for traj_idx, traj in enumerate(trajs):
@@ -56,8 +59,9 @@ class Subplot:
 
 class ProjectionSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, vars=None):
+    def __init__(self, model, flowpipes, num_steps, trajs, vars):
         self.vars = model.vars if not vars else vars
+        self.trajs = trajs
         super().__init__(model,  "Projection", flowpipes, len(self.vars), num_steps)
 
     """
@@ -77,7 +81,7 @@ class ProjectionSubplot(Subplot):
             var = self.model.vars[var_idx]
             name = self.model.name
 
-            self.plot_traj_proj(self.model, ax[ax_idx], var_idx, self.num_steps)
+            plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps)
 
             for flow_idx, flowpipe in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.getProj(var_idx)
@@ -237,6 +241,7 @@ class VolumeSubplot(Subplot):
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
             vol_data = flowpipe.get_volume_data()
+
             ax.plot(t, vol_data, color=f"C{flow_idx}")
             axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Total Volume: {flowpipe.total_volume})"))
 
@@ -277,14 +282,25 @@ class Plot:
             subplot_type = subplot_dict['type']
 
             if subplot_type == "Projection":
-                subplot = ProjectionSubplot(self.model, self.flowpipes, self.num_steps, subplot_dict['vars'])
+                subplot = ProjectionSubplot(self.model,
+                                            self.flowpipes,
+                                            self.num_steps,
+                                            self.trajs,
+                                            subplot_dict['vars'])
+
+
             elif subplot_type == "Phase":
-                subplot = PhaseSubplot(self.model, subplot_dict['vars'], self.flowpipes,
+                subplot = PhaseSubplot(self.model,
+                                       subplot_dict['vars'],
+                                       self.flowpipes,
                                        self.num_steps,
                                        subplot_dict['separate_flag'],
                                        self.trajs)
+
             elif subplot_type == "Volume":
-                subplot = VolumeSubplot(self.model, self.flowpipes, self.num_steps)
+                subplot = VolumeSubplot(self.model,
+                                        self.flowpipes,
+                                        self.num_steps)
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
@@ -347,29 +363,6 @@ class Plot:
     """
     def __create_var_str(self, var_idxs):
         return ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_idxs])
-
-    """
-    Routine to plot trajectory data (self.trajs) into an input Axis object
-    @params x: index of x variable
-            y: index of y variable
-            ax: Axis object to plot trajectory data into
-    """
-    def plot_trajs(self, x, y, ax, num_steps=0):
-        if not self.trajs: return
-
-        x_var, y_var = self.model.vars[x], self.model.vars[y]
-
-        for traj_idx, traj in enumerate(self.trajs):
-            x_coord = traj.get_proj(x_var)
-            y_coord = traj.get_proj(y_var)
-
-            if num_steps:
-                x_coord = x_coord[:num_steps]
-                y_coord = y_coord[:num_steps]
-
-            ax.plot(x_coord, y_coord, color="k", linewidth=0.3)
-            ax.scatter(x_coord, y_coord, color=f"C{traj_idx}", s=1)
-
 
     """
     Saves or plots existing figure

@@ -50,7 +50,7 @@ class FlowPipe:
         for bund_idx, bund in enumerate(self.flowpipe):
             ptope_strat_list = bund.get_ptopes_by_strat(strat)
             #assert len(ptope_strat_list) != 0, f"Input Strategy must act on bundle object at index {bund_idx}"
-            strat_flowpipe.append(ptope_strat_list[0]) #Get first one for now
+            strat_flowpipe.append(ptope_strat_list[0]) #Get first one for now #This stuff should be abstracted and manpulatible.
 
         return strat_flowpipe
 
@@ -75,10 +75,10 @@ class FlowPipe:
         curr_var = self.vars[var_ind]
 
         'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
-        y_min, y_max = np.empty(self.length), np.empty(self.length)
+        y_min, y_max = np.empty(len(self)), np.empty(len(self))
 
         'Initialize objective function'
-        y_obj = np.zeros(len(self.dim))
+        y_obj = np.zeros(self.dim)
         y_obj[var_ind] = 1
 
         'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'

@@ -2,44 +2,40 @@ from models.harosc import HarOsc
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
-from kaa.experi_lib import PhasePlotExperiment
+from kaa.experi_lib import *
 
 from kaa.settings import PlotSettings
 from itertools import product
 
 PlotSettings.save_fig = False
 
-def test_pca_HarOsc():
+def test_HarOsc():
+    num_steps = 10
     model = HarOsc()
 
-    lin_strat = PCAStrat(model, iter_steps=1)
     experi_input = dict(model=model, #Encompass strat initilizations?
-                            strat=lin_strat,
+                            strat=None,
                             label="HarOsc",
-                            num_steps=5,
-                            max_steps=5,
-                            num_trajs=10,
-                            supp_mode=False,
-                            pregen_mode=False)
+                            num_steps=num_steps)
 
-    harosc = PhasePlotExperiment(experi_input)
-    harosc.execute(0,1, separate=True)
+    harosc = ProjectionPlotExperiment(experi_input)
+    harosc.execute(0,1)
 
 def test_sliding_lin_HarOsc():
     model = HarOsc()
 
-    lin_strat = SlidingLinStrat(model, lifespan=5)
+    lin_strat = LinStrat(model, iter_steps=1)
     experi_input = dict(model=model, #Encompass strat initilizations?
                             strat=lin_strat,
                             label="HarOsc",
-                            num_steps=5,
+                            num_steps=10,
                             max_steps=5,
                             num_trajs=10,
                             supp_mode=True,
                             pregen_mode=False)
 
-    harosc = PhasePlotExperiment(experi_input)
-    harosc.execute(0,1, separate=True)
+    harosc = ProjectionPlotExperiment(experi_input)
+    harosc.execute(0,1)
 
 def test_lin_HarOsc():
     model = HarOsc()

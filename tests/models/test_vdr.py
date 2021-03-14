@@ -11,16 +11,19 @@ from kaa.settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
 
 PlotSettings.save_fig = False
-def test_VDP():
-    NUM_STEPS = 1
-    model = VanDerPol(delta=0.08)
+def test_sapo_VDP():
+    num_steps = 70
 
-    vdp_sapo = PhasePlotExperiment([ExperimentInput(model, label="VDP Sapo")])
-    vdp_sapo.execute(NUM_STEPS)
+    model = VanDerPol_UnitBox(delta=0.08)
 
-    vdp_sapo.plot_results(0,1)
+    experi_input = dict(model=model,
+                        strat=None,
+                        label=f"Sapo's Reachable Set",
+                        num_steps=num_steps)
+
+    experi = PhasePlotExperiment(experi_input)
+    experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
-
 
 def test_pca_VDP():
     NUM_STEPS = 3
@@ -208,7 +211,8 @@ def test_sliding_degen_VDP():
         file_identifier = "(RAND)"
 
     experi = PhasePlotExperiment(experi_input)
-    experi.execute(0, 1, plot_border_traj=False)
+    experi.execute(0, 1, plot_border_traj=True)
+    Timer.generate_stats()
 
 def test_ani_pca_lin_VDP():
 
