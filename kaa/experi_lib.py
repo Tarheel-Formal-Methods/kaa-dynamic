@@ -102,7 +102,9 @@ class PhasePlotExperiment(Experiment):
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 
-        self.plot.plot2DPhase(*var_tup, separate)
+        self.plot.plot({'type': 'Phase',
+                        'vars': (0,1),
+                        'separate_flag': False})
 
 class CompAniExperiment(Experiment):
 

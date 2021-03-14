@@ -16,8 +16,8 @@ from kaa.parallelotope import LinearSystem
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
 
 
-def plot_traj_proj(self, model, ax, x, num_steps):
-    var = self.model.vars[x]
+def plot_traj_proj(model, ax, x, num_steps):
+    var = model.vars[x]
 
     t = np.arange(0, num_steps, 1)
 
@@ -27,10 +27,10 @@ def plot_traj_proj(self, model, ax, x, num_steps):
 
         ax.plot(t, y_coord, color="k", linewidth=0.3)
 
-def plot_trajs(self, model, ax, x, y, num_steps=0):
-    x_var, y_var = self.model.vars[x], self.model.vars[y]
+def plot_trajs(model, ax, trajs, x, y, num_steps=0):
+    x_var, y_var = model.vars[x], model.vars[y]
 
-    for traj_idx, traj in enumerate(self.trajs):
+    for traj_idx, traj in enumerate(trajs):
         x_coord = traj.get_proj(x_var)
         y_coord = traj.get_proj(y_var)
 
@@ -46,7 +46,7 @@ class Subplot:
         self.label = label
         self.num_plots = num_plots
         self.model = model
-        self.num_steps
+        self.num_steps = num_steps
         self.flowpipes = flowpipes
 
     @abstractmethod
@@ -103,7 +103,7 @@ class PhaseSubplot(Subplot):
         self.separate_flag = separate_flag
         self.trajs = trajs
         self.lims = None
-        super()._init__(model, "Phase", flowpipes, 1, num_steps)
+        super().__init__(model, "Phase", flowpipes, 1, num_steps)
 
     """
     Plots phase between two variables of dynamical system.
@@ -113,14 +113,16 @@ class PhaseSubplot(Subplot):
             y: index of variable to be plotted as y-axis of desired phase
     """
     def plot(self, ax):
-        Timer.start('Phase')
+        assert len(ax) == 1, "Only one axis object for plotting phase."
 
+        Timer.start('Phase')
+        ax = ax[0]
         for flow_idx, flowpipe in enumerate(self.flowpipes):
             self.__halfspace_inter_plot(ax, self.x, self.y, flowpipe, flow_idx)
             #self.__support_plot(flowpipe, flow_idx,  x, y, ax)
 
-        plot_trajs(self.model, ax, self.x, self.y)
-        self.__phase_plot_legend(self.x, self.y, ax, lims)
+        plot_trajs(self.model, ax, self.trajs, self.x, self.y)
+        self.__phase_plot_legend(self.x, self.y, ax)
 
         phase_time = Timer.stop('Phase')
         x_var, y_var = self.model.vars[self.x], self.model.vars[self.y]
@@ -179,12 +181,12 @@ class PhaseSubplot(Subplot):
         phase_ax.set_ylabel(f'{y_var}')
         phase_ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
 
-        axis_patches = []
-        for flow_idx, flowpipe in enumerate(self.flowpipes):
-            for strat_idx, strat in enumerate(flowpipe):
-                axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
+        #axis_patches = []
+        #for flow_idx, flowpipe in enumerate(self.flowpipes):
+        #    for strat_idx, strat in enumerate(flowpipe):
+        #        axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
 
-        phase_ax.legend(handles=axis_patches)
+        #phase_ax.legend(handles=axis_patches)
 
         if self.lims is not None:
            phase_ax.set_xlim(lims)
@@ -215,7 +217,9 @@ class PhaseSubplot(Subplot):
         'Plot the curves showing phase trajectories'
         for points in supp_traj_points:
             ax.plot(points[0], points[1], color=f"C{flow_idx}")
-
+"""
+TODO document expected dict setup.
+"""
 class VolumeSubplot(Subplot):
 
     def __init__(self, model, flowpipes, num_steps):
@@ -225,9 +229,11 @@ class VolumeSubplot(Subplot):
     Plots volume estimation data from self.flowpipes into input Axis object
     @params ax: Axis object to plot volume data into
     """
-    def plot_volume(self, ax):
-        t = np.arange(0, self.num_steps, 1)
+    def plot(self, ax):
+        assert len(ax) == 1, "Only one axis object for plotting phase."
+        ax = ax[0]
 
+        t = np.arange(0, self.num_steps, 1)
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
             vol_data = flowpipe.get_volume_data()
@@ -263,10 +269,10 @@ class Plot:
         else:
             raise RuntimeError("Object is not of a plottable type.")
 
-    def plot(self, subplots):
+    def plot(self, *subplots):
 
         axes = []
-        subplots = []
+        subplot_objs =[]
         for subplot_dict in subplots:
             subplot_type = subplot_dict['type']
 
@@ -282,20 +288,22 @@ class Plot:
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
-            subplots.append(subplot)
+            subplot_objs.append(subplot)
 
         figure = plt.figure(figsize=PlotSettings.fig_size)
+        total_num_subplots = sum(subplot.num_plots for subplot in subplot_objs)
 
-        total_num_subplots = sum(subplot.num_plots for subplot in subplots)
-
-        for subplot_idx, in enumerate(subplots):
+        for subplot_idx,_ in enumerate(subplot_objs):
             offset = sum(subplot.num_plots for subplot in subplots[:subplot_idx])
-            subplot_tup = [ figure.add_subplot(total_num_subplots, )
-            axes.appe
-
-        figure_name = "Kaa{}Proj{}--{}.png".format(self.model.name, self.__create_var_str(var_tup), self.__create_strat_str())
+            subplot_tup = [ figure.add_subplot(1, total_num_subplots, offset + (i+1)) for i in range(subplot.num_plots) ]
+            axes.append(subplot_tup)
 
 
+        for axes_tup, subplot_obj in zip(axes, subplot_objs):
+            subplot_obj.plot(axes_tup)
+
+        #figure_name = "Kaa{}Phase{}--{}.png".format(self.model.name, self.__create_strat_str())
+        self.__plot_figure(figure, "Fig")
 
     """
     Adds trajectory to be plotted.

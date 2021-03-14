@@ -20,7 +20,7 @@ class TimerData:
     def end(self):
         self.end_time = time.time()
         self.duration = self.end_time - self.start_time
-        
+
 """
 Static class containing all timing utility functions and statistics generating routines.
 """
@@ -31,7 +31,7 @@ class Timer:
 
     @staticmethod
     def start(label):
-        
+
         if not Timer.timer_stack or Timer.timer_stack[-1].label != label:
             start_timer = TimerData(label)
             start_timer.start()
@@ -64,12 +64,15 @@ class Timer:
         for label, times in Timer.time_table.items():
             print("Average {} Duration: {} sec".format(label, Timer.avg_time(times)))
 
+        reach_set_time = Timer.total_time(Timer.time_table['Reachable Set Computation'])
+        m,s = divmod(reach_set_time, 60)
+        print(f"Total Reachable Set Computation Duration: {m} Minutes and {s} Seconds")
+
         timer_stack = []
         time_table = {}
 
     def avg_time(times):
         return reduce(add, [t.duration for t in times]) / len(times)
-
 
     def total_time(times):
         return reduce(add,[t.duration for t in times])

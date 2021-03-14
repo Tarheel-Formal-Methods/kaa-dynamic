@@ -37,7 +37,7 @@ class PlotSettings:
     plot_font = 15
 
     'Toggle to save the figures to disk'
-    save_fig = False
+    save_fig = True
 
     'Path to save figures'
     default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
