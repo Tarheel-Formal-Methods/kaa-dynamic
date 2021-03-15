@@ -56,6 +56,8 @@ class LinearSystem:
             return ConvexHull(self.vertices).volume
 
         except QhullError:
+            Output.prominent("Convexhull volume operation raised an error.")
+
             num_samples = KaaSettings.VolumeSamples
             sampled_points = self.sample_ran_pts_envelop_box(num_samples)
 
@@ -70,14 +72,19 @@ class LinearSystem:
     """
     @property
     def vertices(self):
-        phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
-        center_pt = np.asarray(self.chebyshev_center.center)
+        try:
+            phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
+            center_pt = np.asarray(self.chebyshev_center.center)
 
-        'Run scipy.spatial.HalfspaceIntersection.'
-        hs = HalfspaceIntersection(phase_intersect, center_pt)
-        vertices = np.asarray(hs.intersections)
+            'Run scipy.spatial.HalfspaceIntersection.'
+            hs = HalfspaceIntersection(phase_intersect, center_pt)
+            vertices = np.asarray(hs.intersections)
 
-        return vertices
+            return vertices
+
+        except QhullError:
+            Output.prominent("QHull vertex operation raised an error.")
+            return None
 
     """
     Calculate the volume of the smallest enveloping box of linear system.

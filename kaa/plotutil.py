@@ -159,6 +159,9 @@ class PhaseSubplot(Subplot):
         comple_dim = np.asarray([True if i in [x,y] else False for i in range(dim)])
 
         vertices = sys.vertices
+
+        if vertices is None: return sys
+
         proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
         center_pt = sys.chebyshev_center.center
 
@@ -287,7 +290,6 @@ class Plot:
                                             self.num_steps,
                                             self.trajs,
                                             subplot_dict['vars'])
-
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,

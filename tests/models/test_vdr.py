@@ -14,7 +14,7 @@ PlotSettings.save_fig = False
 def test_sapo_VDP():
     num_steps = 70
 
-    model = VanDerPol_UnitBox(delta=0.08)
+    model = VanDerPol(delta=0.08)
 
     experi_input = dict(model=model,
                         strat=None,
