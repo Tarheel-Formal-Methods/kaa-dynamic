@@ -4,7 +4,6 @@ import numpy as np
 from kaa.bundle import Bundle
 from kaa.model import Model
 
-
 class VanDerPol(Model):
 
     def __init__(self, delta=0.02):

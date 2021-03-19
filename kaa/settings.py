@@ -35,12 +35,14 @@ class KaaSettings:
     "Number of threads to instantiate when running parallel routines."
     ThreadCount = 6
 
+    NormalizeLinDir = True
+
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
     plot_font = 15
 
     'Toggle to save the figures to disk'
-    save_fig = True
+    save_fig = False
 
     'Path to save figures'
     default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"

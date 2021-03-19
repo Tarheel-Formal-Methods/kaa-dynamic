@@ -173,6 +173,6 @@ class Quadcopter_UnitBox(Model):
 
            offu[2] = 0.21; offl[2] = -0.17;
            offu[6] = 1; offl[6] = -1;
-           #offu[17] = 100; offl[17] = 100;
+           offu[17] = 100; offl[17] = 100;
 
            super().__init__(dyns, vars, T, L, offu, offl, name="Quad")

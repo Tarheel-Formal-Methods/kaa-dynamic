@@ -40,14 +40,14 @@ class AbstractLinStrat(TempStrategy):
             inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
             lin_dir_mat = np.matmul(self.unit_dir_mat, inv_A)
 
+            if KaaSettings.NormalizeLinDir:
+                cond_num = np.linalg.cond(lin_dir_mat)
 
-            cond_num = np.linalg.cond(lin_dir_mat)
-
-            if cond_num > self.cond_threshold:
-                print("Using Normalization method.")
-                norm_lin_dir = normalize_mat(lin_dir_mat)
-                closest_dirs = find_closest_dirs(norm_lin_dir)
-                lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
+                if cond_num > self.cond_threshold:
+                    print("Using Normalization method.")
+                    norm_lin_dir = normalize_mat(lin_dir_mat)
+                    closest_dirs = find_closest_dirs(norm_lin_dir)
+                    lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
 
             #print(f"Cal Lin Directions Matrix: {lin_dir_mat}")
             self.unit_dir_mat = lin_dir_mat #This makes senese for now as we assume we generate directions once per step.
