@@ -1,29 +1,20 @@
-from kaa.reach import ReachSet
-from kaa.plotutil import Plot
 from models.phos import Phosphorelay, Phosphorelay_UnitBox
 from kaa.templates import MultiStrategy
-from kaa.temp.lin_app_strat import LinStrat
-from kaa.temp.pca_strat import PCAStrat, DelayedPCAStrat
-from kaa.templates import MultiStrategy
+from kaa.experi_init import *
 
 from kaa.timer import Timer
-from kaa.trajectory import Traj
 
-def test_Phos():
-
+def test_sapo_Phos():
+    num_steps = 200
     model = Phosphorelay()
-    #unit_model = Phosphorelay_UnitBox()
-    mod_reach = ReachSet(model)
-    #mod_unit_reach = ReachSet(unit_model)
-    #unit_flow = mod_unit_reach.computeReachSet(200)
-    mod_flow = mod_reach.computeReachSet(30)
 
-    phos_plot = Plot()
-    phos_plot.add(mod_flow)
-    phos_plot.plot2DPhase(0,1, separate=False, plotvertices=True)
+    experi_input = dict(model=model, #Encompass strat initilizations?
+                        strat=None,
+                        label="SapoPhos",
+                        num_steps=num_steps)
 
-    Timer.generate_stats()
-
+    harosc = ProjectionPlotExperiment(experi_input)
+    harosc.execute(0, 1, 2)
 
 def test_pca_lin_Phos():
 
@@ -58,3 +49,50 @@ def test_pca_lin_Phos():
         phos_plot.add(traj)
 
     phos_plot.plot2DPhase(0,1, separate=False, plotvertices=True)
+
+def test_sliding_skewed_plot_SIR():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+    num_steps = 150
+
+    pca_window_size = 10
+    lin_window_size = 10
+
+    model = Phosphorelay_UnitBox()
+
+    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
+    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+
+    experi_input = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps-1,
+                        max_steps=num_steps)
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = ProjectionPlotExperiment(experi_input)
+    experi.execute(0, 1, 2)
+    Timer.generate_stats()
+
+def test_skewed_sliding_strat_comb_Phos():
+    model = Phosphorelay_UnitBox()
+    test_skewed_sliding_strat_comb(model, 200, 5000, use_supp=True, use_pregen=False)
+
+def test_sliding_pca_SIR():
+    model = Phosphorelay_UnitBox()
+    test_sliding_pca(model, 20, 200, 5000, use_supp=True, use_pregen=False)
+
+def test_sliding_lin_SIR():
+    model = Phosphorelay_UnitBox()
+    test_sliding_lin(model, 20, 200, 5000, use_supp=True, use_pregen=False)
