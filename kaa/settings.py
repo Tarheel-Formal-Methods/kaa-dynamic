@@ -21,7 +21,7 @@ class KaaSettings:
     RandSeed = 897987178
 
     'Use random sampling scheme for volume'
-    RandVol = False
+    UseRandVol = False
 
     'Save the flowpipe when error appears during transformation'
     SaveStateonError = True

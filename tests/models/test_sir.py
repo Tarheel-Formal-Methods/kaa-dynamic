@@ -33,40 +33,6 @@ def test_sapo_SIR():
 
     Timer.generate_stats()
 
-def test_sliding_skewed_plot_SIR():
-    use_supp = True
-    use_pregen = False
-
-    num_trajs = 5000
-    num_steps = 150
-
-    pca_window_size = 10
-    lin_window_size = 10
-
-    model = SIR_UnitBox(delta=0.5)
-
-    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
-    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
-
-    experi_input = dict(model=model,
-                        strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
-
-    if use_supp:
-        file_identifier = "(SUPP)"
-    elif use_pregen:
-        file_identifier = f"(PREGEN: {num_trajs})"
-    else:
-        file_identifier = "(RAND)"
-
-    experi = ProjectionPlotExperiment(experi_input)
-    experi.execute(0, 1, 2)
-    Timer.generate_stats()
 
 def test_sir_lin_pca_strat():
 

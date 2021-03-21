@@ -52,21 +52,21 @@ class LinearSystem:
     """
     @property
     def volume(self):
-        try:
-            return ConvexHull(self.vertices).volume
+        if not KaaSettings.UseRandVol:
+            try:
+                return ConvexHull(self.vertices).volume
 
-        except QhullError:
-            Output.prominent("Convexhull volume operation raised an error.")
+            except QhullError:
+                Output.prominent("Convexhull volume operation raised an error.")
 
-            num_samples = KaaSettings.VolumeSamples
-            sampled_points = self.sample_ran_pts_envelop_box(num_samples)
+        num_samples = KaaSettings.VolumeSamples
+        sampled_points = self.sample_ran_pts_envelop_box(num_samples)
 
-            check_point_membership = lambda point: 1 if self.check_membership(point) else 0
-            point_value = map(check_point_membership, sampled_points)
-            num_contained_points = reduce(add, point_value)
+        check_point_membership = lambda point: 1 if self.check_membership(point) else 0
+        point_value = map(check_point_membership, sampled_points)
+        num_contained_points = reduce(add, point_value)
 
-            return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
-
+        return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
     """
     Find vertices of this linear system.
     """

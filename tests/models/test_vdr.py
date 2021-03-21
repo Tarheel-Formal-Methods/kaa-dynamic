@@ -3,6 +3,7 @@ from itertools import product
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
+from kaa.temp.random_static_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experiment import *
 from kaa.experi_init import *
@@ -241,6 +242,26 @@ def test_ani_pca_lin_VDP():
     vdp_pca = Animation(inputs)
     vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
+    Timer.generate_stats()
+
+def test_ran_strat_VDP():
+    num_steps = 70
+
+    model = VanDerPol(delta=0.08)
+    inputs = []
+    for num_templates in iter([20,15,10,5,4,3,2,1]):
+        experi_input = dict(model=model,
+                            strat=RandomStaticStrat(model, num_templates),
+                            label=f"Random Static Strategy with {num_templates} Templates",
+                            num_steps=num_steps,
+                            supp_mode = True,
+                            pregen_mode = False,
+                            num_trajs = 5000)
+
+        inputs.append(experi_input)
+
+    experi = VolumeExperiment(*inputs, label="VDP Random Static Strat")
+    experi.execute(1)
     Timer.generate_stats()
 
 def test_strat_comb_VDP():

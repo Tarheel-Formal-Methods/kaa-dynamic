@@ -113,7 +113,6 @@ class TempStrategy(ABC):
     @returns TrajCollection object wrapping generated Traj objects.
     """
     def generate_trajs(self, bund, num_trajs):
-
         if self.use_supp_points:
             trajs = bund.getIntersect().generate_supp_trajs(bund.L, 1)
         else:

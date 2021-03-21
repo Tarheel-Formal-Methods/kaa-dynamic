@@ -399,16 +399,12 @@ class Experiment(ABC):
     """
     def initialize_strat(self, experi_input, num_trials):
         experi_strat = experi_input['strat']
+        loaded_dirs = None
 
         if not experi_strat: return #If strat is None, nothing to initialize
 
         experi_supp_mode = experi_input['supp_mode']
         experi_pregen_mode = experi_input['pregen_mode']
-        experi_num_trajs = experi_input['num_trajs']
-        experi_num_steps = experi_input['max_steps']
-
-        loaded_dirs = None
-        experi_strat.num_trajs =  experi_num_trajs
 
         if experi_supp_mode:
             if isinstance(experi_strat, MultiStrategy):
@@ -418,6 +414,11 @@ class Experiment(ABC):
                 experi_strat.use_supp_points = True
 
         elif experi_pregen_mode:
+            experi_num_trajs = experi_input['num_trajs']
+            experi_num_steps = experi_input['max_steps']
+
+            experi_strat.num_trajs =  experi_num_trajs
+
             loaded_dirs = self.load_dirs(experi_num_steps, experi_num_trajs, num_trials)
             self.assign_dirs(experi_strat, 0, loaded_dirs)
 
