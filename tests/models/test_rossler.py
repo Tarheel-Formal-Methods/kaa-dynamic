@@ -94,25 +94,25 @@ def test_pca_lin_Rossler():
     Timer.generate_stats()
 
 def test_strat_comb_Rossler():
-    model = Rossler_UnitBox(delta=0.5)
+    model = Rossler_UnitBox()
     test_strat_comb(model, (1,3,5), 150, )
 
 def test_sliding_strat_comb_Rossler():
-    model = Rossler_UnitBox(delta=0.08)
+    model = Rossler_UnitBox()
     test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
 
 def test_skewed_sliding_strat_comb_Rossler():
-    model = SIR_UnitBox(delta=0.08)
+    model = Rossler_UnitBox()
     test_skewed_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
 
 def test_sliding_pca_Rossler():
-    model = Rossler_UnitBox(delta=0.5)
+    model = Rossler_UnitBox()
     test_sliding_pca(model, 20, 150, -1, use_supp=True, use_pregen=False)
 
 def test_sliding_lin_Rossler():
-    model = Rossler_UnitBox(delta=0.5)
+    model = Rossler_UnitBox()
     test_sliding_lin(model, 20, 150, -1, use_supp=True, use_pregen=False)
 
 def gen_save_dirs_Rossler():
-    model = Rossler_UnitBox(delta=0.5)
+    model = Rossler_UnitBox()
     gen_save_dirs(model, 150)

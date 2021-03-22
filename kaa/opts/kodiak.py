@@ -3,6 +3,7 @@ import numpy as np
 from kaa.pykodiak.pykodiak_interface import Kodiak
 from kaa.opts.optprod import OptimizationProd
 from kaa.log import Output
+from kaa.timer import Timer
 
 class KodiakProd(OptimizationProd):
 

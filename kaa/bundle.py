@@ -330,7 +330,7 @@ class BundleTransformer:
         direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dirs)
 
         for l_row in direct_iter:
-            Output.write(f"BOUNDS FOR PTOPE {row_ind} ROW INDEX {l_row}")
+            #Output.write(f"BOUNDS FOR PTOPE {row_ind} ROW INDEX {l_row}")
             curr_L = L[l_row]
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
             output_queue.put((l_row, ub, lb))
