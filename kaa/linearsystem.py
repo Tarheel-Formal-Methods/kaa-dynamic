@@ -77,7 +77,6 @@ class LinearSystem:
             phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
             center_pt = np.asarray(self.chebyshev_center.center)
 
-            print(center_pt)
             'Run scipy.spatial.HalfspaceIntersection.'
             hs = HalfspaceIntersection(phase_intersect, center_pt)
             vertices = np.asarray(hs.intersections)

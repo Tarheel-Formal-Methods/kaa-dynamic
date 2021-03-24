@@ -35,6 +35,7 @@ class LPUtil:
         self.c = c
         self.A = A
         self.b = b
+        self.num_cols = None
         self.lp_prob = glpk.glp_create_prob()
 
         self.params = glpk.glp_smcp()
@@ -44,7 +45,7 @@ class LPUtil:
 
     def populate_consts(self):
         num_rows = self.A.shape[0]
-        num_cols = self.A.shape[1]
+        self.num_cols =  num_cols = self.A.shape[1]
         mat_size = num_rows * num_cols
 
         glpk.glp_add_rows(self.lp_prob, num_rows)
@@ -68,7 +69,7 @@ class LPUtil:
         glpk.glp_load_matrix(self.lp_prob, mat_size, ia, ja, ar)
 
     def populate_obj_vec(self):
-        for col_ind in range(self.dim):
+        for col_ind in range(self.num_cols):
             glpk.glp_set_col_bnds(self.lp_prob, col_ind+1, glpk.GLP_FR, 0.0, 0.0)
             glpk.glp_set_obj_coef(self.lp_prob, col_ind+1, self.c[col_ind])
 
@@ -81,7 +82,7 @@ class LPUtil:
         glpk.glp_simplex(self.lp_prob, self.params)
 
         fun = glpk.glp_get_obj_val(self.lp_prob)
-        x = [i for i in map(lambda x: glpk.glp_get_col_prim(self.lp_prob, x+1), range(self.dim))]
+        x = [i for i in map(lambda x: glpk.glp_get_col_prim(self.lp_prob, x+1), range(self.num_cols))]
 
         Timer.stop("LP Routines")
         #Output.bold_write(f"Ended LP with c: {c}")

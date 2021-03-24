@@ -10,7 +10,7 @@ from kaa.settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
 
 def test_box_Neuron():
-    num_steps = 100
+    num_steps = 300
 
     model = Neuron_UnitBox(delta=0.08)
 
