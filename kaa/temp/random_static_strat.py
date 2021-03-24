@@ -3,6 +3,7 @@ import random
 from math import sin, cos, radians, sqrt
 
 from kaa.templates import TempStrategy
+from kaa.timer import Timer
 
 """
 Strategy which adds random directions and templates at the start of the
@@ -19,10 +20,14 @@ class RandomStaticStrat(TempStrategy):
     """
     def open_strat(self, bund, step_num):
         if not step_num:
+            Timer.start("Random Direction Gen")
+
             for ptope_idx in range(self.num_ran_temps):
                 rand_vec_mat = [self.__gen_naive_ran_dir() for _ in range(self.dim)]
                 rand_vec_labels = [f"RandDir{i}Ptope{ptope_idx}" for i in range(self.dim)]
                 self.add_ptope_to_bund(bund, rand_vec_mat, rand_vec_labels)
+
+            Timer.stop("Random Direction Gen")
 
     def close_strat(self, bund, step_num):
         pass

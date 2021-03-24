@@ -13,7 +13,7 @@ from kaa.timer import Timer
 
 PlotSettings.save_fig = False
 def test_sapo_VDP():
-    num_steps = 70
+    num_steps = 2
 
     model = VanDerPol(delta=0.08)
 
@@ -25,6 +25,26 @@ def test_sapo_VDP():
     experi = PhasePlotExperiment(experi_input)
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
+
+def test_sapo_vol_VDP():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+    num_steps = 150
+
+    model = VanDerPol(delta=0.08)
+    experi_input = dict(model=model, #Encompass strat initilizations?
+                        strat=None,
+                        label="SapoVDP",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps-1,
+                        max_steps=num_steps)
+
+    harosc = VolumeExperiment(experi_input)
+    harosc.execute(1)
 
 def test_pca_VDP():
     NUM_STEPS = 3
@@ -245,24 +265,8 @@ def test_ani_pca_lin_VDP():
     Timer.generate_stats()
 
 def test_ran_strat_VDP():
-    num_steps = 70
-
-    model = VanDerPol(delta=0.08)
-    inputs = []
-    for num_templates in iter([20,15,10,5,4,3,2,1]):
-        experi_input = dict(model=model,
-                            strat=RandomStaticStrat(model, num_templates),
-                            label=f"Random Static Strategy with {num_templates} Templates",
-                            num_steps=num_steps,
-                            supp_mode = True,
-                            pregen_mode = False,
-                            num_trajs = 5000)
-
-        inputs.append(experi_input)
-
-    experi = VolumeExperiment(*inputs, label="VDP Random Static Strat")
-    experi.execute(1)
-    Timer.generate_stats()
+    model = VanDerPol_UnitBox(delta=0.08)
+    test_ran_strat(model, 70, 5000, use_supp=True, use_pregen=False)
 
 def test_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

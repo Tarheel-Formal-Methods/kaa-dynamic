@@ -21,19 +21,8 @@ class VolumeExperiment(Experiment):
         for experi_input in self.inputs:
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
 
-            experi_strat = experi_input['strat']
-            experi_supp_mode = experi_input['supp_mode']
-            experi_pregen_mode = experi_input['pregen_mode']
-            experi_num_trajs = experi_input['num_trajs']
-
             for trial_num in range(num_trials):
-                Output.prominent(f"Running Experiment {experi_input['label']} Trial:{trial_num}")
-                Output.prominent(f"Using following parameters for experiments:")
-                Output.prominent(f"Use Support Points: {experi_supp_mode}")
-                Output.prominent(f"Use Pre-gen Points: {experi_pregen_mode}")
-
-                if experi_pregen_mode:
-                    Output.prominent(f"Number of Trajectories Used: {experi_num_trajs}")
+                self.print_input_params(experi_input, trial_num=trial_num)
 
                 flowpipe = self.gather_vol_data(experi_input)
                 flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
@@ -44,7 +33,7 @@ class VolumeExperiment(Experiment):
                 self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)
 
-                experi_strat.reset() #Reset attributes for next independent trial.
+                #experi_strat.reset() #Reset attributes for next independent trial.
 
 """
 Experiment to measure deviations between generated directions for a strategy type over the course of the reachable set computation.
@@ -122,6 +111,8 @@ class ProjectionPlotExperiment(Experiment):
             self.plot.add(self.simulate_border_points(num_steps))
 
         for experi_input in self.inputs:
+            self.print_input_params(experi_input)
+
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 

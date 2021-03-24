@@ -6,6 +6,7 @@ from itertools import product, chain
 
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
+from kaa.temp.random_static_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experi_lib import *
 from kaa.settings import KaaSettings
@@ -111,7 +112,7 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
         num_trials = 1
 
     inputs = []
-    for pca_window_size in range(0,25,5):
+    for pca_window_size in range(2,20,2):
         lin_window_size = 20 - pca_window_size
 
         pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
@@ -343,6 +344,25 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10):
 
     experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats")
     experi.execute(num_trials)
+
+
+def test_ran_strat(model, num_steps, num_trajs, use_supp = True, use_pregen = False):
+    inputs = []
+    for num_templates in iter([20,15,10,5,4,3,2,1]):
+        experi_input = dict(model=model,
+                            strat=RandomStaticStrat(model, num_templates),
+                            label=f"Random Static Strategy with {num_templates} Templates",
+                            num_steps=num_steps,
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
+                            num_trajs = num_trajs)
+
+        inputs.append(experi_input)
+
+    experi = VolumeExperiment(*inputs, label="VDP Random Static Strat")
+    experi.execute(1)
+    Timer.generate_stats()
+
 
 def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
     for num_trajs in range(1000, max_num_trajs+1000, 1000):

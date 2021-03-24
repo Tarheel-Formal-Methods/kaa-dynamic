@@ -24,46 +24,92 @@ class TimerData:
 Static class containing all timing utility functions and statistics generating routines.
 """
 class Timer:
-
     timer_stack = []
-    time_table = {}
+    timer_table = {}
+    timer_child_map = {}
+    timer_parent_map = {}
 
     @staticmethod
     def start(label):
-
         if not Timer.timer_stack or Timer.timer_stack[-1].label != label:
             start_timer = TimerData(label)
             start_timer.start()
             Timer.timer_stack.append(start_timer)
+
         else:
             raise RuntimeError("Timer of same category started previously for Timer: {}.".format(label))
 
     @staticmethod
     def stop(label):
-
-        if Timer.timer_stack[-1].label == label:
+        if len(Timer.timer_stack) > 0 and (current_label := Timer.timer_stack[-1].label) == label:
             end_timer = Timer.timer_stack.pop()
             end_timer.end()
+            end_label = end_timer.label
 
-            if end_timer.label not in Timer.time_table:
-                Timer.time_table[end_timer.label] = []
+            'Instantiate list for newly-found label.'
+            if current_label not in Timer.timer_table:
+                Timer.timer_table[end_label] = []
 
-            Timer.time_table[end_timer.label].append(end_timer)
+            Timer.timer_table[end_label].append(end_timer)
+
+            'Populate the Timer parent/child dependencies for output later.'
+            if len(Timer.timer_stack) > 0:
+                if (parent_label := Timer.timer_stack[-1].label) not in Timer.timer_child_map:
+                    Timer.timer_child_map[parent_label] = set()
+
+                if current_label not in Timer.timer_child_map[parent_label]:
+                    Timer.timer_child_map[parent_label].add(current_label)
+
+                if current_label not in Timer.timer_parent_map:
+                    Timer.timer_parent_map[label] = parent_label
+
             return end_timer.duration
+
         else:
             raise RuntimeError("Previous timer has not been stopped yet or timer has not been instantiated for Timer: {}.".format(label))
 
     @staticmethod
     def flush_timer_stack():
         Timer.timer_stack = []
-        Timer.time_table = {}
+        Timer.timer_table = {}
+        Timer.timer_child_map = {}
+        Timer.timer_parent_map = {}
 
     @staticmethod
     def generate_stats():
-        for label, times in Timer.time_table.items():
-            print("Average {} Duration: {} sec".format(label, Timer.avg_time(times)))
+        time_data_dict = {}
+        total_time = 0
 
-        reach_set_time = Timer.total_time(Timer.time_table['Reachable Set Computation'])
+        'Average time and total duration for all categories.'
+        for label, times in Timer.timer_table.items():
+
+            avg_time = Timer.avg_time(times)
+            at = divmod(avg_time, 60)
+            print(f"Average {label} Duration: {at[0]} min {at[1]} sec")
+
+            tot_time = Timer.total_time(times)
+            dt = divmod(tot_time, 60)
+            print(f"Total {label} Duration: {dt[0]} min {dt[1]} sec \n")
+
+            time_data_dict[label] = (at, dt, tot_time)
+
+            if label not in Timer.timer_parent_map:
+                total_time += tot_time
+
+        'Generate Tree-like output indicating total percentage of time taken by category.'
+        def recurse_print_tree(label, depth):
+            print(''.join([" "] * depth) + f"{label}: {(time_data_dict[label][2] / total_time) * 100}% \n")
+            if label not in Timer.timer_child_map:
+                return
+
+            for child_label in Timer.timer_child_map[label]:
+                recurse_print_tree(child_label, depth+1)
+
+        for label in Timer.timer_table:
+            if label not in Timer.timer_parent_map:
+                recurse_print_tree(label, 0)
+
+        reach_set_time = Timer.total_time(Timer.timer_table['Reachable Set Computation'])
         m,s = divmod(reach_set_time, 60)
         print(f"Total Reachable Set Computation Duration: {m} Minutes and {s} Seconds")
 

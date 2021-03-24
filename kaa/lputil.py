@@ -7,6 +7,7 @@ from scipy.optimize import linprog
 from itertools import product
 
 from kaa.log import Output
+from kaa.timer import Timer
 
 class LPSolution:
 
@@ -31,7 +32,8 @@ def __scipy_linprog(c, A, b, obj):
 
 
 def __swiglpk_linprog(c, A, b, obj):
-    Output.bold_write(f"Started LP with c: {c}")
+    #Output.bold_write(f"Started LP with c: {c}")
+    Timer.start("LP Routines")
     glp_obj = glpk.GLP_MIN if obj == "min" else glpk.GLP_MAX
 
     lp = glpk.glp_create_prob()
@@ -81,5 +83,6 @@ def __swiglpk_linprog(c, A, b, obj):
     glpk.glp_delete_prob(lp)
     glpk.glp_free_env()
 
-    Output.bold_write(f"Ended LP with c: {c}")
+    Timer.stop("LP Routines")
+    #Output.bold_write(f"Ended LP with c: {c}")
     return LPSolution(x, fun)

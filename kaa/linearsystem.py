@@ -255,7 +255,7 @@ class LinearSystem:
             Output.write("Non parallel routine")
             output_list = []
             for dir_vec in dir_vecs:
-                Output.write(f"Direction vector we are using: {dir_vec}")
+                #Output.write(f"Direction vector we are using: {dir_vec}")
                 output_list += self.generate_supp_worker(dir_vec, steps)
                 #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
                 #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))

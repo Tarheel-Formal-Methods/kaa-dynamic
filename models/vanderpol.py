@@ -38,8 +38,8 @@ class VanDerPol(Model):
         offu = np.zeros(num_dirs);
         offl = np.zeros(num_dirs);
 
-        offu[0] = 0.2; offl[0] = 0;
-        offu[1] = 2; offl[1] = -1.8;
+        offu[0] = 0.03; offl[0] = 0;
+        offu[1] = 2; offl[1] = -1.97;
         offu[2] = 10; offl[2] = 10;
         offu[3] = 10; offl[3] = 10;
 

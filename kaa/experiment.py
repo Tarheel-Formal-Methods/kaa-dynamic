@@ -424,6 +424,22 @@ class Experiment(ABC):
 
         return loaded_dirs
 
+    def print_input_params(self, experi_input, trial_num=-1):
+        experi_strat = experi_input['strat']
+        Output.prominent(f"Running Experiment {experi_input['label']} Trial:{trial_num if trial_num >= 0 else ""}")
+
+        if experi_strat:
+            experi_supp_mode = experi_input['supp_mode']
+            experi_pregen_mode = experi_input['pregen_mode']
+            experi_num_trajs = experi_input['num_trajs']
+
+            Output.prominent(f"Using following parameters for experiments:")
+            Output.prominent(f"Use Support Points: {experi_supp_mode}")
+            Output.prominent(f"Use Pre-gen Points: {experi_pregen_mode}")
+
+            if experi_pregen_mode:
+                Output.prominent(f"Number of Trajectories Used: {experi_num_trajs}")
+
     def __str__(self):
         return self.label
 
