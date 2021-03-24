@@ -42,7 +42,7 @@ class LinearSystem:
         row_norm = np.reshape(np.linalg.norm(self.A, axis=1), (self.A.shape[0], 1))
         center_A = np.hstack((self.A, row_norm))
 
-        center_pt = maxLinProg(c, center_A, self.b).x
+        center_pt = maxLinProg(self.model, c, center_A, self.b).x
         return ChebyCenter(center_pt[:-1], center_pt[-1])
 
     """
@@ -52,7 +52,7 @@ class LinearSystem:
     """
     @property
     def volume(self):
-        if not KaaSettings.UseRandVol:
+        if not KaaSettings.UseRandVol or self.dim < 4:
             try:
                 return ConvexHull(self.vertices).volume
 
@@ -67,6 +67,7 @@ class LinearSystem:
         num_contained_points = reduce(add, point_value)
 
         return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
+
     """
     Find vertices of this linear system.
     """
@@ -76,6 +77,7 @@ class LinearSystem:
             phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
             center_pt = np.asarray(self.chebyshev_center.center)
 
+            print(center_pt)
             'Run scipy.spatial.HalfspaceIntersection.'
             hs = HalfspaceIntersection(phase_intersect, center_pt)
             vertices = np.asarray(hs.intersections)
