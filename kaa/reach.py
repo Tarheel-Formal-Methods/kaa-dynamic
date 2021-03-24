@@ -47,9 +47,18 @@ class ReachSet:
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
 
             try:
+                Timer.start("Strategy")
                 self.strat.open_strat(starting_bund, step)
+                Timer.stop("Strategy")
+
+                Timer.start("Bundle Transformation")
                 trans_bund = transformer.transform(starting_bund)
+                Timer.stop("Bundle Transformation")
+
+                Timer.start("Strategy")
                 self.strat.close_strat(trans_bund, step)
+                Timer.stop("Strategy")
+
             except:
                 #if KaaSettings.SaveStateonError:
                 #    save_flowpipe_to_disk(self.flowpipe) #Implement this
@@ -92,6 +101,5 @@ class FlowpipeSaveLoader:
     @staticmethod
     def save_flowpipe(flowpipe):
         model = flowpipe.model
-
         with open("")
 """

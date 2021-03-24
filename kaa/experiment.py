@@ -1,4 +1,3 @@
-from openpyxl import Workbook
 from collections import namedtuple
 from itertools import product
 from abc import ABC, abstractmethod
@@ -14,20 +13,12 @@ from kaa.settings import PlotSettings, KaaSettings
 from kaa.templates import MultiStrategy, GeneratedDirs
 from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
+from kaa.spreadsheet import *
 from kaa.log import Output
 from kaa.timer import Timer
 
 GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
 
-"""
-Data class for storing objects relevant to saving data to openpyxl spreadsheets
-"""
-class SpreadSheet:
-
-    def __init__(self, workbook, row_dict, data_pwd):
-        self.workbook = workbook
-        self.row_dict = row_dict
-        self.data_pwd = data_pwd
 
 """
 Class responsible for saving/oading pre-generated directions from disk.
@@ -251,55 +242,6 @@ class Experiment(ABC):
         return generated_dirs
 
     """
-    Saves data into a desired cell in spreadsheet.
-    """
-    def save_data_into_sheet(self, spreadsheet, trial_num, num_trials, flow_label, data):
-        workbook = spreadsheet.workbook
-        row_dict = spreadsheet.row_dict
-        data_pwd = spreadsheet.data_pwd
-
-        column_offset = trial_num
-        row_offset = row_dict[flow_label]
-
-        sheet = workbook.active
-        sheet[chr(66 + column_offset) + str(row_offset)] = data
-
-        if column_offset == num_trials - 1:
-            sheet[chr(66 + num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
-            sheet[chr(66 + num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
-
-        workbook.save(filename=os.path.join(data_pwd, self.label + '.xlsx'))
-
-    """
-    Generates directory path used to save spreadsheet into disk.
-    @returns total path to data directory
-    """
-    def __gen_data_directory(self):
-        data_pwd = os.path.join(PlotSettings.default_fig_path, date.today().isoformat(), str(self.model))
-        Path(data_pwd).mkdir(parents=True, exist_ok=True)
-        return data_pwd
-
-    """
-    Initializes openpyxl spreadsheet to dump resulting data.
-    """
-    def generate_sheet(self, num_trials, row_labels=None):
-        workbook = Workbook()
-        sheet = workbook.active
-        sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(num_trials)] + ["Mean", "Stdev"])
-
-        'Initialize label-row dictionary'
-        row_dict = {experi_input['label'] : row_idx + 2 for row_idx, experi_input in enumerate(self.inputs)}
-
-        for experi_input in self.inputs:
-            flow_label = experi_input['label']
-            row = row_dict[flow_label]
-            sheet['A' + str(row)] = flow_label
-
-        data_pwd = self.__gen_data_directory()
-        workbook.save(filename=os.path.join(data_pwd, self.label + '.xlsx'))
-        return SpreadSheet(workbook, row_dict, data_pwd)
-
-    """
     Execute the reachable set simulations and add the flowpipes to the Plot.
     """
     def gather_plots(self):
@@ -426,7 +368,7 @@ class Experiment(ABC):
 
     def print_input_params(self, experi_input, trial_num=-1):
         experi_strat = experi_input['strat']
-        Output.prominent(f"Running Experiment {experi_input['label']} Trial:{trial_num if trial_num >= 0 else ""}")
+        Output.prominent(f"Running Experiment {experi_input['label']} Trial:{trial_num if trial_num >= 0 else None}")
 
         if experi_strat:
             experi_supp_mode = experi_input['supp_mode']

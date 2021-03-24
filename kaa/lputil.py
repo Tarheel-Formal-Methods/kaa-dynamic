@@ -15,9 +15,86 @@ class LPSolution:
         self.x = x
         self.fun = fun
 
-minLinProg = lambda c, A, b: __swiglpk_linprog(c, A, b, "min")
-maxLinProg = lambda c, A, b: __swiglpk_linprog(c, A, b, "max")
+'LP routines for problems without warm start'
+minLinProg = lambda model, c, A, b: OneTimeLinProg(model, c, A, b, "Min")
+maxLinProg = lambda model, c, A, b: OneTimeLinProg(model, c, A, b, "Max")
 
+def OneTimeLinProg(model, c, A, b, glb_obj):
+    with LPUtil(model, c, A, b) as lp_inst:
+        lp_inst.populate_consts()
+        lp_inst.populate_obj_vec()
+        lp_sol = lp_inst.solve(glb_obj)
+
+    return lp_sol
+
+class LPUtil:
+
+    def __init__(self, model, c=None, A=None, b=None):
+        self.model = model
+        self.dim = model.dim
+        self.c = c
+        self.A = A
+        self.b = b
+        self.lp_prob = glpk.glp_create_prob()
+
+        self.params = glpk.glp_smcp()
+        glpk.glp_init_smcp(self.params)
+        self.params.msg_lev = glpk.GLP_MSG_ERR
+        self.params.meth = glpk.GLP_DUAL
+
+    def populate_consts(self):
+        num_rows = self.A.shape[0]
+        num_cols = self.A.shape[1]
+        mat_size = num_rows * num_cols
+
+        glpk.glp_add_rows(self.lp_prob, num_rows)
+
+        for row_ind in range(num_rows):
+            glpk.glp_set_row_bnds(self.lp_prob , row_ind+1, glpk.GLP_UP, 0.0, float(self.b[row_ind]))
+
+        glpk.glp_add_cols(self.lp_prob , num_cols)
+
+        'Swig arrays are used for feeding constraints in GLPK'
+        ia, ja, ar = [],[],[]
+        for i,j in product(range(num_rows),range(num_cols)):
+            ia.append(i+1)
+            ja.append(j+1)
+            ar.append(float(self.A[i][j]))
+
+        ia = glpk.as_intArray(ia)
+        ja = glpk.as_intArray(ja)
+        ar = glpk.as_doubleArray(ar)
+
+        glpk.glp_load_matrix(self.lp_prob, mat_size, ia, ja, ar)
+
+    def populate_obj_vec(self):
+        for col_ind in range(self.dim):
+            glpk.glp_set_col_bnds(self.lp_prob, col_ind+1, glpk.GLP_FR, 0.0, 0.0)
+            glpk.glp_set_obj_coef(self.lp_prob, col_ind+1, self.c[col_ind])
+
+    def solve(self, glp_obj):
+        glp_obj = glpk.GLP_MAX if glp_obj == "Max" else glpk.GLP_MIN
+
+        Timer.start("LP Routines")
+        glpk.glp_set_obj_dir(self.lp_prob, glp_obj)
+
+        glpk.glp_simplex(self.lp_prob, self.params)
+
+        fun = glpk.glp_get_obj_val(self.lp_prob)
+        x = [i for i in map(lambda x: glpk.glp_get_col_prim(self.lp_prob, x+1), range(self.dim))]
+
+        Timer.stop("LP Routines")
+        #Output.bold_write(f"Ended LP with c: {c}")
+        return LPSolution(x, fun)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        glpk.glp_delete_prob(self.lp_prob)
+        glpk.glp_free_env()
+
+"""
 def __scipy_linprog(c, A, b, obj):
     if obj == "min":
         obj_c_vec = c
@@ -29,60 +106,4 @@ def __scipy_linprog(c, A, b, obj):
     print(obj_c_vec)
     lin_result = linprog(obj_c_vec, A_ub=A, b_ub=b, bounds=(None,None), method='revised simplex')
     return LPSolution(lin_result.x, lin_result.fun)
-
-
-def __swiglpk_linprog(c, A, b, obj):
-    #Output.bold_write(f"Started LP with c: {c}")
-    Timer.start("LP Routines")
-    glp_obj = glpk.GLP_MIN if obj == "min" else glpk.GLP_MAX
-
-    lp = glpk.glp_create_prob()
-    glpk.glp_set_obj_dir(lp, glp_obj)
-
-    params = glpk.glp_smcp()
-    glpk.glp_init_smcp(params)
-    params.msg_lev = glpk.GLP_MSG_ERR
-
-    #params.tm_lim = int(glpk.GLPK_TIMEOUT * 1000)
-    params.out_dly = 2 * 1000 # start printing to terminal delay
-    params.meth = glpk.GLP_DUAL
-
-    num_rows = A.shape[0]
-    num_cols = A.shape[1]
-    mat_size = num_rows * num_cols
-
-    glpk.glp_add_rows(lp, num_rows)
-
-    for row_ind in range(num_rows):
-        glpk.glp_set_row_bnds(lp, row_ind+1, glpk.GLP_UP, 0.0, float(b[row_ind]))
-
-    glpk.glp_add_cols(lp, num_cols)
-
-    for col_ind in range(num_cols):
-        glpk.glp_set_col_bnds(lp, col_ind+1, glpk.GLP_FR, 0.0, 0.0)
-        glpk.glp_set_obj_coef(lp, col_ind+1, c[col_ind])
-
-    'Swig arrays are used for feeding constraints in GLPK'
-
-    ia, ja, ar = [],[],[]
-    for i,j in product(range(num_rows),range(num_cols)):
-        ia.append(i+1)
-        ja.append(j+1)
-        ar.append(float(A[i][j]))
-
-    ia = glpk.as_intArray(ia)
-    ja = glpk.as_intArray(ja)
-    ar = glpk.as_doubleArray(ar)
-
-    glpk.glp_load_matrix(lp, mat_size, ia, ja, ar)
-    glpk.glp_simplex(lp, params)
-
-    fun = glpk.glp_get_obj_val(lp)
-    x = [i for i in map(lambda x: glpk.glp_get_col_prim(lp, x+1), range(num_cols))]
-
-    glpk.glp_delete_prob(lp)
-    glpk.glp_free_env()
-
-    Timer.stop("LP Routines")
-    #Output.bold_write(f"Ended LP with c: {c}")
-    return LPSolution(x, fun)
+"""

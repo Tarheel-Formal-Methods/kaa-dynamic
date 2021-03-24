@@ -7,7 +7,7 @@ from scipy.spatial.qhull import QhullError
 from operator import mul, add
 from functools import reduce
 from itertools import product
-from kaa.lputil import minLinProg, maxLinProg
+from kaa.lputil import minLinProg, maxLinProg, LPUtil
 from kaa.settings import KaaSettings
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import KaaSettings
@@ -100,7 +100,7 @@ class LinearSystem:
     """
     def max_opt(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return maxLinProg(y, self.A, self.b)
+        return maxLinProg(self.model, y, self.A, self.b)
 
     """
     Minimize optimization function y over Ax \leq b
@@ -109,7 +109,7 @@ class LinearSystem:
     """
     def min_opt(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return minLinProg(y,self.A, self.b)
+        return minLinProg(self.model, y,self.A, self.b)
 
     """
     Checks if point is indeed contained in Ax \leq b
@@ -252,13 +252,24 @@ class LinearSystem:
 
             output_list = self.queue_to_list(output_queue)
         else:
-            Output.write("Non parallel routine")
+            #Output.write("Non parallel routine")
+            'Exploiting Warm-start LP'
             output_list = []
-            for dir_vec in dir_vecs:
-                #Output.write(f"Direction vector we are using: {dir_vec}")
-                output_list += self.generate_supp_worker(dir_vec, steps)
-                #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
-                #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
+
+            with LPUtil(self.model, A=self.A, b=self.b) as lp_inst:
+                lp_inst.populate_consts()
+                for dir_vec in dir_vecs:
+                    #Output.write(f"Direction vector we are using: {dir_vec}")
+                    lp_inst.c = dir_vec
+                    lp_inst.populate_obj_vec()
+
+                    supp_point = lp_inst.solve("Max").x
+                    neg_supp_point = lp_inst.solve("Min").x
+
+                    output_list += [self.create_traj(supp_point, steps),
+                                    self.create_traj(neg_supp_point, steps)]
+                    #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
+                    #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
 
         #Output.bold_write("End of Generating Support Points Traj")
         return TrajCollection(self.model, output_list)

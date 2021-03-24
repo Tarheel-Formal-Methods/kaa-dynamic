@@ -16,7 +16,8 @@ class VolumeExperiment(Experiment):
         num_steps = self.max_num_steps
         num_trajs = self.max_num_trajs
 
-        spreadsheet = self.generate_sheet(num_trials)
+        spreadsheet = SpreadSheet(self.model, self.label)
+        spreadsheet.generate_sheet(self.inputs, num_trials)
 
         for experi_input in self.inputs:
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
@@ -30,10 +31,10 @@ class VolumeExperiment(Experiment):
                 if flowpipe.error:
                     flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
 
-                self.save_data_into_sheet(spreadsheet, trial_num, num_trials, flow_label, flow_vol)
+                spreadsheet.save_data_into_sheet(trial_num, num_trials, flow_label, flow_vol)
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)
 
-                #experi_strat.reset() #Reset attributes for next independent trial.
+                experi_strat.reset() #Reset attributes for next independent trial.
 
 """
 Experiment to measure deviations between generated directions for a strategy type over the course of the reachable set computation.
@@ -60,13 +61,16 @@ class DeviationExperiment(Experiment):
                 strat_dirs_by_input.append(pca_dirs)
                 row_labels.append(label)
 
+        spreadsheet = SpreadSheet(self.model, self.label)
+        spreadsheet.generate_sheet(self.inputs, num_trials)
+
         for trial_num in range(num_trials):
             for row_label, strat_dirs_prev, strat_dirs_curr in zip(row_labels, strat_dirs_by_traj, strat_dirs_by_traj[1:]):
                 prev_dirs = strat_dirs_prev[trial_num] #Corresponding directions from previous input to compare against
                 curr_dirs = strat_dirs_curr[trial_num] #Corresponding directions from current input to compare against
 
                 dirs_dist = self.__calc_dirs_dist(prev_dirs, curr_dirs)
-                self.save_data_into_sheet(spreadsheet, trial_num, num_trials, row_label, dirs_dist)
+                spreadsheet.save_data_into_sheet(trial_num, num_trials, row_label, dirs_dist)
 
     def __calc_dirs_dist(self, gen_dirs_one, gen_dirs_two):
          norm_dir_one = (gen_dirs_one.dir_mat.T / np.linalg.norm(gen_dirs_one.dir_mat, axis=1)).T
