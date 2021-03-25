@@ -305,7 +305,6 @@ Returns the indices of the two closest ones.
 @returns tuple of indices of closest pair
 """
 def find_closest_dirs(dir_mat):
-
     closest_pair = None
     closest_dot_prod = 0
 

@@ -1,6 +1,7 @@
 import time
 from functools import reduce
 from operator import add
+from pptree import print_tree, Node
 
 """
 Timer object containing duration data.
@@ -97,21 +98,21 @@ class Timer:
                 total_time += tot_time
 
         'Generate Tree-like output indicating total percentage of time taken by category.'
-        def recurse_print_tree(label, depth):
-            print(''.join([" "] * depth) + f"{label}: {(time_data_dict[label][2] / total_time) * 100}% \n")
+        root = Node("Kaa Runtime")
+
+        def construct_tree(label, parent_node):
+            child_node = Node(f"{label}: {round((time_data_dict[label][2] / total_time) * 100, 2)}% \n", parent_node)
             if label not in Timer.timer_child_map:
                 return
 
             for child_label in Timer.timer_child_map[label]:
-                recurse_print_tree(child_label, depth+1)
+                construct_tree(child_label, child_node)
 
         for label in Timer.timer_table:
             if label not in Timer.timer_parent_map:
-                recurse_print_tree(label, 0)
+                construct_tree(label, root)
 
-        reach_set_time = Timer.total_time(Timer.timer_table['Reachable Set Computation'])
-        m,s = divmod(reach_set_time, 60)
-        print(f"Total Reachable Set Computation Duration: {m} Minutes and {s} Seconds")
+        print_tree(root)
 
         Timer.flush_timer_stack()
 

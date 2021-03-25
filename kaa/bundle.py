@@ -350,7 +350,7 @@ class BundleTransformer:
         output_queue = mp.Manager().Queue()
         input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]
 
-        if KaaSettings.Parallelize:
+        if KaaSettings.Parallelize and len(input_params) > 10:
             p = mp.Pool(processes=KaaSettings.ThreadCount)
             p.starmap(self.bound_worker, input_params)
             p.close()
@@ -385,10 +385,10 @@ class BundleTransformer:
         genFun = ptope.getGeneratorRep()
 
         'Create subsitutions tuples.'
-        var_sub = [(var, genFun[var_ind]) for var_ind, var in enumerate(self.vars)]
+        var_sub = {var: genFun[var_ind] for var_ind, var in enumerate(self.vars)}
 
         Timer.start('Functional Composition')
-        fog = [func.subs(var_sub, simultaneous=True) for func in self.f]
+        fog = [func.xreplace(var_sub) for func in self.f]
         Timer.stop('Functional Composition')
 
         'Perform functional composition with exact transformation from unitbox to parallelotope.'

@@ -1,7 +1,7 @@
 from openpyxl import Workbook
 from pathlib import Path
+from datetime import date
 import os
-
 
 """
 Data class for storing objects relevant to saving data to openpyxl spreadsheets
@@ -13,12 +13,13 @@ class SpreadSheet:
         self.name = name
         self.workbook = Workbook()
         self.row_dict = None
+        self.num_trials = None
         self.data_pwd = self.__gen_data_directory()
 
     """
     Saves data into a desired cell in spreadsheet.
     """
-    def save_data_into_sheet(self, trial_num, num_trials, flow_label, data):
+    def save_data_into_sheet(self, trial_num, flow_label, data):
         column_offset = trial_num
         row_offset = row_dict[flow_label]
 
@@ -36,7 +37,7 @@ class SpreadSheet:
     @returns total path to data directory
     """
     def __gen_data_directory(self):
-        data_pwd = os.path.join(PlotSettings.default_fig_path, date.today().isoformat(), str(self.model))
+        data_pwd = os.path.join(PlotSettings.default_fig_path, 'Spreadsheets', date.today().isoformat(), str(self.model))
         Path(data_pwd).mkdir(parents=True, exist_ok=True)
         return data_pwd
 
@@ -44,6 +45,7 @@ class SpreadSheet:
     Initializes openpyxl spreadsheet to dump resulting data.
     """
     def generate_sheet(self, inputs, num_trials):
+        self.num_trials = num_trials
         sheet = self.workbook.active
         sheet.append(["Strategy"] + [f"Trial {i+1}" for i in range(num_trials)] + ["Mean", "Stdev"])
 

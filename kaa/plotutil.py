@@ -2,16 +2,19 @@ import os
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from abc import ABC, abstractmethod
 import matplotlib.patches as pat
 import matplotlib.animation as animate
 from matplotlib.legend import Legend
+from pathlib import Path
+from datetime import date
+from abc import ABC, abstractmethod
 
 from kaa.settings import PlotSettings
 from kaa.trajectory import TrajCollection, Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.parallelotope import LinearSystem
+
 
 plt.rcParams.update({'font.size': PlotSettings.plot_font})
 
@@ -278,7 +281,6 @@ class Plot:
             raise RuntimeError("Object is not of a plottable type.")
 
     def plot(self, *subplots):
-
         axes = []
         subplot_objs =[]
         for subplot_dict in subplots:
@@ -315,7 +317,6 @@ class Plot:
             offset = sum(subplot.num_plots for subplot in subplots[:subplot_idx])
             subplot_tup = [ figure.add_subplot(1, total_num_subplots, offset + (i+1)) for i in range(subplot.num_plots) ]
             axes.append(subplot_tup)
-
 
         for axes_tup, subplot_obj in zip(axes, subplot_objs):
             subplot_obj.plot(axes_tup)
@@ -372,10 +373,20 @@ class Plot:
             filename: filename string to save to disk
     """
     def __plot_figure(self, figure, filename):
+        fig_path = self.__gen_plot_directory()
         if PlotSettings.save_fig:
-            figure.savefig(os.path.join(PlotSettings.default_fig_path, filename), format='png')
+            figure.savefig(os.path.join(fig_path, filename), format='png')
         else:
             plt.show()
+
+    """
+    Generates directory path used to save spreadsheet into disk.
+    @returns total path to data directory
+    """
+    def __gen_plot_directory(self):
+        data_pwd = os.path.join(PlotSettings.default_fig_path, 'Plots', date.today().isoformat(), str(self.model))
+        Path(data_pwd).mkdir(parents=True, exist_ok=True)
+        return data_pwd
 
 class CombinedPlot:
 

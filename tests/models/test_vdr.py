@@ -200,41 +200,6 @@ def test_ani_lin_comp_VDP():
 
     Timer.generate_stats()
 
-def test_sliding_degen_VDP():
-    use_supp = True
-    use_pregen = False
-
-    num_trajs = 5000
-    num_steps = 70
-
-    pca_window_size = 10
-    lin_window_size = 10
-
-    model = VanDerPol_UnitBox(delta=0.08)
-
-    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
-    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
-
-    experi_input = dict(model=model,
-                        strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
-
-    if use_supp:
-        file_identifier = "(SUPP)"
-    elif use_pregen:
-        file_identifier = f"(PREGEN: {num_trajs})"
-    else:
-        file_identifier = "(RAND)"
-
-    experi = PhasePlotExperiment(experi_input)
-    experi.execute(0, 1, plot_border_traj=True)
-    Timer.generate_stats()
-
 def test_ani_pca_lin_VDP():
 
     NUM_STEPS = 70
@@ -263,6 +228,10 @@ def test_ani_pca_lin_VDP():
     vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
     Timer.generate_stats()
+
+def test_sliding_equal_VDP():
+    model = VanDerPol_UnitBox(delta=0.08)
+    test_equal_sliding_strat(model)
 
 def test_ran_strat_VDP():
     model = VanDerPol_UnitBox(delta=0.08)

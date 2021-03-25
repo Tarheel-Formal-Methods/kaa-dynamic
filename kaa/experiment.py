@@ -1,7 +1,6 @@
 from collections import namedtuple
 from itertools import product
 from abc import ABC, abstractmethod
-from datetime import date
 from pathlib import Path
 import numpy as np
 import os
