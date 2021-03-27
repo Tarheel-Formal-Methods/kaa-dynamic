@@ -59,6 +59,7 @@ class LinearSystem:
             except QhullError:
                 Output.prominent("Convexhull volume operation raised an error.")
 
+        """
         num_samples = KaaSettings.VolumeSamples
         sampled_points = self.sample_ran_pts_envelop_box(num_samples)
 
@@ -67,6 +68,9 @@ class LinearSystem:
         num_contained_points = reduce(add, point_value)
 
         return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
+        """
+        'Just return volume of enveloping box.'
+        return self.calc_vol_envelop_box()
 
     """
     Find vertices of this linear system.

@@ -105,7 +105,7 @@ def test_max_sliding_lin_strat(model, num_steps):
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
 
-def test_equal_sliding_strats(model, num_steps):
+def test_equal_sliding_strat(model, num_steps):
     use_supp = True
     use_pregen = False
 
@@ -313,7 +313,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             max_steps=NUM_STEPS)
         inputs.append(experi_input)
 
-    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT-1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingPCAStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
@@ -359,7 +359,7 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
 
         inputs.append(experi_input)
 
-    for lifespan in range(LIFE_INCREMENT, 0, -1): #model tossed around too many times.
+    for lifespan in range(LIFE_INCREMENT-1, 0, -1): #model tossed around too many times.
         experi_strat = SlidingLinStrat(model, lifespan=lifespan)
         experi_input = dict(model=model,
                             strat=experi_strat,
@@ -420,7 +420,7 @@ def test_ran_strat(model, num_steps, num_trajs, use_supp = True, use_pregen = Fa
         inputs.append(experi_input)
 
     experi = VolumeExperiment(*inputs, label="VDP Random Static Strat")
-    experi.execute(1)
+    experi.execute(10)
     Timer.generate_stats()
 
 

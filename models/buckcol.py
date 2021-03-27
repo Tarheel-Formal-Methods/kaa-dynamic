@@ -7,8 +7,7 @@ from kaa.bundle import Bundle
 'Buckling Column Model'
 class BuckCol_UnitBox(Model):
 
-    def __init__(self, delta=0.2):
-
+    def __init__(self, delta=0.05):
         x, y = sp.Symbol('x'), sp.Symbol('y')
         vars = [x, y]
 

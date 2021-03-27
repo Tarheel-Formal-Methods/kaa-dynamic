@@ -3,6 +3,8 @@ import numpy as np
 from kaa.trajectory import Traj, TrajCollection
 from kaa.log import Output
 from kaa.experiment import Experiment
+from kaa.spreadsheet import *
+from kaa.timer import Timer
 
 """
 Experiment to compute the reachable set and estimate the total volume of all of its overapproximations.
@@ -21,6 +23,7 @@ class VolumeExperiment(Experiment):
 
         for experi_input in self.inputs:
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
+            experi_strat = experi_input['strat']
 
             for trial_num in range(num_trials):
                 self.print_input_params(experi_input, trial_num=trial_num)
@@ -31,8 +34,9 @@ class VolumeExperiment(Experiment):
                 if flowpipe.error:
                     flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
 
-                spreadsheet.save_data_into_sheet(trial_num, num_trials, flow_label, flow_vol)
+                spreadsheet.save_data_into_sheet(trial_num, flow_label, flow_vol)
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)
+                Timer.generate_stats()
 
                 experi_strat.reset() #Reset attributes for next independent trial.
 

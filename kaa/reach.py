@@ -32,7 +32,7 @@ class ReachSet:
     """
     def computeReachSet(self, time_steps, transmode=BundleMode.AFO):
         transformer = BundleTransformer(self.model, transmode)
-        init_box_vol_thres = ((1000 * self.model.dim) * self.model.bund.getIntersect().volume
+        init_box_vol_thres = ((10 * self.model.dim) * self.model.bund.getIntersect().volume
                                 if KaaSettings.UseThreshold
                                 else -1)
 

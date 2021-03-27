@@ -3,6 +3,8 @@ from pathlib import Path
 from datetime import date
 import os
 
+from kaa.settings import PlotSettings
+
 """
 Data class for storing objects relevant to saving data to openpyxl spreadsheets
 """
@@ -21,14 +23,14 @@ class SpreadSheet:
     """
     def save_data_into_sheet(self, trial_num, flow_label, data):
         column_offset = trial_num
-        row_offset = row_dict[flow_label]
+        row_offset = self.row_dict[flow_label]
 
         sheet = self.workbook.active
         sheet[chr(66 + column_offset) + str(row_offset)] = data
 
-        if column_offset == num_trials - 1:
-            sheet[chr(66 + num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
-            sheet[chr(66 + num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + num_trials - 1)}{row_offset})"
+        if column_offset == self.num_trials - 1:
+            sheet[chr(66 + self.num_trials) + str(row_offset)] = f"=AVERAGE(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
+            sheet[chr(66 + self.num_trials + 1) + str(row_offset)] = f"=STDEV(B{row_offset}:{chr(66 + self.num_trials - 1)}{row_offset})"
 
         self.workbook.save(filename=os.path.join(self.data_pwd, self.name + '.xlsx'))
 

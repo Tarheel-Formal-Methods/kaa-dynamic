@@ -12,12 +12,10 @@ from kaa.settings import PlotSettings, KaaSettings
 from kaa.templates import MultiStrategy, GeneratedDirs
 from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
-from kaa.spreadsheet import *
 from kaa.log import Output
 from kaa.timer import Timer
 
 GenDirsTuple = namedtuple('GenDirsTuple', ['GenPCADirs', 'GenLinDirs'])
-
 
 """
 Class responsible for saving/oading pre-generated directions from disk.

@@ -33,9 +33,10 @@ class KaaSettings:
     UseThreshold = False
 
     "Number of threads to instantiate when running parallel routines."
-    ThreadCount = 6
+    ThreadCount = 3
 
-    NormalizeLinDir = True
+    'Run Normalization method if condition number becomes too large.'
+    NormalizeLinDir = False
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

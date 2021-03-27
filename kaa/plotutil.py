@@ -99,8 +99,6 @@ class ProjectionSubplot(Subplot):
                 ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
                 ax.legend()
 
-
-
 class PhaseSubplot(Subplot):
 
     def __init__(self, model, vars, flowpipes, num_steps, separate_flag, trajs):
