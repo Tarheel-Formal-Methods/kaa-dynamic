@@ -19,7 +19,7 @@ class VolumeExperiment(Experiment):
         num_trajs = self.max_num_trajs
 
         spreadsheet = SpreadSheet(self.model, self.label)
-        spreadsheet.generate_sheet(self.inputs, num_trials)
+        spreadsheet.generate_sheet(self.inputs, ("Volume", "Time"), num_trials)
 
         for experi_input in self.inputs:
             loaded_dirs = self.initialize_strat(experi_input, num_trials)
@@ -34,9 +34,10 @@ class VolumeExperiment(Experiment):
                 if flowpipe.error:
                     flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
 
-                spreadsheet.save_data_into_sheet(trial_num, flow_label, flow_vol)
+                reach_time = divmod(Timer.generate_stats(), 60)
+
+                spreadsheet.save_data_into_sheet(flow_label, trial_num, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
                 self.assign_dirs(experi_strat, trial_num, loaded_dirs)
-                Timer.generate_stats()
 
                 experi_strat.reset() #Reset attributes for next independent trial.
 

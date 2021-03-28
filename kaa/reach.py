@@ -36,7 +36,7 @@ class ReachSet:
                                 if KaaSettings.UseThreshold
                                 else -1)
 
-        for step in range(time_steps):
+        for step in range(time_steps+1):
             #Output.write("=========================================")
             #Output.write(f"DUMP OF STEP {step}")
 

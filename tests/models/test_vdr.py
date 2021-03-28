@@ -31,7 +31,7 @@ def test_sapo_vol_VDP():
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 150
+    num_steps = 1
 
     model = VanDerPol(delta=0.08)
     experi_input = dict(model=model, #Encompass strat initilizations?
@@ -259,7 +259,7 @@ def test_one_one_strat_lin_VDP():
 
 def test_sliding_pca_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
-    test_sliding_pca(unit_model, 20, 70, 4000)
+    test_sliding_pca(unit_model, 20, 1, 4000, use_supp=True, use_pregen=False)
 
 def test_sliding_lin_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

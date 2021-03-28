@@ -115,6 +115,7 @@ class Timer:
         print_tree(root)
 
         Timer.flush_timer_stack()
+        return time_data_dict['Reachable Set Computation'][2]
 
     def avg_time(times):
         return reduce(add, [t.duration for t in times]) / len(times)
