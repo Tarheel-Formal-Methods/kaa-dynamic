@@ -63,3 +63,15 @@ def test_pca_dominant_Neuron():
     experi = PhasePlotExperiment(experi_input)
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
+
+def test_skewed_sliding_strat_comb_Neuron():
+    model =  Neuron_UnitBox()
+    test_skewed_sliding_strat_comb(model, 500, 5000, use_supp=True, use_pregen=False)
+
+def test_sliding_pca_Neuron():
+    model =  Neuron_UnitBox()
+    test_sliding_pca(model, 20, 500, 5000, use_supp=True, use_pregen=False)
+
+def test_sliding_lin_Neuron():
+    model =  Neuron_UnitBox()
+    test_sliding_lin(model, 20, 500, 5000, use_supp=True, use_pregen=False)

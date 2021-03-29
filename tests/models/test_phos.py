@@ -89,10 +89,10 @@ def test_skewed_sliding_strat_comb_Phos():
     model = Phosphorelay_UnitBox()
     test_skewed_sliding_strat_comb(model, 200, 5000, use_supp=True, use_pregen=False)
 
-def test_sliding_pca_SIR():
+def test_sliding_pca_Phos():
     model = Phosphorelay_UnitBox()
     test_sliding_pca(model, 20, 200, 5000, use_supp=True, use_pregen=False)
 
-def test_sliding_lin_SIR():
+def test_sliding_lin_Phos():
     model = Phosphorelay_UnitBox()
     test_sliding_lin(model, 20, 200, 5000, use_supp=True, use_pregen=False)
