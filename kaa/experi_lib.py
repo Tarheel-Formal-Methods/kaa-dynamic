@@ -7,6 +7,22 @@ from kaa.spreadsheet import *
 from kaa.timer import Timer
 
 """
+Experiment to generate statistics useful for profiling Kaa
+"""
+class ProfileExperiment(Experiment):
+    def __init__(self, *inputs, label="Experiment"):
+        super().__init__(*inputs, label=label)
+
+    def execute(self):
+        for experi_input in self.inputs:
+            self.print_input_params(experi_input)
+
+            self.initialize_strat(experi_input, 10)
+            self.calc_flowpipe(experi_input)
+
+        Timer.generate_stats()
+
+"""
 Experiment to compute the reachable set and estimate the total volume of all of its overapproximations.
 """
 class VolumeExperiment(Experiment):
@@ -17,6 +33,8 @@ class VolumeExperiment(Experiment):
     def execute(self, num_trials):
         num_steps = self.max_num_steps
         num_trajs = self.max_num_trajs
+
+        print(num_steps)
 
         spreadsheet = SpreadSheet(self.model, self.label)
         spreadsheet.generate_sheet(self.inputs, ("Volume", "Time"), num_trials)
@@ -104,6 +122,11 @@ class PhasePlotExperiment(Experiment):
         self.plot.plot({'type': 'Phase',
                         'vars': var_tup,
                         'separate_flag': False})
+
+'''
+class VolumePlotExperiment(Experiment):
+'''
+
 
 """
 Experiment to calculate and plot the projection reachable sets.

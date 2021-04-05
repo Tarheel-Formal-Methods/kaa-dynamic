@@ -2,6 +2,8 @@ import time
 from functools import reduce
 from operator import add
 from pptree import print_tree, Node
+from kaa.log import Output
+from kaa.settings import DebugSettings
 
 """
 Timer object containing duration data.
@@ -20,6 +22,11 @@ class TimerData:
     def end(self):
         self.end_time = time.time()
         self.duration = self.end_time - self.start_time
+
+    @property
+    def formatted_duration(self):
+        m, s = divmod(self.duration, 60)
+        return f"{m} min {s} sec"
 
 """
 Static class containing all timing utility functions and statistics generating routines.
@@ -64,6 +71,9 @@ class Timer:
                 if current_label not in Timer.timer_parent_map:
                     Timer.timer_parent_map[label] = parent_label
 
+            if end_label in DebugSettings.TimerProfileLabels:
+                Output.write(f"Label: {end_label} Duration: {end_timer.formatted_duration} \n")
+                
             return end_timer.duration
 
         else:

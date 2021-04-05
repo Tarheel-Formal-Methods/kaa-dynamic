@@ -12,7 +12,13 @@ from kaa.settings import KaaSettings
 from kaa.timer import Timer
 from kaa.log import Output
 
-OptProd = KaaSettings.OptProd
+from kaa.opts.kodiak import KodiakProd
+from kaa.opts.bernstein import BernsteinProd
+
+if KaaSettings.OptProd == "Kodiak":
+    OptProd = KodiakProd
+elif KaaSettings.OptProd == "Bernstein":
+    OptProd = BernsteinProd
 
 warnings.filterwarnings('ignore')
 
@@ -154,7 +160,9 @@ class Bundle:
     def add_temp(self, asso_strat, row_labels, temp_label):
         assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
-        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels), self.__get_global_labels(asso_strat, temp_label), self.__get_temp_id(asso_strat))
+        new_temp_ent = (self.__get_global_labels(asso_strat, row_labels),
+                        self.__get_global_labels(asso_strat, temp_label),
+                        self.__get_temp_id(asso_strat))
         self.labeled_T = np.append(self.labeled_T, [new_temp_ent], axis=0)
 
     """
@@ -162,7 +170,8 @@ class Bundle:
     @params temp_idx: list of indices specifying row indices in template matrix
     """
     def remove_temp(self, asso_strat, temp_label):
-        label_indices = self.__get_label_indices(self.labeled_T, self.__get_global_labels(asso_strat, temp_label))
+        label_indices = self.__get_label_indices(self.labeled_T,
+                                                 self.__get_global_labels(asso_strat, temp_label))
         self.labeled_T = np.delete(self.labeled_T, label_indices, axis=0)
         #print(f"labeled_T: {self.labeled_T}")
 
@@ -332,7 +341,11 @@ class BundleTransformer:
         for l_row in direct_iter:
             #Output.write(f"BOUNDS FOR PTOPE {row_ind} ROW INDEX {l_row}")
             curr_L = L[l_row]
+
+            Timer.start("Find Bounds Function Call")
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
+            Timer.stop("Find Bounds Function Call")
+
             output_queue.put((l_row, ub, lb))
 
     """
@@ -392,9 +405,12 @@ class BundleTransformer:
         Timer.stop('Functional Composition')
 
         'Perform functional composition with exact transformation from unitbox to parallelotope.'
+        Timer.start("Polynomial Generation")
         bound_polyu = 0
         for coeff_idx, coeff in enumerate(dir_vec):
-            bound_polyu += coeff * fog[coeff_idx]
+            prod_exp = sp.Mul(coeff, fog[coeff_idx], evaluate=False)
+            bound_polyu = sp.Add(bound_polyu, prod_exp, evaluate=False)
+        Timer.stop("Polynomial Generation")
 
         Timer.start('Bound Computation')
         ub, lb = OptProd(bound_polyu, bund).getBounds()

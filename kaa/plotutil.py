@@ -237,7 +237,7 @@ class VolumeSubplot(Subplot):
     Plots volume estimation data from self.flowpipes into input Axis object
     @params ax: Axis object to plot volume data into
     """
-    def plot(self, ax):
+    def plot(self, ax, accum=True):
         assert len(ax) == 1, "Only one axis object for plotting phase."
         ax = ax[0]
 

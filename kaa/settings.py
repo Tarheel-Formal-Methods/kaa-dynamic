@@ -1,5 +1,3 @@
-from kaa.opts.kodiak import KodiakProd
-from kaa.opts.bernstein import BernsteinProd
 
 """
 Simple settings file for the in-and-outs of Kaa.
@@ -9,7 +7,7 @@ class KaaSettings:
     Parallelize = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
-    OptProd = KodiakProd
+    OptProd = "Kodiak"
 
     'Suppress Output?'
     SuppressOutput = False
@@ -37,6 +35,9 @@ class KaaSettings:
 
     'Run Normalization method if condition number becomes too large.'
     NormalizeLinDir = False
+
+class DebugSettings:
+    TimerProfileLabels = set(["PCA Direction Generation", "Linear Direction Generation", "Open Strategy", "Close Strategy"])
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'

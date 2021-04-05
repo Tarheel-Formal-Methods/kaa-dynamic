@@ -30,12 +30,12 @@ class AbstractPCAStrat(TempStrategy):
              and the second component being the corresponding labels to identify each direction generated.
     """
     def generate_pca_dir(self, bund, step_num):
-
+        Timer.start("PCA Direction Generation")
         if self.dirs is None:
             #Output.bold_write(f"Generating Directons for PCA")
             trajs = self.generate_trajs(bund, self.num_trajs)
             traj_mat = trajs.end_points
-            Output.bold_write(f"Done generating directons for PCA")
+            #Output.bold_write(f"Done generating directons for PCA")
 
 
             #Output.bold_write(f"Running PCA")
@@ -50,6 +50,8 @@ class AbstractPCAStrat(TempStrategy):
             #Output.bold_write(f"Done fetching Directions")
 
         ptope_dir_labels = [str((step_num, comp_idx)) for comp_idx, _ in enumerate(pca_dirs_mat)]
+        Timer.stop("PCA Direction Generation")
+
         return pca_dirs_mat, ptope_dir_labels
 
 """

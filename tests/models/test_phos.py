@@ -50,12 +50,12 @@ def test_pca_lin_Phos():
 
     phos_plot.plot2DPhase(0,1, separate=False, plotvertices=True)
 
-def test_sliding_skewed_plot_SIR():
+def test_sliding_skewed_plot_Phos():
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 150
+    num_steps = 10
 
     pca_window_size = 10
     lin_window_size = 10
@@ -81,9 +81,8 @@ def test_sliding_skewed_plot_SIR():
     else:
         file_identifier = "(RAND)"
 
-    experi = ProjectionPlotExperiment(experi_input)
-    experi.execute(0, 1, 2)
-    Timer.generate_stats()
+    experi = ProfileExperiment(experi_input)
+    experi.execute()
 
 def test_skewed_sliding_strat_comb_Phos():
     model = Phosphorelay_UnitBox()

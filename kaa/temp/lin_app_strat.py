@@ -5,6 +5,7 @@ import random as rand
 from kaa.templates import TempStrategy, GeneratedDirs
 from kaa.settings import KaaSettings
 from kaa.log import Output
+from kaa.timer import Timer
 
 
 """
@@ -33,10 +34,11 @@ class AbstractLinStrat(TempStrategy):
              labels for each of those directions.
     """
     def generate_lin_dir(self, bund, step_num):
-
         if self.dirs is None:
             #print(f"Ran points gen. {self.num_trajs}")
             #print(f"STORED MAT: {self.unit_dir_mat}")
+
+            Timer.start("Linear Direction Generation")
             inv_A = self.__approx_inv_A(bund) #Approx inverse linear transform.
             lin_dir_mat = np.matmul(self.unit_dir_mat, inv_A)
 
@@ -49,6 +51,7 @@ class AbstractLinStrat(TempStrategy):
                     closest_dirs = find_closest_dirs(norm_lin_dir)
                     lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
 
+            Timer.stop("Linear Direction Generation")
             #print(f"Cal Lin Directions Matrix: {lin_dir_mat}")
             self.unit_dir_mat = lin_dir_mat #This makes senese for now as we assume we generate directions once per step.
         else:
@@ -284,7 +287,7 @@ which is orthogonal to resulting set of vectors.
 def merge_closest_dirs(dir_mat, closest_dirs, dim):
 
     randgen = rand.Random(KaaSettings.RandSeed)
-    first_dir, second_dir = (0,1)
+    first_dir, second_dir = closest_dirs
     merged_dir = (dir_mat[first_dir] + dir_mat[second_dir]) / 2
     ortho_dir = [randgen.uniform(-1,1) for _ in range(dim)]
 
