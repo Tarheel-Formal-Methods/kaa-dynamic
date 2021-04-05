@@ -230,28 +230,29 @@ TODO document expected dict setup.
 """
 class VolumeSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps):
-        super().__init__(self, "Volume", flowpipes, 1, num_steps)
+    def __init__(self, model, flowpipes, num_steps, accum_flag):
+        super().__init__(model, "Volume", flowpipes, 1, num_steps)
+        self.accum_flag = accum_flag
 
     """
     Plots volume estimation data from self.flowpipes into input Axis object
     @params ax: Axis object to plot volume data into
     """
-    def plot(self, ax, accum=True):
+    def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting phase."
         ax = ax[0]
 
         t = np.arange(0, self.num_steps, 1)
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            vol_data = flowpipe.get_volume_data()
+            vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
 
             ax.plot(t, vol_data, color=f"C{flow_idx}")
             axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Total Volume: {flowpipe.total_volume})"))
 
         ax.set_xlabel("Time steps")
         ax.set_ylabel("Volume")
-        ax.set_title("Volume Plot for {}".format(self.model.name))
+        ax.set_title(f"Volume Plot for {self.model.name}")
 
         ax.legend(handles=axis_patches)
 
@@ -302,7 +303,8 @@ class Plot:
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,
                                         self.flowpipes,
-                                        self.num_steps)
+                                        self.num_steps,
+                                        subplot_dict['accum_flag'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

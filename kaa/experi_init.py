@@ -196,8 +196,8 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
-    experi.execute(num_trials)
+    experi = VolumePlotExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    experi.execute()
 
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:

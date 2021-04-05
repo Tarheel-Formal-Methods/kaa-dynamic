@@ -58,10 +58,17 @@ class FlowPipe:
     Returns array of volume data for each bundle in the flowpipe.
     @returns array of volume data.
     """
-    def get_volume_data(self):
+    def get_volume_data(self, accum=False):
         vol_data = np.empty(len(self.flowpipe))
-        for idx, bund in enumerate(self.flowpipe):
-            vol_data[idx] = bund.getIntersect().volume
+
+        if accum:
+            vol_accum = 0
+            for idx, bund in enumerate(self.flowpipe):
+                vol_accum += bund.getIntersect().volume
+                vol_data[idx] = vol_accum
+        else:
+            for idx, bund in enumerate(self.flowpipe):
+                vol_data[idx] = bund.getIntersect().volume
 
         return vol_data
 

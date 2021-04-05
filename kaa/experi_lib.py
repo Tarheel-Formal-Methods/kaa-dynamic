@@ -123,10 +123,23 @@ class PhasePlotExperiment(Experiment):
                         'vars': var_tup,
                         'separate_flag': False})
 
-'''
-class VolumePlotExperiment(Experiment):
-'''
 
+class VolumePlotExperiment(Experiment):
+
+    def __init__(self, *inputs, label="VolumePlotExperiment"):
+        super().__init__(*inputs)
+
+    def execute(self, accum=True):
+        num_steps = self.max_num_steps
+
+        for experi_input in self.inputs:
+            self.print_input_params(experi_input)
+
+            self.initialize_strat(experi_input, 10)
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        self.plot.plot({'type': 'Volume',
+                        'accum_flag': accum})
 
 """
 Experiment to calculate and plot the projection reachable sets.

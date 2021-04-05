@@ -31,7 +31,7 @@ def test_sapo_vol_VDP():
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 1
+    num_steps = 70
 
     model = VanDerPol(delta=0.08)
     experi_input = dict(model=model, #Encompass strat initilizations?
@@ -43,8 +43,8 @@ def test_sapo_vol_VDP():
                         num_steps=num_steps-1,
                         max_steps=num_steps)
 
-    harosc = VolumeExperiment(experi_input)
-    harosc.execute(1)
+    harosc = VolumePlotExperiment(experi_input)
+    harosc.execute()
 
 def test_pca_VDP():
     NUM_STEPS = 3

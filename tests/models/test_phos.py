@@ -55,7 +55,7 @@ def test_sliding_skewed_plot_Phos():
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 10
+    num_steps = 150
 
     pca_window_size = 10
     lin_window_size = 10
@@ -81,8 +81,9 @@ def test_sliding_skewed_plot_Phos():
     else:
         file_identifier = "(RAND)"
 
-    experi = ProfileExperiment(experi_input)
-    experi.execute()
+    experi = ProjectionPlotExperiment(experi_input)
+    experi.execute(0,1,2)
+    Timer.generate_stats()
 
 def test_skewed_sliding_strat_comb_Phos():
     model = Phosphorelay_UnitBox()
