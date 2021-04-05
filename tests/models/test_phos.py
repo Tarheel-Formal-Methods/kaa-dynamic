@@ -86,8 +86,9 @@ def test_sliding_skewed_plot_Phos():
     Timer.generate_stats()
 
 def test_skewed_sliding_strat_comb_Phos():
-    model = Phosphorelay_UnitBox()
-    test_skewed_sliding_strat_comb(model, 200, 5000, use_supp=True, use_pregen=False)
+    unit_model = Phosphorelay_UnitBox()
+    model = Phosphorelay()
+    test_skewed_sliding_strat_comb(unit_model, 200, 5000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_pca_Phos():
     model = Phosphorelay_UnitBox()

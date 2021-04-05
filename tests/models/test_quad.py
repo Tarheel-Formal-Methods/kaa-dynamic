@@ -79,8 +79,9 @@ def test_pca_Quad():
 """
 
 def test_skewed_sliding_strat_comb_Quad():
-    model = Quadcopter_UnitBox()
-    test_skewed_sliding_strat_comb(model, 150, 5000, use_supp=True, use_pregen=False)
+    unit_model = Quadcopter_UnitBox()
+    model = Quadcopter()
+    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_pca_Quad():
     model = Quadcopter_UnitBox()

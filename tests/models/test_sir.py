@@ -131,8 +131,9 @@ def test_strat_comb_SIR():
     test_strat_comb(model, (1,3,5), 150, -1)
 
 def test_skewed_sliding_strat_comb_SIR():
-    model = SIR_UnitBox(delta=0.08)
-    test_skewed_sliding_strat_comb(model, 150, 5000, use_supp=True, use_pregen=False)
+    unit_model = SIR_UnitBox(delta=0.08)
+    model = SIR(delta=0.08)
+    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_SIR():
     model = SIR_UnitBox(delta=0.08)
