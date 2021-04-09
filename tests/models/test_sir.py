@@ -88,81 +88,48 @@ def test_sapo_skewed_compare_SIR():
     harosc = VolumeExperiment(experi_input_1, experi_input_2, label=f"SAPO1010COMP")
     harosc.execute(1)
 
-def test_sir_lin_pca_strat():
-
-    NUM_STEPS = 70
-    SIR_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    'PCA Strategy Parameters'
-    SIR_PCA_TRAJ_STEPS = 1 #Number of steps our sample trajectories should run.
-    SIR_PCA_NUM_TRAJ = 100 #Number of sample trajectories we should use for the PCA routine.
-    SIR_LIN_ITER_STEPS = 1
-    #
-    SIR_PCA_LIFE_SPAN = 3
-
-    sir_pca = SIR_UnitBox(delta=0.5)
-    sir_plot = Plot()
-
-    points = [[0.79,0.19,0], [0.79, 0.2,0], [0.8,0.19,0], [0.8,0.2,0], [0.79,0.195,0], [0.8,0.195,0], [0.795,0.19,0],  [0.795,0.2,0]]
-    trajs = [Traj(sir_pca, point, NUM_STEPS) for point in points]
-
-    pca_strat = MultiStrategy(LinStrat(sir_pca, iter_steps=SIR_LIN_ITER_STEPS), \
-                              DelayedPCAStrat(sir_pca, traj_steps=SIR_PCA_TRAJ_STEPS, num_trajs=SIR_PCA_NUM_TRAJ, life_span=SIR_PCA_LIFE_SPAN))
-
-    sir_pca_reach = ReachSet(sir_pca)
-    sir_flow_pca = sir_pca_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat)
-    sir_plot.add(sir_flow_pca, "SIR_LinApp&PCA")
-
-    'Add trajectories'
-    for traj in trajs:
-        sir_plot.add(traj)
-
-   # sir_plot.plot2DPhase(0,1,separate=False, plotvertices=True)
-    sir_plot.plot2DPhase(1, 2, separate=False, plotvertices=True)
-    sir_plot.plot2DPhase(0, 2, separate=False, plotvertices=True)
-
-    Timer.generate_stats()
 
 def test_ran_strat_SIR():
-    model = SIR_UnitBox(delta=0.5)
+    model = SIR_UnitBox()
     test_ran_strat(model, 150, 5000, use_supp = True, use_pregen = False)
 
 def test_strat_comb_SIR():
-    model = SIR_UnitBox(delta=0.5)
+    model = SIR_UnitBox()
     test_strat_comb(model, (1,3,5), 150, -1)
 
 def test_skewed_sliding_strat_comb_SIR():
-    unit_model = SIR_UnitBox(delta=0.08)
-    model = SIR(delta=0.08)
-    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=model)
+    unit_model = SIR_UnitBox()
+    model = SIR()
+    test_skewed_sliding_strat_comb(unit_model, 100, 5000, use_supp=True, use_pregen=False)
 
 def test_sliding_strat_comb_SIR():
-    model = SIR_UnitBox(delta=0.08)
+    model = SIR_UnitBox()
     test_sliding_strat_comb(model, 150, 5000, use_supp=True, use_pregen=False)
 
 def test_one_one_strat_pca_SIR():
-    model = SIR_UnitBox(delta=0.08)
+    model = SIR_UnitBox()
     test_one_one_strat_pca(model, 150)
 
 def test_one_one_strat_lin_SIR():
-    model = SIR_UnitBox(delta=0.08)
+    model = SIR_UnitBox()
     test_one_one_strat_lin(model, 150)
 
 def test_sliding_pca_SIR():
-    model = SIR_UnitBox(delta=0.5)
+    model = SIR_UnitBox()
     test_sliding_pca(model, 20, 150, 5000, use_supp=True, use_pregen=False)
 
 def test_sliding_lin_SIR():
-    model = SIR_UnitBox(delta=0.5)
+    model = SIR_UnitBox()
     test_sliding_lin(model, 20, 150, 5000, use_supp=True, use_pregen=False)
 
 def gen_save_dirs_SIR():
-    model = SIR_UnitBox(delta=0.5)
+    model = SIR_UnitBox(d)
     gen_save_dirs(model, 150)
 
 def find_pca_variation_SIR():
-    unit_model = SIR_UnitBox(delta=0.5)
+    unit_model = SIR_UnitBox()
     find_pca_variation(unit_model, 150, max_num_trajs=6000, label="PCADevSIR")
 
 def find_lin_variation_SIR():
-    unit_model = SIR_UnitBox(delta=0.5)
+    unit_model = SIR_UnitBox()
     find_lin_variation(unit_model, 150, max_num_trajs=6000, label="LinDevSIR")

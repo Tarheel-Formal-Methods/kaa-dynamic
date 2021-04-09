@@ -88,6 +88,9 @@ class LPUtil:
         #Output.bold_write(f"Ended LP with c: {c}")
         return LPSolution(x, fun)
 
+    def __normalize_const(self):
+        pass
+
     def __enter__(self):
         return self
 

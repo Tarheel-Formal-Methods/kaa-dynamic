@@ -110,8 +110,9 @@ def test_sliding_strat_comb_Rossler():
     Timer.generate_stats()
 
 def test_skewed_sliding_strat_comb_Rossler():
-    model = Rossler_UnitBox()
-    test_skewed_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
+    unit_model = Rossler_UnitBox()
+    model = Rossler()
+    test_skewed_sliding_strat_comb(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=model)
     Timer.generate_stats()
 
 def test_sliding_pca_Rossler():

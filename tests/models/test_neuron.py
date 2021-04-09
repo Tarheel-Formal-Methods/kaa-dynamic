@@ -64,6 +64,9 @@ def test_pca_dominant_Neuron():
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
 
+def test_ran_strat_Neuron():
+    model = Neuron_UnitBox()
+    test_ran_strat(model, 500, 5000, use_supp=True, use_pregen=False)
 
 def test_skewed_sliding_strat_comb_Neuron():
     model =  Neuron_UnitBox()

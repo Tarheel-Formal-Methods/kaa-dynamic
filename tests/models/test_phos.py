@@ -5,7 +5,7 @@ from kaa.experi_init import *
 from kaa.timer import Timer
 
 def test_sapo_Phos():
-    num_steps = 200
+    num_steps = 100
     model = Phosphorelay()
 
     experi_input = dict(model=model, #Encompass strat initilizations?
@@ -15,6 +15,26 @@ def test_sapo_Phos():
 
     harosc = ProjectionPlotExperiment(experi_input)
     harosc.execute(0, 1, 2)
+
+def test_sapo_vol_Phos():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+    num_steps = 100
+
+    model = Phosphorelay()
+    experi_input = dict(model=model, #Encompass strat initilizations?
+                        strat=None,
+                        label="SapoVDP",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps-1,
+                        max_steps=num_steps)
+
+    harosc = VolumeExperiment(experi_input)
+    harosc.execute(1)
 
 def test_pca_lin_Phos():
 

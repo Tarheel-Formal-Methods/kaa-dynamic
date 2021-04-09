@@ -35,11 +35,17 @@ class RandomStaticStrat(TempStrategy):
     def reset(self):
         pass
 
+    def __gen_gaussian_ran_dir(self):
+        ran_dirs = np.random.normal(size=(self.dim,self.dim))
+        norms = np.linalg.norm(ran_dirs, axis=1)
+
+        return ran_dirs / norms[:,None]
+
     def __gen_naive_ran_dir(self):
         rand_vec = None
-        rand_vec_len = 2
-        while rand_vec_len > 1:
+        rand_vec_norm = 2
+        while rand_vec_norm > 1:
             rand_vec = [random.uniform(-1, 1) for _ in range(self.dim)]
-            rand_vec_len = sqrt(sum(map(lambda x: x**2, rand_vec)))
+            rand_vec_norm = sqrt(sum(map(lambda x: x**2, rand_vec)))
 
         return rand_vec

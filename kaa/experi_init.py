@@ -192,7 +192,7 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
     if use_sapo:
         experi_input = dict(model=use_sapo,
                             strat=None,
-                            label="VDP",
+                            label="Sapo",
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
@@ -208,8 +208,8 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, u
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumePlotExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
-    experi.execute()
+    experi = VolumeExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    experi.execute(1)
 
 def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:
