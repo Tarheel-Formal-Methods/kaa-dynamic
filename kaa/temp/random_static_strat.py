@@ -1,6 +1,5 @@
 import numpy as np
 import random
-from math import sin, cos, radians, sqrt
 
 from kaa.templates import TempStrategy
 from kaa.timer import Timer
@@ -15,15 +14,12 @@ class RandomStaticStrat(TempStrategy):
         super().__init__(model)
         self.num_ran_temps = num_ran_temps
 
-    """
-    Only viable for lower dimensions.
-    """
     def open_strat(self, bund, step_num):
         if not step_num:
             Timer.start("Random Direction Gen")
 
             for ptope_idx in range(self.num_ran_temps):
-                rand_vec_mat = [self.__gen_naive_ran_dir() for _ in range(self.dim)]
+                rand_vec_mat = self.__gen_gaussian_ran_dir()
                 rand_vec_labels = [f"RandDir{i}Ptope{ptope_idx}" for i in range(self.dim)]
                 self.add_ptope_to_bund(bund, rand_vec_mat, rand_vec_labels)
 
@@ -34,12 +30,14 @@ class RandomStaticStrat(TempStrategy):
 
     def reset(self):
         pass
-
+    """
+    Normalize a Gaussian vector to sample surface of n-sphere for higher n
+    """
     def __gen_gaussian_ran_dir(self):
         ran_dirs = np.random.normal(size=(self.dim,self.dim))
         norms = np.linalg.norm(ran_dirs, axis=1)
 
-        return ran_dirs / norms[:,None]
+        return ran_dirs / norms
 
     def __gen_naive_ran_dir(self):
         rand_vec = None

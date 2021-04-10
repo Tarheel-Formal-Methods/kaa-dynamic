@@ -21,12 +21,10 @@ plt.rcParams.update({'font.size': PlotSettings.plot_font})
 def plot_traj_proj(model, ax, trajs, x, num_steps):
     if not trajs: return
 
-    var = model.vars[x]
-
     t = np.arange(0, num_steps, 1)
 
     for traj_idx, traj in enumerate(trajs):
-        y_coord = traj.get_proj(var)
+        y_coord = traj.get_proj(x)
         y_coord = y_coord[:num_steps]
 
         ax.plot(t, y_coord, color="k", linewidth=0.3)
@@ -34,11 +32,9 @@ def plot_traj_proj(model, ax, trajs, x, num_steps):
 def plot_trajs(model, ax, trajs, x, y, num_steps=0):
     if not trajs: return
 
-    x_var, y_var = model.vars[x], model.vars[y]
-
     for traj_idx, traj in enumerate(trajs):
-        x_coord = traj.get_proj(x_var)
-        y_coord = traj.get_proj(y_var)
+        x_coord = traj.get_proj(x)
+        y_coord = traj.get_proj(y)
 
         if num_steps:
             x_coord = x_coord[:num_steps]
@@ -335,7 +331,7 @@ class Plot:
 
         self.trajs = traj_col
         self.model = traj_col.model if self.model is None else self.model
-        self.num_steps = max(self.num_steps, traj_col.max_traj_len)
+        self.num_steps = max(self.num_steps, traj_col.traj_len)
 
     """
     Adds flowpipe to be plotted.

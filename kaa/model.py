@@ -1,3 +1,4 @@
+from sympy.utilities.lambdify import lambdify
 from kaa.opts.kodiak import KodiakProd
 from kaa.settings import KaaSettings
 from kaa.bundle import Bundle
@@ -27,6 +28,8 @@ class Model:
 
         'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
+
+        self.lambdified_f =  [lambdify(vars, f) for f in self.f]
 
     def __str__(self):
         return self.name

@@ -105,7 +105,7 @@ def test_max_sliding_lin_strat(model, num_steps):
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
 
-def test_equal_sliding_strat(model, num_steps):
+def test_equal_sliding_strat(model, num_steps, vars=(0,1)):
     use_supp = True
     use_pregen = False
 
@@ -133,8 +133,8 @@ def test_equal_sliding_strat(model, num_steps):
     else:
         file_identifier = "(RAND)"
 
-    experi = PhasePlotExperiment(experi_input)
-    experi.execute(0, 1, plot_border_traj=True)
+    experi = ProjectionPlotExperiment(experi_input)
+    experi.execute(*vars, plot_border_traj=False)
     Timer.generate_stats()
 
 def test_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp=True, use_pregen=False):

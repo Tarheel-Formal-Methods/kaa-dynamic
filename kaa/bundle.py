@@ -90,16 +90,18 @@ class Bundle:
     """
     def getIntersect(self):
         L = self.L
-        A = np.empty([2*self.num_dirs, self.dim])
-        b = np.empty(2*self.num_dirs)
+        constr_mat = np.empty([2*self.num_dirs, self.dim+1])
 
         for ind in range(self.num_dirs):
-            A[ind] = L[ind]
-            A[ind + self.num_dirs] = np.negative(L[ind])
-            b[ind] = self.offu[ind]
-            b[ind + self.num_dirs] = self.offl[ind]
+            constr_mat[ind, :self.dim] = L[ind]
+            constr_mat[ind + self.num_dirs, :self.dim] = np.negative(L[ind])
 
-        return LinearSystem(self.model, A, b)
+            constr_mat[ind, self.dim] = self.offu[ind]
+            constr_mat[ind + self.num_dirs, self.dim] = self.offl[ind]
+
+        A = constr_mat[:, :self.dim]
+        b = constr_mat[:, self.dim]
+        return LinearSystem(self.model, A, b, constr_mat=constr_mat)
 
 
     """
@@ -141,16 +143,17 @@ class Bundle:
     def getParallelotope(self, temp_ind):
         L = self.L
         T = self.T
-        A = np.empty([2*self.dim,self.dim])
-        b = np.empty(2*self.dim)
+        constr_mat = np.empty((2*self.dim,self.dim+1))
 
         'Fetch linear constraints defining the parallelotope.'
         for fac_ind, facet in enumerate(T[temp_ind].astype(int)):
-            A[fac_ind] = L[facet]
-            A[fac_ind + self.dim] = np.negative(L[facet])
-            b[fac_ind] = self.offu[facet]
-            b[fac_ind + self.dim] = self.offl[facet]
+            constr_mat[fac_ind, :self.dim] = L[facet]
+            constr_mat[fac_ind + self.dim, :self.dim] = np.negative(L[facet])
+            constr_mat[fac_ind, self.dim] = self.offu[facet]
+            constr_mat[fac_ind + self.dim, self.dim] = self.offl[facet]
 
+        A = constr_mat[:, :self.dim]
+        b = constr_mat[:, self.dim]
         return Parallelotope(self.model, A, b)
 
     """
@@ -203,7 +206,8 @@ class Bundle:
     """
     def remove_dirs(self, asso_strat, labels):
 
-        label_indices = self.__get_label_indices(self.labeled_L, self.__get_global_labels(asso_strat, labels))
+        label_indices = self.__get_label_indices(self.labeled_L,
+                                                 self.__get_global_labels(asso_strat, labels))
 
         #print(f"RemoveDir: Labels: {global_labels}")
         #print(f"labeled_L: {self.labeled_L}")
@@ -216,7 +220,6 @@ class Bundle:
 
 
     def __get_temp_id(self, asso_strat):
-
         if str(asso_strat) not in self.strat_temp_id:
             self.num_strat += 1
             self.strat_temp_id[str(asso_strat)] = self.num_strat
@@ -234,7 +237,7 @@ class Bundle:
         return [str(asso_strat) + label for label in labels] if isinstance(labels, list) else str(asso_strat) + labels
 
     """
-    Returns the indices which a list of indices or an index points towrads in the tuple matrix.
+    Returns the indices which a list of indices or an index points towards in the tuple matrix.
     @params tup mat: input tuple matrix
             labels: list of labels or a single label relevant to search
     @returns list of indices which a label in the input points towards

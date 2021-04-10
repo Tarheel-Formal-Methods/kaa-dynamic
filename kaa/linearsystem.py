@@ -21,12 +21,13 @@ class ChebyCenter:
 
 class LinearSystem:
 
-    def __init__(self, model, A, b):
+    def __init__(self, model, A, b, constr_mat=None):
         self.A = A
         self.b = b
         self.model = model
         self.vars = model.vars
         self.dim = model.dim
+        self.constr_mat = constr_mat #Pointer to total constraint mat for LPUtil purposes.
         self.randgen = rand.Random(KaaSettings.RandSeed)
 
     """
@@ -42,7 +43,7 @@ class LinearSystem:
         row_norm = np.reshape(np.linalg.norm(self.A, axis=1), (self.A.shape[0], 1))
         center_A = np.hstack((self.A, row_norm))
 
-        center_pt = maxLinProg(self.model, c, center_A, self.b).x
+        center_pt = maxLinProg(self.model, c, center_A, self.b, self.constr_mat).x
         return ChebyCenter(center_pt[:-1], center_pt[-1])
 
     """
@@ -105,7 +106,7 @@ class LinearSystem:
     """
     def max_opt(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return maxLinProg(self.model, y, self.A, self.b)
+        return maxLinProg(self.model, y, self.A, self.b, self.constr_mat)
 
     """
     Minimize optimization function y over Ax \leq b
@@ -114,7 +115,7 @@ class LinearSystem:
     """
     def min_opt(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return minLinProg(self.model, y,self.A, self.b)
+        return minLinProg(self.model, y,self.A, self.b, self.constr_mat)
 
     """
     Checks if point is indeed contained in Ax \leq b
@@ -260,7 +261,6 @@ class LinearSystem:
             #Output.write("Non parallel routine")
             'Exploiting Warm-start LP'
             output_list = []
-
             with LPUtil(self.model, A=self.A, b=self.b) as lp_inst:
                 lp_inst.populate_consts()
                 for dir_vec in dir_vecs:

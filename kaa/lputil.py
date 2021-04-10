@@ -16,11 +16,11 @@ class LPSolution:
         self.fun = fun
 
 'LP routines for problems without warm start'
-minLinProg = lambda model, c, A, b: OneTimeLinProg(model, c, A, b, "Min")
-maxLinProg = lambda model, c, A, b: OneTimeLinProg(model, c, A, b, "Max")
+minLinProg = lambda model, c, A, b, constr_mat: OneTimeLinProg(model, c, A, b, constr_mat, "Min")
+maxLinProg = lambda model, c, A, b, constr_mat: OneTimeLinProg(model, c, A, b, constr_mat, "Max")
 
-def OneTimeLinProg(model, c, A, b, glb_obj):
-    with LPUtil(model, c, A, b) as lp_inst:
+def OneTimeLinProg(model, c, A, b, constr_mat, glb_obj):
+    with LPUtil(model, c, A, b, constr_mat) as lp_inst:
         lp_inst.populate_consts()
         lp_inst.populate_obj_vec()
         lp_sol = lp_inst.solve(glb_obj)
@@ -29,12 +29,13 @@ def OneTimeLinProg(model, c, A, b, glb_obj):
 
 class LPUtil:
 
-    def __init__(self, model, c=None, A=None, b=None):
+    def __init__(self, model, c=None, A=None, b=None, constr_mat=None):
         self.model = model
         self.dim = model.dim
         self.c = c
         self.A = A
         self.b = b
+        self.constr_mat = constr_mat
         self.num_cols = None
         self.lp_prob = glpk.glp_create_prob()
 
@@ -42,6 +43,8 @@ class LPUtil:
         glpk.glp_init_smcp(self.params)
         self.params.msg_lev = glpk.GLP_MSG_ERR
         self.params.meth = glpk.GLP_DUAL
+
+        #self.__normalize_constrs()
 
     def populate_consts(self):
         num_rows = self.A.shape[0]
@@ -88,8 +91,12 @@ class LPUtil:
         #Output.bold_write(f"Ended LP with c: {c}")
         return LPSolution(x, fun)
 
-    def __normalize_const(self):
-        pass
+    def __normalize_constrs(self):
+        if self.constr_mat is not None:
+            constr_norms = np.linalg.norm(self.constr_mat, axis=1)
+            self.constr_mat /= constr_norms[:,None]
+        else:
+            Output.prominent("Constraint pointer not initialized.")
 
     def __enter__(self):
         return self
