@@ -65,6 +65,10 @@ def test_pca_dominant_JetEngine():
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
 
+def test_vol_comp_JetEngine():
+    unit_model = JetEngine_UnitBox()
+    test_vol_comp(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=None)
+
 def test_ran_strat_JetEngine():
     model = JetEngine_UnitBox(delta=0.1)
     test_ran_strat(model, 100, 5000, use_supp=True, use_pregen=False)

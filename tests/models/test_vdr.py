@@ -229,6 +229,11 @@ def test_ani_pca_lin_VDP():
     vdp_pca.animate(0,1, lin_1, lin_2)
     Timer.generate_stats()
 
+def test_vol_comp_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    model = VanDerPol(delta=0.08)
+    test_vol_comp(unit_model, 70, 4000, use_supp=True, use_pregen=False, use_sapo=None)
+
 def test_sliding_equal_VDP():
     model = VanDerPol_UnitBox(delta=0.08)
     test_equal_sliding_strat(model)

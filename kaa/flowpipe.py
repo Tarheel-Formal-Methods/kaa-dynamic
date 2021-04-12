@@ -1,8 +1,13 @@
 import numpy as np
+from collections import namedtuple
 
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
 from kaa.templates import MultiStrategy
+
+FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
+TotalFlowpipeVolTup = namedtuple('FlowpipeVolDataTup', ['TotalFlowpipeConvHullVol', 'TotalFlowpipeEnvelopBoxVol'])
+
 
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of Bundle objects.
@@ -37,7 +42,10 @@ class FlowPipe:
     """
     @property
     def total_volume(self):
-        return np.sum(self.get_volume_data())
+        vol_tup = self.get_volume_data()
+
+        return TotalFlowpipeVolTup(np.sum(vol_tup.FlowpipeConvHullVol),
+                                   np.sum(vol_tup.FlowpipeEnvelopBoxVol))
 
     """
     Wrapper method around self.flowpipe.append function.
@@ -59,18 +67,40 @@ class FlowPipe:
     @returns array of volume data.
     """
     def get_volume_data(self, accum=False):
-        vol_data = np.empty(len(self.flowpipe))
+        conv_hull_vol_data = np.empty(len(self.flowpipe))
+        envelop_box_vol_data = np.empty(len(self.flowpipe))
+        conv_hull_failed = False
 
         if accum:
-            vol_accum = 0
-            for idx, bund in enumerate(self.flowpipe):
-                vol_accum += bund.getIntersect().volume
-                vol_data[idx] = vol_accum
-        else:
-            for idx, bund in enumerate(self.flowpipe):
-                vol_data[idx] = bund.getIntersect().volume
+            conv_hull_vol_accum = 0
+            envelop_box_vol_accum = 0
 
-        return vol_data
+        for idx, bund in enumerate(self.flowpipe):
+            vol_data = bund.getIntersect().volume
+
+            if not vol_data.ConvHullVol:
+                conv_hull_failed = True
+                conv_hull_vol_data = np.zeros(1) # Empty flowpipe
+
+            if not conv_hull_failed:
+                if accum:
+                    conv_hull_vol_accum += vol_data.ConvHullVol
+                    conv_hull_vol = conv_hull_vol_accum
+                else:
+                    conv_hull_vol = vol_data.ConvHullVol
+
+                conv_hull_vol_data[idx] = conv_hull_vol
+
+            if accum:
+                envelop_box_vol_accum += vol_data.EnvelopBoxVol
+                envelop_box_vol = envelop_box_vol_accum
+            else:
+                envelop_box_vol = vol_data.EnvelopBoxVol
+
+            envelop_box_vol_data[idx] = envelop_box_vol
+
+
+        return FlowpipeVolDataTup(conv_hull_vol_data, envelop_box_vol_data)
 
     """
     Calculates the flowpipe projection of reachable set against time t.
@@ -79,7 +109,6 @@ class FlowPipe:
     """
     def getProj(self, var_ind):
         Timer.start('Proj')
-        curr_var = self.vars[var_ind]
 
         'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
         y_min, y_max = np.empty(len(self)), np.empty(len(self))

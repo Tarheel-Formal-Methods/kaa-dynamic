@@ -88,6 +88,11 @@ def test_sapo_skewed_compare_SIR():
     harosc = VolumeExperiment(experi_input_1, experi_input_2, label=f"SAPO1010COMP")
     harosc.execute(1)
 
+def test_vol_comp_SIR():
+    unit_model = SIR_UnitBox()
+    model = SIR()
+    test_vol_comp(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=None)
+
 
 def test_ran_strat_SIR():
     model = SIR_UnitBox()

@@ -93,7 +93,7 @@ class LPUtil:
 
     def __normalize_constrs(self):
         if self.constr_mat is not None:
-            constr_norms = np.linalg.norm(self.constr_mat, axis=1)
+            constr_norms = np.linalg.norm(self.A, axis=1)
             self.constr_mat /= constr_norms[:,None]
         else:
             Output.prominent("Constraint pointer not initialized.")

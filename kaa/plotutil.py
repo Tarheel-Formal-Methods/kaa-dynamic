@@ -50,6 +50,7 @@ class Subplot:
         self.model = model
         self.num_steps = num_steps
         self.flowpipes = flowpipes
+        self.num_flowpipes = len(flowpipes)
 
     @abstractmethod
     def plot(self):
@@ -226,9 +227,10 @@ TODO document expected dict setup.
 """
 class VolumeSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, accum_flag):
+    def __init__(self, model, flowpipes, num_steps, accum_flag, plot_all_vol):
         super().__init__(model, "Volume", flowpipes, 1, num_steps)
         self.accum_flag = accum_flag
+        self.plot_all_vol = plot_all_vol # Flag for plotting volumes for all methods (ConvHull, Enveloping box)
 
     """
     Plots volume estimation data from self.flowpipes into input Axis object
@@ -238,13 +240,10 @@ class VolumeSubplot(Subplot):
         assert len(ax) == 1, "Only one axis object for plotting phase."
         ax = ax[0]
 
-        t = np.arange(0, self.num_steps, 1)
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
-
-            ax.plot(t, vol_data, color=f"C{flow_idx}")
-            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Total Volume: {flowpipe.total_volume})"))
+            patches = self.__plot_volume_and_legend(ax, flowpipe, flow_idx)
+            axis_patches += patches
 
         ax.set_xlabel("Time steps")
         ax.set_ylabel("Volume")
@@ -252,6 +251,28 @@ class VolumeSubplot(Subplot):
 
         ax.legend(handles=axis_patches)
 
+    def __plot_volume_and_legend(self, ax, flowpipe, flow_idx):
+        t = np.arange(0, self.num_steps, 1)
+        vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
+
+        tot_vol_tup = flowpipe.total_volume
+        tot_conv_hull_vol = round(tot_vol_tup.TotalFlowpipeConvHullVol, 3)
+        tot_envelop_box_vol = round(tot_vol_tup.TotalFlowpipeEnvelopBoxVol, 3)
+
+        if self.plot_all_vol:
+            ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
+            ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx + self.num_flowpipes}")
+
+            return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})"),
+                    pat.Patch(color = f"C{flow_idx+ self.num_flowpipes}", label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+
+        else:
+            if tot_conv_hull_vol > 0:
+                ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
+                return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})")]
+
+            ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
+            return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
@@ -300,7 +321,8 @@ class Plot:
                 subplot = VolumeSubplot(self.model,
                                         self.flowpipes,
                                         self.num_steps,
-                                        subplot_dict['accum_flag'])
+                                        subplot_dict['accum_flag'],
+                                        subplot_dict['plot_all_vol_flag'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

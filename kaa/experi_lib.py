@@ -129,7 +129,7 @@ class VolumePlotExperiment(Experiment):
     def __init__(self, *inputs, label="VolumePlotExperiment"):
         super().__init__(*inputs)
 
-    def execute(self, accum=True):
+    def execute(self, accum=True, plot_all_vol=False):
         num_steps = self.max_num_steps
 
         for experi_input in self.inputs:
@@ -139,7 +139,8 @@ class VolumePlotExperiment(Experiment):
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'Volume',
-                        'accum_flag': accum})
+                        'accum_flag': accum,
+                        'plot_all_vol_flag': plot_all_vol})
 
 """
 Experiment to calculate and plot the projection reachable sets.

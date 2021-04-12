@@ -3,21 +3,25 @@ import numpy as np
 import multiprocessing as mp
 from scipy.spatial import HalfspaceIntersection, ConvexHull
 from scipy.spatial.qhull import QhullError
-
 from operator import mul, add
 from functools import reduce
-from itertools import product
+from collections import namedtuple
+
 from kaa.lputil import minLinProg, maxLinProg, LPUtil
 from kaa.settings import KaaSettings
 from kaa.trajectory import Traj, TrajCollection
 from kaa.settings import KaaSettings
 from kaa.log import Output
 
+VolDataTuple = namedtuple('VolDataTuple', ['ConvHullVol', 'EnvelopBoxVol'])
+
+
 class ChebyCenter:
 
     def __init__(self, center, radius):
         self.center = center
         self.radius = radius
+
 
 class LinearSystem:
 
@@ -27,7 +31,7 @@ class LinearSystem:
         self.model = model
         self.vars = model.vars
         self.dim = model.dim
-        self.constr_mat = constr_mat #Pointer to total constraint mat for LPUtil purposes.
+        self.constr_mat = constr_mat  # Pointer to total constraint mat for LPUtil purposes.
         self.randgen = rand.Random(KaaSettings.RandSeed)
 
     """
@@ -49,16 +53,14 @@ class LinearSystem:
     """
     Volume estimation of system by sampling points and taking ratio.
     @params samples: number of samples used to estimate volume
-    @returns estimated volume of linear system
+    @returns estimated volume of linear system stored in VolDataTuple
     """
     @property
     def volume(self):
-        if not KaaSettings.UseRandVol or self.dim < 4:
-            try:
-                return ConvexHull(self.vertices).volume
+        envelop_box_vol = self.calc_vol_envelop_box()
+        conv_hull_vol = self.calc_vol_conv_hull()
 
-            except QhullError:
-                Output.prominent("Convexhull volume operation raised an error.")
+        return VolDataTuple(conv_hull_vol, envelop_box_vol)
 
         """
         num_samples = KaaSettings.VolumeSamples
@@ -71,7 +73,6 @@ class LinearSystem:
         return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
         """
         'Just return volume of enveloping box.'
-        return self.calc_vol_envelop_box()
 
     """
     Find vertices of this linear system.
@@ -91,6 +92,16 @@ class LinearSystem:
         except QhullError:
             Output.prominent("QHull vertex operation raised an error.")
             return None
+
+    def calc_vol_conv_hull(self):
+        if self.dim < 4:
+            try:
+                return ConvexHull(self.vertices).volume
+
+            except QhullError:
+                Output.prominent("Convexhull volume operation raised an error.")
+
+        return None
 
     """
     Calculate the volume of the smallest enveloping box of linear system.
@@ -299,6 +310,7 @@ class LinearSystem:
         box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
 
         return self.__sample_box_points(box_intervals, num_trajs)
+
 
 def intersect(model, *lin_sys):
     assert all(isinstance(sys, LinearSystem) for sys in lin_sys), "Intersection operation only viable with another LinearSystem object."

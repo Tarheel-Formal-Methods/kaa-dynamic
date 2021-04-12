@@ -92,14 +92,14 @@ class TrajCollection:
         for traj_idx, traj in enumerate(self.traj_list):
             start_points[traj_idx] = traj.start_point
 
-        return start_points_list
+        return start_points
 
     @property
     def end_points(self):
         end_points = np.empty((self.num_trajs, self.dim))
 
         for traj_idx, traj in enumerate(self.traj_list):
-            start_points[traj_idx] = traj.end_point
+            end_points[traj_idx] = traj.end_point
 
         return end_points
 

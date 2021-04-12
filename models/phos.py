@@ -28,7 +28,7 @@ class Phosphorelay(Model):
         num_dirs = 10
         num_temps = 4
 
-        L = np.zeros([num_dirs,dim_sys])
+        L = np.zeros((num_dirs,dim_sys))
         for i in range(dim_sys):
             L[i][i] = 1
 
@@ -36,7 +36,7 @@ class Phosphorelay(Model):
         L[8][4] = 1; L[8][5] = 1;
         L[9][2] = 1; L[9][3] = 1; L[9][4] = 1; L[9][5] = 1;
 
-        T = np.zeros([num_temps,dim_sys])
+        T = np.zeros((num_temps,dim_sys))
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4; T[0][5] = 5; T[0][6] = 6;
         T[1][0] = 0; T[1][1] = 1; T[1][2] = 2; T[1][3] = 7; T[1][4] = 4; T[1][5] = 5; T[1][6] = 6;
         T[2][0] = 0; T[2][1] = 1; T[2][2] = 2; T[2][3] = 7; T[2][4] = 8; T[2][5] = 5; T[2][6] = 6;

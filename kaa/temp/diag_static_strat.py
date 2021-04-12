@@ -10,7 +10,6 @@ class DiagStaticStrat(TempStrategy):
         super().__init__(self, model)
         self.num_diag_temps = num_diag_temps
 
-
     def open_strat(self, bund, step_num):
         if not step_num:
             temp_dirs = self.__gen_diag_dirs()
@@ -26,7 +25,7 @@ class DiagStaticStrat(TempStrategy):
         for i in range(self.dim):
             axis_dirs[i][i] = 1
 
-        ['Generate all the positive, negative diags']
+        'Generate all the positive, negative diags'
         diag_mat = np.copy(axis_dirs)
         for row_idx, row in enumerate(axis_dirs):
             prod_mat = np.empty((2*(self.dim - row_idx), self.dim))
