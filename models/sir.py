@@ -6,22 +6,22 @@ from kaa.model import Model
 
 class SIR(Model):
 
-  def __init__(self, delta=0.1):
+  def __init__(self, delta=0.1, init_box= ((0.79,0.8), (0.19,0.2), (0.00099, 0.001)) ):
       s, i, r = sp.Symbol('s'), sp.Symbol('i'), sp.Symbol('r')
 
       ds = s - (0.34*s*i)*delta;
       di = i + (0.34*s*i - 0.05*i)*delta;
       dr = r + (0.05*i)*delta;
 
-      dyns = [ds, di, dr]
-      vars = [s, i, r] #In predetermined order
+      dyns = (ds, di, dr)
+      vars = (s, i, r) #In predetermined order
       sys_dim = len(vars)
 
       num_direct = 5
       num_temps = 3
 
-      L = np.zeros([num_direct, sys_dim])
-      T = np.zeros([num_temps, sys_dim])
+      L = np.zeros((num_direct, sys_dim))
+      T = np.zeros((num_temps, sys_dim))
 
       #Directions matrix
       L[0][0] = 1  #[1 0 0 ]^T
@@ -40,23 +40,14 @@ class SIR(Model):
       offu = np.zeros(num_direct)
       offl = np.zeros(num_direct)
 
-      offu[0] = 0.8
-      offl[0] = -0.79
-
-      offu[1] = 0.2
-      offl[1] = -0.19
-
-      offu[2] = 0.001
-      offl[2] = -0.00099
-
       offu[3] = 1; offl[3] = 0;
       offu[4] = 1; offl[4] = 0;
 
-      super().__init__(dyns, vars, T, L, offu, offl, name="SIR")
+      super().__init__(dyns, vars, T, L, init_box, offl, offu, name="SIR")
 
 class SIR_UnitBox(Model):
 
-  def __init__(self, delta=0.1):
+  def __init__(self, delta=0.1, init_box= ((0.79,0.8), (0.19,0.2), (0.00099, 0.001))):
 
       s, i, r = sp.Symbol('s'), sp.Symbol('i'), sp.Symbol('r')
 
@@ -64,15 +55,15 @@ class SIR_UnitBox(Model):
       di = i + (0.34*s*i - 0.05*i)*delta;
       dr = r + 0.05*i*delta;
 
-      dyns = [ds, di, dr]
-      vars = [s, i, r] #In predetermined order
+      dyns = (ds, di, dr)
+      vars = (s, i, r) #In predetermined order
       sys_dim = len(vars)
 
       num_direct = 3
       num_temps = 1
 
-      L = np.zeros([num_direct, sys_dim])
-      T = np.zeros([num_temps, sys_dim])
+      L = np.zeros((num_direct, sys_dim))
+      T = np.zeros((num_temps, sys_dim))
 
       #Directions matrix
       L[0][0] = 1  #[1 0 0 ]^T
@@ -90,16 +81,4 @@ class SIR_UnitBox(Model):
       offu = np.zeros(num_direct)
       offl = np.zeros(num_direct)
 
-      offu[0] = 0.8
-      offl[0] = -0.79
-
-      offu[1] = 0.2
-      offl[1] = -0.19
-
-      offu[2] = 0.001
-      offl[2] = -0.00099
-
-      #offu[3] = 1; offl[3] = 0;
-      #offu[4] = 1; offl[4] = 0;
-
-      super().__init__(dyns, vars, T, L, offu, offl, name="SIR")
+      super().__init__(dyns, vars, T, L, init_box, offl, offu, name="SIR")

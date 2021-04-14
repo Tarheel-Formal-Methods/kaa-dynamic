@@ -47,7 +47,7 @@ class LinearSystem:
         row_norm = np.reshape(np.linalg.norm(self.A, axis=1), (self.A.shape[0], 1))
         center_A = np.hstack((self.A, row_norm))
 
-        center_pt = maxLinProg(self.model, c, center_A, self.b, self.constr_mat).x
+        center_pt = maxLinProg(self.model, c, center_A, self.b, None).x
         return ChebyCenter(center_pt[:-1], center_pt[-1])
 
     """
@@ -108,7 +108,7 @@ class LinearSystem:
     """
     def calc_vol_envelop_box(self):
         envelop_box = self.__calc_envelop_box()
-        return self.__calc_box_volume(envelop_box)
+        return calc_box_volume(envelop_box)
 
     """
     Maxmize optimization function y over Ax \leq b
@@ -157,16 +157,6 @@ class LinearSystem:
             box_interval[i] = [minCood, maxCood]
 
         return box_interval
-
-    """
-    Calculate the volume of the box described by a list of tuples.
-    @params box_intervals: List of tuples where the first component is the lower end
-                           and the second component is the upper end.
-    @returns volume of box
-    """
-    def __calc_box_volume(self, box_intervals):
-        box_dim = [end - start for start,end in box_intervals]
-        return reduce(mul, box_dim)
 
     """
     Sample a random point contained within a box.
@@ -311,6 +301,16 @@ class LinearSystem:
 
         return self.__sample_box_points(box_intervals, num_trajs)
 
+
+"""
+Calculate the volume of the box described by a list of tuples.
+@params box_intervals: List of tuples where the first component is the lower end
+                       and the second component is the upper end.
+@returns volume of box
+"""
+def calc_box_volume(box_intervals):
+    box_dim = [abs(end - start) for start,end in box_intervals]
+    return reduce(mul, box_dim)
 
 def intersect(model, *lin_sys):
     assert all(isinstance(sys, LinearSystem) for sys in lin_sys), "Intersection operation only viable with another LinearSystem object."

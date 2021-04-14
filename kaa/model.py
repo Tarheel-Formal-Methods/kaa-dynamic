@@ -8,11 +8,11 @@ if KaaSettings.OptProd is KodiakProd:
 
 class Model:
 
-    def __init__(self, f, vars, T, L, offu, offl, name="Model", compose=0):
+    def __init__(self, f, vars, T, L, init_box, offl, offu, name="Model", compose=0):
 
         for _ in range(compose):
-            var_sub = [ (var, f[var_idx]) for var_idx, var in enumerate(vars) ]
-            f = [ func.subs(var_sub, simultaneous=True) for func in f ]
+            var_sub = [(var, f[var_idx]) for var_idx, var in enumerate(vars)]
+            f = [func.subs(var_sub, simultaneous=True) for func in f]
 
         'List of system dynamics.'
         self.f = f
@@ -26,10 +26,21 @@ class Model:
         'Name of system.'
         self.name = name
 
+        self.__set_init_box(init_box, offl, offu)
+
+        self.init_box = init_box
+
         'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
 
-        self.lambdified_f =  [lambdify(vars, f) for f in self.f]
+        self.lambdified_f = [lambdify(vars, f) for f in self.f]
 
     def __str__(self):
         return self.name
+
+    def __set_init_box(self, init_box, offl, offu):
+        assert len(init_box) == self.dim, "dimensions of init box have to same as that of system's"
+
+        for idx in range(self.dim):
+            offl[idx] = -init_box[idx][0]
+            offu[idx] = init_box[idx][1]

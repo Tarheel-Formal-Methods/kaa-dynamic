@@ -44,7 +44,7 @@ class LPUtil:
         self.params.msg_lev = glpk.GLP_MSG_ERR
         self.params.meth = glpk.GLP_DUAL
 
-        #self.__normalize_constrs()
+        self.__normalize_constrs()
 
     def populate_consts(self):
         num_rows = self.A.shape[0]
@@ -95,8 +95,6 @@ class LPUtil:
         if self.constr_mat is not None:
             constr_norms = np.linalg.norm(self.A, axis=1)
             self.constr_mat /= constr_norms[:,None]
-        else:
-            Output.prominent("Constraint pointer not initialized.")
 
     def __enter__(self):
         return self

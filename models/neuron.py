@@ -7,23 +7,23 @@ from kaa.bundle import Bundle
 'Fitz-Hugh-Nagumo Neuron Model'
 class Neuron_UnitBox(Model):
 
-    def __init__(self, delta=0.2):
+    def __init__(self, delta=0.2, init_box=((0.9,1.1), (2.4,2.6))):
 
         x, y = sp.Symbol('x'), sp.Symbol('y')
-        vars = [x, y]
+        vars = (x, y)
 
         dim_sys = len(vars)
 
         dx = x + (x - x**3 - y + 0.875)*delta
         dy = y + (0.08*(x + 0.7 - 0.8*y))*delta
 
-        dyns = [dx, dy]
+        dyns = (dx, dy)
 
         num_direct = 2
         num_temps = 1
 
-        L = np.zeros([num_direct, dim_sys])
-        T = np.zeros([num_temps, dim_sys])
+        L = np.zeros((num_direct, dim_sys))
+        T = np.zeros((num_temps, dim_sys))
 
         L[0][0] = 1
         L[1][1] = 1
@@ -33,7 +33,4 @@ class Neuron_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 1.1; offl[0] = -0.9;
-        offu[1] = 2.6; offl[1] = -2.4;
-
-        super().__init__(dyns, vars, T, L, offu, offl, name="Neuron")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Neuron")

@@ -342,15 +342,21 @@ class BundleTransformer:
         'Toggle iterators between OFO/AFO'
         direct_iter = row.astype(int) if self.ofo_mode.value else range(bund.num_dirs)
 
+        bound_results = []
         for l_row in direct_iter:
-            #Output.write(f"BOUNDS FOR PTOPE {row_ind} ROW INDEX {l_row}")
             curr_L = L[l_row]
 
             Timer.start("Find Bounds Function Call")
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
             Timer.stop("Find Bounds Function Call")
 
-            output_queue.put((l_row, ub, lb))
+            if output_queue:
+                output_queue.put((l_row, ub, lb))
+            else:
+                bound_results.append((l_row, ub, lb))
+
+        if not output_queue:
+            return bound_results
 
     """
     Transforms the bundle according to the dynamics governing the system. (dictated by self.f)
@@ -372,20 +378,20 @@ class BundleTransformer:
             p.starmap(self.bound_worker, input_params)
             p.close()
             p.join()
+
+            bound_results = self.queue_to_list(output_queue)
         else:
+            bound_results = []
             for param in input_params:
                 row_ind, row, bund, L, output_queue = param
-                self.bound_worker(row_ind, row, bund, L, output_queue)
+                bound_results += self.bound_worker(row_ind, row, bund, L, None)
 
-        for l_row, ub, lb in self.queue_to_list(output_queue):
+        for l_row, ub, lb in bound_results:
             new_offu[l_row] = min(ub, new_offu[l_row])
             new_offl[l_row] = min(lb, new_offl[l_row])
 
         bund.offu = new_offu
         bund.offl = new_offl
-
-        #print("Upper Offsets: {}\n".format(bund.offu))
-        #print("Lower Offsets: {}\n".format(bund.offl))
 
         bund.canonize()
         return bund
@@ -397,7 +403,6 @@ class BundleTransformer:
     @returns: upper bound, lower bound
     """
     def __find_bounds(self, dir_vec, ptope, bund):
-
         'Find the generator of the parallelotope.'
         genFun = ptope.getGeneratorRep()
 

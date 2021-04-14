@@ -124,6 +124,18 @@ class PhasePlotExperiment(Experiment):
                         'separate_flag': False})
 
 
+class InitReachPlotExperiment(Experiment):
+
+    def __init__(self, *inputs):
+            super().__init__(*inputs)
+
+    def execute(self):
+        for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10)
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        self.plot.plot({'type': 'InitVolReachVol'})
+
 class VolumePlotExperiment(Experiment):
 
     def __init__(self, *inputs, label="VolumePlotExperiment"):

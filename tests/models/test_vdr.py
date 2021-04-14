@@ -170,6 +170,62 @@ def test_ani_pca_comp_VDP():
 
     Timer.generate_stats()
 
+def test_init_reach_vol_VDP():
+    num_steps = 30
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+
+    pca_window_size = 8
+    lin_window_size = 12
+
+    inputs_one = []
+    inputs_two = []
+    for inc in range(3):
+        inc /= 100
+
+        box = ((0, 0.01+inc),(1.99 - inc, 2))
+
+        unit_model = VanDerPol_UnitBox(delta=0.08, init_box=box)
+        model = VanDerPol(delta=0.08, init_box=box)
+
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
+
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+        experi_input_two = dict(model=model,
+                                strat=None,
+                                label=f"SapoVDP",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+
+        inputs_one.append(experi_input_one)
+        inputs_two.append(experi_input_two)
+
+
+    inputs = inputs_one + inputs_two
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = InitReachPlotExperiment(*inputs)
+    experi.execute()
+
 def test_ani_lin_comp_VDP():
     NUM_STEPS = 40
     NUM_TRAJS = 1000

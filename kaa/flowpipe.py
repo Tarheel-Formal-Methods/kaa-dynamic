@@ -4,6 +4,7 @@ from collections import namedtuple
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
 from kaa.templates import MultiStrategy
+from kaa.linearsystem import calc_box_volume
 
 FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
 TotalFlowpipeVolTup = namedtuple('FlowpipeVolDataTup', ['TotalFlowpipeConvHullVol', 'TotalFlowpipeEnvelopBoxVol'])
@@ -31,21 +32,40 @@ class FlowPipe:
     """
     @property
     def strats(self):
-        return self.strat.strat_list if isinstance(self.strat, MultiStrategy) else [self.strat]
+        return self.strat
 
     @property
     def model_name(self):
         return self.model.name
 
     """
-    Returns accumlation sum of the bundle volumes
+    Returns accumlation sum tuple of bundle volumes computed by every volume estimation method.
     """
     @property
-    def total_volume(self):
+    def all_total_volume(self):
         vol_tup = self.get_volume_data()
 
         return TotalFlowpipeVolTup(np.sum(vol_tup.FlowpipeConvHullVol),
                                    np.sum(vol_tup.FlowpipeEnvelopBoxVol))
+
+    """
+    Return total volume based on most accurate available estimation method.
+    Convex hull gets priority for low-dimensioanl systems.
+    """
+    @property
+    def total_volume(self):
+        vol_tup = self.get_volume_data()
+        tot_conv_vol = np.sum(vol_tup.FlowpipeConvHullVol)
+
+        if tot_conv_vol > 0:
+            return tot_conv_vol
+
+        return np.sum(vol_tup.FlowpipeEnvelopBoxVol)
+
+    @property
+    def init_box_volume(self):
+        init_box = self.model.init_box
+        return calc_box_volume(init_box)
 
     """
     Wrapper method around self.flowpipe.append function.

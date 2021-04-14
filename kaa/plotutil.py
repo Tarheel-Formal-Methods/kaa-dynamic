@@ -7,6 +7,7 @@ import matplotlib.animation as animate
 from matplotlib.legend import Legend
 from pathlib import Path
 from datetime import date
+from itertools import groupby
 from abc import ABC, abstractmethod
 
 from kaa.settings import PlotSettings
@@ -222,6 +223,7 @@ class PhaseSubplot(Subplot):
         'Plot the curves showing phase trajectories'
         for points in supp_traj_points:
             ax.plot(points[0], points[1], color=f"C{flow_idx}")
+
 """
 TODO document expected dict setup.
 """
@@ -255,7 +257,7 @@ class VolumeSubplot(Subplot):
         t = np.arange(0, self.num_steps, 1)
         vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
 
-        tot_vol_tup = flowpipe.total_volume
+        tot_vol_tup = flowpipe.all_total_volume
         tot_conv_hull_vol = round(tot_vol_tup.TotalFlowpipeConvHullVol, 3)
         tot_envelop_box_vol = round(tot_vol_tup.TotalFlowpipeEnvelopBoxVol, 3)
 
@@ -263,16 +265,62 @@ class VolumeSubplot(Subplot):
             ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx + self.num_flowpipes}")
 
-            return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})"),
-                    pat.Patch(color = f"C{flow_idx+ self.num_flowpipes}", label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+            return [pat.Patch(color = f"C{flow_idx}",
+                              label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})"),
+                    pat.Patch(color = f"C{flow_idx+ self.num_flowpipes}",
+                              label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
 
         else:
             if tot_conv_hull_vol > 0:
                 ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
-                return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})")]
+                return [pat.Patch(color = f"C{flow_idx}",
+                                  label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})")]
 
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
-            return [pat.Patch(color = f"C{flow_idx}", label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+            return [pat.Patch(color = f"C{flow_idx}",
+                              label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+
+class InitVolReachVolPlot(Subplot):
+
+    def __init__(self, model, flowpipes, num_steps):
+        super().__init__(model, "InitVolReachVol", flowpipes, 1, num_steps)
+
+    def plot(self, ax):
+        assert len(ax) == 1, "Only one axis object for plotting InitVolReachVol."
+        ax = ax[0]
+
+        ax.set_xlabel("Volume of Initial Box")
+        ax.set_ylabel("Total Volume of Reachable Set")
+        ax.set_title(f"Initial Box Volume VS Reachable Set Volume Plot for {self.model.name}")
+
+        key = lambda pipe: pipe.label
+        flow_dict = groupby(sorted(self.flowpipes, key=key), key=key)
+
+        axis_patches = []
+        for label_idx, (label, flowpipes_grouper) in enumerate(flow_dict):
+            flowpipes = list(flowpipes_grouper) # Grouper needs to be turned into a list
+            tot_labeled_flow = len(flowpipes)
+
+            init_vol_arr = np.empty(tot_labeled_flow)
+            reach_vol_arr = np.empty(tot_labeled_flow)
+
+            for flow_idx, flowpipe in enumerate(flowpipes):
+
+                #print(round(flowpipe.init_box_volume, 5))
+                #print(round(flowpipe.total_volume, 5))
+
+                init_vol_arr[flow_idx] = round(flowpipe.init_box_volume, 5)
+                reach_vol_arr[flow_idx] = round(flowpipe.total_volume, 5)
+
+
+            print(init_vol_arr)
+            print(reach_vol_arr)
+            ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{label_idx}")
+            axis_patches.append(pat.Patch(color=f"C{label_idx}",
+                                          label=label))
+
+        ax.legend(handles=axis_patches)
+
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
@@ -323,6 +371,11 @@ class Plot:
                                         self.num_steps,
                                         subplot_dict['accum_flag'],
                                         subplot_dict['plot_all_vol_flag'])
+
+            elif subplot_type == "InitVolReachVol":
+                subplot = InitVolReachVolPlot(self.model,
+                                              self.flowpipes,
+                                              self.num_steps)
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

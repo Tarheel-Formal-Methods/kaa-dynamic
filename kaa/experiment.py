@@ -295,15 +295,6 @@ class Experiment(ABC):
         return [flowpipe.total_volume for flowpipe in self.output_flowpipes]
 
     """
-    Extract the initial box intervals from the model
-    """
-    def __get_init_box(self):
-        init_offu = self.model.bund.offu[:self.model.dim] #Assume first dim # of offsets are associated to initial box
-        init_offl = self.model.bund.offl[:self.model.dim]
-
-        return [[-lower_off, upper_off] for lower_off, upper_off in zip(init_offl, init_offu)]
-
-    """
     Sample points from the edges of the box and propagate them for a number of steps.
     """
     def simulate_border_points(self, num_steps):

@@ -10,7 +10,7 @@ class SampledTrajData:
         self.image_points = image_points
 
     def __getitem__(self, idx):
-        TrajData = nampledtuple('TrajData', ['initial_points, image_points'])
+        TrajData = namedtuple('TrajData', ['initial_points, image_points'])
         return TrajData(self.initial_points[idx], self.image_points[idx])
 
 """

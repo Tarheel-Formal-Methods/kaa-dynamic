@@ -7,7 +7,7 @@ from kaa.bundle import Bundle
 'JetEngine Model'
 class JetEngine_UnitBox(Model):
 
-    def __init__(self, delta=0.2):
+    def __init__(self, delta=0.2, init_box=((0.8,1.2), (0.8,1.2))):
 
         x, y = sp.Symbol('x'), sp.Symbol('y')
         vars = [x, y]
@@ -33,7 +33,4 @@ class JetEngine_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 1.2; offl[0] = -0.8;
-        offu[1] = 1.2; offl[1] = -0.8;
-
-        super().__init__(dyns, vars, T, L, offu, offl, name="JetEngine")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="JetEngine")
