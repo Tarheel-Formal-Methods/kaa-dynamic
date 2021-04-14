@@ -1,3 +1,4 @@
+
 import copy
 from termcolor import colored
 
@@ -21,11 +22,11 @@ Object handling all reachable flowpipe computations.
 """
 class ReachSet:
 
-    def __init__(self, model, strat=None, label="", reachcompmode=None, transmode=BundleMode.AFO):
+    def __init__(self, model, reachcompmode, strat=None, label="", transmode=BundleMode.AFO):
         self.model = model
         self.trans_mode = transmode
         self.strat = StaticStrat(self.model) if strat is None else strat
-        self.flowpipe = FlowPipe(self.model, strat, label, self.reach, reachcompmode)
+        self.flowpipe = FlowPipe(self.model, strat, label, reachcompmode)
 
 
     """
@@ -90,8 +91,9 @@ class ReachSet:
 
             #Output.write("=========================================")
 
+        if KaaSettings.DelFlowpipe:
+            self.flowpipe.calc_data_del_flowpipe()
 
-        self.flowpipe.calc_flowpipe_data()
         if not isinstance(self.strat, MultiStrategy):
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
 

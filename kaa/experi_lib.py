@@ -128,7 +128,7 @@ class PhasePlotExperiment(Experiment):
 class InitReachPlotExperiment(Experiment):
 
     def __init__(self, *inputs):
-            super().__init__(*inputs, ReachCompMode.VolMode)
+            super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
 
     def execute(self):
         for experi_input in self.inputs:

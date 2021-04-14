@@ -28,6 +28,7 @@ class FlowPipe:
 
     def __init__(self, model, strat, label, reach_comp_mode, flowpipe=None):
         self.flowpipe = [model.bund]
+        self.num_bunds = 0
         self.model = model
         self.strat = strat
         self.vars = model.vars
@@ -55,9 +56,10 @@ class FlowPipe:
     """
     @property
     def all_total_volume(self):
-        assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-        return TotalFlowpipeVolTup(np.sum(self.volume_data.FlowpipeConvHullVol),
-                                   np.sum(self.volume_data.FlowpipeEnvelopBoxVol))
+        #assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+        vol_data = self.volume_data if self.volume_data else self.get_volume_data()
+        return TotalFlowpipeVolTup(np.sum(vol_data.FlowpipeConvHullVol),
+                                   np.sum(vol_data.FlowpipeEnvelopBoxVol))
 
     """
     Return total volume based on most accurate available estimation method.
@@ -65,13 +67,15 @@ class FlowPipe:
     """
     @property
     def total_volume(self):
-        assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-        tot_conv_vol = np.sum(self.volume_data.FlowpipeConvHullVol)
+        #assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+
+        vol_data = self.volume_data if self.volume_data else self.get_volume_data()
+        tot_conv_vol = np.sum(vol_data.FlowpipeConvHullVol)
 
         if tot_conv_vol > 0:
             return tot_conv_vol
 
-        return np.sum(self.volume_data.FlowpipeEnvelopBoxVol)
+        return np.sum(vol_data.FlowpipeEnvelopBoxVol)
 
     @property
     def init_box_volume(self):
@@ -83,17 +87,18 @@ class FlowPipe:
     """
     def append(self, bund):
         self.flowpipe.append(bund)
+        self.num_bunds += 1
 
     """
     Crunch requested flowpipe data and delete the bundle list. Memory-conserving procedure.
     """
-    def calc_flowpipe_data(self):
+    def calc_data_del_flowpipe(self):
         if self.reach_comp_mode == ReachCompMode.VolMode:
             self.volume_data = self.get_volume_data()
             del self.flowpipe
 
         elif self.reach_comp_mode == ReachCompMode.ProjPlotMode:
-            self.proj_data = np.empty((2*self.dim, len(self))
+            self.proj_data = np.empty((2*self.dim, len(self)))
 
             for var_idx in range(0, 2*self.dim, 2):
                 var_min_arr, var_max_arr = self.__calc_bounds_along_var(var_idx)
@@ -178,11 +183,14 @@ class FlowPipe:
     @returns list of minimum and maximum points of projected set at each time step.
     """
     def getProj(self, var_ind):
-        assert self.proj_data, "self.proj_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-        return self.proj_data[2*var_ind], self.proj_data[2*var_ind + 1]
+        #assert self.proj_data, "self.proj_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+        if self.proj_data:
+            return self.proj_data[2*var_ind], self.proj_data[2*var_ind + 1]
+
+        return self.__calc_bounds_along_var(var_ind)
 
     def __len__(self):
-        return len(self.flowpipe)
+        return self.num_bunds
 
     def __iter__(self):
         return iter(self.flowpipe)
