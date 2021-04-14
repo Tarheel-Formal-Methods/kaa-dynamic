@@ -139,13 +139,14 @@ their output data, and plot/compare them.
 """
 class Experiment(ABC):
 
-    def __init__(self, *inputs, label=""):
+    def __init__(self, *inputs, reach_comp_mode, label=""):
         self.inputs = inputs
         self.plot = Plot()
 
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0]['model']
         self.label = label
+        self.reach_comp_mode = reach_comp_mode
 
     """
     Execute experiment and dump results into spreadsheet.
@@ -262,7 +263,7 @@ class Experiment(ABC):
         flow_label = experi_input['label']
         num_steps = experi_input['num_steps']
 
-        mod_reach = ReachSet(model, strat=strat, label=flow_label)
+        mod_reach = ReachSet(model, strat=strat, label=flow_label, reachcompmode=self.reach_comp_mode)
         mod_flow = mod_reach.computeReachSet(num_steps)
 
         return mod_flow

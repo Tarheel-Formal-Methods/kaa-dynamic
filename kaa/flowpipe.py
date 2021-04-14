@@ -1,5 +1,6 @@
 import numpy as np
 from collections import namedtuple
+from enum import Enum, auto
 
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
@@ -9,20 +10,35 @@ from kaa.linearsystem import calc_box_volume
 FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
 TotalFlowpipeVolTup = namedtuple('FlowpipeVolDataTup', ['TotalFlowpipeConvHullVol', 'TotalFlowpipeEnvelopBoxVol'])
 
+class ReachCompMode(Enum):
+    'Computes only the volume statistics of flowpipe. Discards bundle matrices once done.'
+    VolMode = auto()
+
+    'Computes only the maximum, minimum values along axes. Discards bundle matrices once done.'
+    ProjPlotMode = auto()
+
+    'Most expensive mode in terms of memory usage. Keeps all bundle matrices in memory.'
+    PhasePlotMode = auto()
+
 
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of Bundle objects.
 """
 class FlowPipe:
 
-    def __init__(self, model, strat, label, flowpipe=None):
-        self.flowpipe = [model.bund] if flowpipe is None else flowpipe
+    def __init__(self, model, strat, label, reach_comp_mode, flowpipe=None):
+        self.flowpipe = [model.bund]
         self.model = model
         self.strat = strat
         self.vars = model.vars
         self.dim = model.dim
         self.label = label
+        self.reach_comp_mode = reach_comp_mode
+
+
         self.traj_data = None
+        self.volume_data = None
+        self.proj_data = None
         self.error = None
 
     """
@@ -34,19 +50,14 @@ class FlowPipe:
     def strats(self):
         return self.strat
 
-    @property
-    def model_name(self):
-        return self.model.name
-
     """
     Returns accumlation sum tuple of bundle volumes computed by every volume estimation method.
     """
     @property
     def all_total_volume(self):
-        vol_tup = self.get_volume_data()
-
-        return TotalFlowpipeVolTup(np.sum(vol_tup.FlowpipeConvHullVol),
-                                   np.sum(vol_tup.FlowpipeEnvelopBoxVol))
+        assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+        return TotalFlowpipeVolTup(np.sum(self.volume_data.FlowpipeConvHullVol),
+                                   np.sum(self.volume_data.FlowpipeEnvelopBoxVol))
 
     """
     Return total volume based on most accurate available estimation method.
@@ -54,13 +65,13 @@ class FlowPipe:
     """
     @property
     def total_volume(self):
-        vol_tup = self.get_volume_data()
-        tot_conv_vol = np.sum(vol_tup.FlowpipeConvHullVol)
+        assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+        tot_conv_vol = np.sum(self.volume_data.FlowpipeConvHullVol)
 
         if tot_conv_vol > 0:
             return tot_conv_vol
 
-        return np.sum(vol_tup.FlowpipeEnvelopBoxVol)
+        return np.sum(self.volume_data.FlowpipeEnvelopBoxVol)
 
     @property
     def init_box_volume(self):
@@ -72,6 +83,24 @@ class FlowPipe:
     """
     def append(self, bund):
         self.flowpipe.append(bund)
+
+    """
+    Crunch requested flowpipe data and delete the bundle list. Memory-conserving procedure.
+    """
+    def calc_flowpipe_data(self):
+        if self.reach_comp_mode == ReachCompMode.VolMode:
+            self.volume_data = self.get_volume_data()
+            del self.flowpipe
+
+        elif self.reach_comp_mode == ReachCompMode.ProjPlotMode:
+            self.proj_data = np.empty((2*self.dim, len(self))
+
+            for var_idx in range(0, 2*self.dim, 2):
+                var_min_arr, var_max_arr = self.__calc_bounds_along_var(var_idx)
+                self.proj_data[var_idx] = var_min_arr
+                self.proj_data[var_idx+1] = var_max_arr
+
+            del self.flowpipe
 
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
@@ -122,12 +151,8 @@ class FlowPipe:
 
         return FlowpipeVolDataTup(conv_hull_vol_data, envelop_box_vol_data)
 
-    """
-    Calculates the flowpipe projection of reachable set against time t.
-    @params var: The variable for the reachable set to be projected onto.
-    @returns list of minimum and maximum points of projected set at each time step.
-    """
-    def getProj(self, var_ind):
+
+    def __calc_bounds_along_var(self, var_ind):
         Timer.start('Proj')
 
         'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
@@ -145,6 +170,16 @@ class FlowPipe:
         Timer.stop("Proj")
 
         return y_min, y_max
+
+
+    """
+    Calculates the flowpipe projection of reachable set against time t.
+    @params var: The variable for the reachable set to be projected onto.
+    @returns list of minimum and maximum points of projected set at each time step.
+    """
+    def getProj(self, var_ind):
+        assert self.proj_data, "self.proj_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
+        return self.proj_data[2*var_ind], self.proj_data[2*var_ind + 1]
 
     def __len__(self):
         return len(self.flowpipe)

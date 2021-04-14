@@ -8,21 +8,25 @@ from kaa.settings import KaaSettings
 from kaa.templates import StaticStrat, MultiStrategy
 from kaa.log import Output
 
+
 class ReachError:
 
     def __init__(self, msg, total_steps):
         self.message = msg
         self.total_steps = total_steps
 
+
 """
 Object handling all reachable flowpipe computations.
 """
 class ReachSet:
 
-    def __init__(self, model, strat=None, label=""):
+    def __init__(self, model, strat=None, label="", reachcompmode=None, transmode=BundleMode.AFO):
         self.model = model
+        self.trans_mode = transmode
         self.strat = StaticStrat(self.model) if strat is None else strat
-        self.flowpipe = FlowPipe(self.model, strat, label)
+        self.flowpipe = FlowPipe(self.model, strat, label, self.reach, reachcompmode)
+
 
     """
     Compute reachable set for the alloted number of time steps.
@@ -30,8 +34,8 @@ class ReachSet:
             TempStrat: template n  loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
-    def computeReachSet(self, time_steps, transmode=BundleMode.AFO):
-        transformer = BundleTransformer(self.model, transmode)
+    def computeReachSet(self, time_steps):
+        transformer = BundleTransformer(self.model, self.trans_mode)
         init_box_vol_thres = ((10 * self.model.dim) * self.model.bund.getIntersect().volume
                                 if KaaSettings.UseThreshold
                                 else -1)
@@ -86,6 +90,8 @@ class ReachSet:
 
             #Output.write("=========================================")
 
+
+        self.flowpipe.calc_flowpipe_data()
         if not isinstance(self.strat, MultiStrategy):
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
 
