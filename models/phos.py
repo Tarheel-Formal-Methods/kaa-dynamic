@@ -8,6 +8,8 @@ class Phosphorelay(Model):
 
     def __init__(self):
 
+        init_box = ((1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01))
+
         dim_sys = 7
 
         x1, x2, x3, x4, x5, x6, x7 = sp.Symbol("x1"), sp.Symbol("x2"), sp.Symbol("x3"), sp.Symbol("x4"), sp.Symbol("x5"), sp.Symbol("x6"), sp.Symbol("x7");
@@ -45,23 +47,17 @@ class Phosphorelay(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 1.01; offl[0] = -1.00;
-        offu[1] = 1.01; offl[1] = -1.00;
-        offu[2] = 1.01; offl[2] = -1.00;
-        offu[3] = 1.01; offl[3] = -1.00;
-        offu[4] = 1.01; offl[4] = -1.00;
-        offu[5] = 1.01; offl[5] = -1.00;
-        offu[6] = 1.01; offl[6] = -1.00;
-
         offu[7] = 100; offl[7] = 100;
         offu[8] = 100; offl[8] = 100;
         offu[9] = 100; offl[9] = 100;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="Phos")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Phos")
 
 class Phosphorelay_UnitBox(Model):
 
     def __init__(self):
+
+        init_box = ((1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01), (1.00, 1.01))
 
         dim_sys = 7
 
@@ -108,4 +104,4 @@ class Phosphorelay_UnitBox(Model):
         offu[5] = 1.01; offl[5] = -1.00;
         offu[6] = 1.01; offl[6] = -1.00;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="Phos")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Phos")

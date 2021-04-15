@@ -258,8 +258,8 @@ class VolumeSubplot(Subplot):
         vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
 
         tot_vol_tup = flowpipe.all_total_volume
-        tot_conv_hull_vol = round(tot_vol_tup.TotalFlowpipeConvHullVol, 3)
-        tot_envelop_box_vol = round(tot_vol_tup.TotalFlowpipeEnvelopBoxVol, 3)
+        tot_conv_hull_vol = round(tot_vol_tup.TotalFlowpipeConvHullVol, 10) #Volume scaling from intial set dim
+        tot_envelop_box_vol = round(tot_vol_tup.TotalFlowpipeEnvelopBoxVol, 10)
 
         if self.plot_all_vol:
             ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
@@ -276,7 +276,9 @@ class VolumeSubplot(Subplot):
                 return [pat.Patch(color = f"C{flow_idx}",
                                   label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})")]
 
+            print(vol_data.FlowpipeEnvelopBoxVol)
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
+
             return [pat.Patch(color = f"C{flow_idx}",
                               label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
 

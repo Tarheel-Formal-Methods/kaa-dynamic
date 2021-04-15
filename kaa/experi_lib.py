@@ -29,7 +29,7 @@ Experiment to compute the reachable set and estimate the total volume of all of 
 class VolumeExperiment(Experiment):
 
     def __init__(self, *inputs, label="Experiment"):
-        super().__init__(*inputs, ReachCompMode.VolMode, label=label)
+        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode, label=label)
 
     def execute(self, num_trials):
         num_steps = self.max_num_steps
@@ -66,7 +66,7 @@ Experiment to measure deviations between generated directions for a strategy typ
 class DeviationExperiment(Experiment):
 
     def __init__(self, *inputs, experi_type, label="Experiment"):
-        super().__init__(*inputs, ReachCompMode.VolMode, label=label)
+        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode, label=label)
         self.experi_type = experi_type
 
     def execute(self, num_trials):
@@ -140,7 +140,7 @@ class InitReachPlotExperiment(Experiment):
 class VolumePlotExperiment(Experiment):
 
     def __init__(self, *inputs, label="VolumePlotExperiment"):
-        super().__init__(*inputs, ReachCompMode.VolMode)
+        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
 
     def execute(self, accum=True, plot_all_vol=False):
         num_steps = self.max_num_steps
@@ -161,7 +161,7 @@ Experiment to calculate and plot the projection reachable sets.
 class ProjectionPlotExperiment(Experiment):
 
     def __init__(self, *inputs):
-        super().__init__(*inputs, ReachCompMode.ProjPlotMode)
+        super().__init__(*inputs, reach_comp_mode=ReachCompMode.ProjPlotMode)
 
     def execute(self, *var_tup, separate=False, plot_border_traj=True):
         num_steps = self.max_num_steps
@@ -181,7 +181,7 @@ class ProjectionPlotExperiment(Experiment):
 class CompAniExperiment(Experiment):
 
     def __init__(self, *inputs):
-        super().__init__(*inputs, ReachCompMode.PhasePlotMode)
+        super().__init__(*inputs, reach_comp_mode=ReachCompMode.PhasePlotMode)
 
     def execute(self, x , y, ptope_order, filename, plot_pts=None):
         if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]

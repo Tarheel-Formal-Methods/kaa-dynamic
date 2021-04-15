@@ -99,7 +99,7 @@ def test_ran_strat_Covid():
 def test_skewed_sliding_strat_comb_Covid():
     unit_model = Covid_UnitBox()
     model = Covid()
-    test_skewed_sliding_strat_comb(unit_model, 40, 5000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 50, 5000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_Covid():
     model = Covid_UnitBox()

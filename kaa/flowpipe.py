@@ -5,6 +5,7 @@ from enum import Enum, auto
 from kaa.timer import Timer
 from kaa.settings import PlotSettings
 from kaa.templates import MultiStrategy
+from kaa.log import Output
 from kaa.linearsystem import calc_box_volume
 
 FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
@@ -28,7 +29,7 @@ class FlowPipe:
 
     def __init__(self, model, strat, label, reach_comp_mode, flowpipe=None):
         self.flowpipe = [model.bund]
-        self.num_bunds = 0
+        self.num_bunds = 1
         self.model = model
         self.strat = strat
         self.vars = model.vars
@@ -96,6 +97,7 @@ class FlowPipe:
         if self.reach_comp_mode == ReachCompMode.VolMode:
             self.volume_data = self.get_volume_data()
             del self.flowpipe
+            Output.prominent("Deleting Flowpipe")
 
         elif self.reach_comp_mode == ReachCompMode.ProjPlotMode:
             self.proj_data = np.empty((2*self.dim, len(self)))
@@ -106,6 +108,7 @@ class FlowPipe:
                 self.proj_data[var_idx+1] = var_max_arr
 
             del self.flowpipe
+            Output.prominent("Deleting Flowpipe")
 
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
@@ -120,7 +123,10 @@ class FlowPipe:
     Returns array of volume data for each bundle in the flowpipe.
     @returns array of volume data.
     """
-    def get_volume_data(self, accum=False):
+    def get_volume_data(self, accum=True):
+        if self.volume_data:
+            return self.volume_data
+
         conv_hull_vol_data = np.empty(len(self.flowpipe))
         envelop_box_vol_data = np.empty(len(self.flowpipe))
         conv_hull_failed = False

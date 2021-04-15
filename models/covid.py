@@ -8,6 +8,8 @@ class Covid(Model):
 
     def __init__(self, delta=0.1):
 
+        init_box = ((0.69, 0.70), (0.09,0.1), (0.14, 0.15), (0.04, 0.05), (0.00099, 0.001), (0.00099, 0.001), (0.00099, 0.001))
+
         sA, sI, A, I, Ra, Ri, D = sp.Symbol('sA'), sp.Symbol('sI'), sp.Symbol('A'), sp.Symbol('I'), sp.Symbol('Ra'), sp.Symbol('Ri'), sp.Symbol('D')
 
         dsA = sA + (-0.25 * sA * (A + I))*delta
@@ -42,19 +44,17 @@ class Covid(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 0.7; offl[0] = -0.69;
-        offu[1] = 0.1; offl[1] = -0.09;
-        offu[2] = 0.15; offl[2] = -0.14;
-        offu[3] = 0.05; offl[3] = -0.04;
-        offu[4] = 0.001; offl[4] = -0.00099;
-        offu[5] = 0.001; offl[5] = -0.00099;
-        offu[6] = 0.001; offl[6] = -0.00099;
+        offu[7] = 100; offl[7] = 100; # Scaling is probs not right
+        offu[8] = 100; offl[8] = 100;
+        offu[9] = 100; offl[9] = 100;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="covid")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="covid")
 
 class Covid_UnitBox(Model):
 
     def __init__(self, delta=0.1):
+
+        init_box = ((0.69, 0.70), (0.09,0.1), (0.14, 0.15), (0.04, 0.05), (0.00099, 0.001), (0.00099, 0.001), (0.00099, 0.001))
 
         sA, sI, A, I, Ra, Ri, D = sp.Symbol('sA'), sp.Symbol('sI'), sp.Symbol('A'), sp.Symbol('I'), sp.Symbol('Ra'), sp.Symbol('Ri'), sp.Symbol('D')
 
@@ -84,12 +84,4 @@ class Covid_UnitBox(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 0.7; offl[0] = -0.69;
-        offu[1] = 0.1; offl[1] = -0.09;
-        offu[2] = 0.15; offl[2] = -0.14;
-        offu[3] = 0.05; offl[3] = -0.04;
-        offu[4] = 0.001; offl[4] = -0.00099;
-        offu[5] = 0.001; offl[5] = -0.00099;
-        offu[6] = 0.001; offl[6] = -0.00099;
-
-        super().__init__(dyns, vars, T, L, offu, offl, name="covid")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="covid")
