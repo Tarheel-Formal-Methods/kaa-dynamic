@@ -422,7 +422,8 @@ class BundleTransformer:
         Timer.stop("Polynomial Generation")
 
         Timer.start('Bound Computation')
-        ub, lb = OptProd(bound_polyu, bund).getBounds()
+        with OptProd(bound_polyu, bund) as opt_prod:
+            ub, lb = opt_prod.getBounds()
         Timer.stop('Bound Computation')
 
         return ub, -1 * lb

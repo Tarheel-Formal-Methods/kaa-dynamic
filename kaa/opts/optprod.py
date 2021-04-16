@@ -15,5 +15,14 @@ class OptimizationProd(ABC):
     All bounds must be returned as a tuple with the first element being the upper bound and the
     second element being the lower bound.
     """
+    @abstractmethod
     def getBounds(self):
+        pass
+
+    @abstractmethod
+    def __enter__(self):
+        return self
+
+    @abstractmethod
+    def __exit__(self):
         pass

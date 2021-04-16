@@ -23,6 +23,7 @@ class Kodiak:
     def __init__(self):
         self.initialized = False
         self.variables = {}
+        self.init()
 
     def init(self):
         'initialize the static members'
@@ -93,6 +94,10 @@ class Kodiak:
             self._make_atan.restype = ctypes.c_int
             self._make_atan.argtypes = [ctypes.c_int]
 
+            self._free_stack = self.lib.free_stack
+            self._free_stack.restype = None
+            self._free_stack.argtypes = []
+
             self._minmax_diff = self.lib.minmax_diff
             self._minmax_diff.restype = None
             self._minmax_diff.argtypes = [ctypes.c_int, # nonlinear expression
@@ -101,6 +106,8 @@ class Kodiak:
                                          ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"), ctypes.c_int,
                                          ctypes.c_int,
                                          ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"), ctypes.c_int]
+
+
 
             #### initialize with default values ####
             self._init()
@@ -122,8 +129,6 @@ class Kodiak:
         ''''return the lower and upper bound of the passed-in nonlinear function minus the linear approximation,
         within the passed-in bounds'''
 
-        self.init()
-
         if not isinstance(linear_approx, np.ndarray):
             linear_approx = np.array(linear_approx, dtype=float)
 
@@ -143,25 +148,23 @@ class Kodiak:
         #return rv[0], rv[1]
         return rv[0], rv[1], rv[2], rv[3]
 
+    def free_stack(self):
+        self._free_stack()
 
     def use_bernstein(self, use_bernstein):
         'should we use bernstein polynomials for optimization (false = interval arithmetic), default: True'
-
-        self.init()
         self._use_bernstein(1 if use_bernstein else 0)
 
 
     def set_precision(self, precision):
         'set the prevision for the answer, more negative = more accurage, default: -9 (10^-9)'
-
-        self.init()
         self._set_precision(precision)
 
 
     def add_variable(self, name):
         'add an optimization variable (should be called in order)'
 
-        self.init()
+        #self.init()
         self.variables[name] = len(self.variables)
 
         n = name.encode('utf-8')
@@ -171,7 +174,7 @@ class Kodiak:
     def lookup_variable(self, name):
         'lookup the expression index for a variable previously-added with add_variable()'
 
-        self.init()
+        #self.init()
 
         assert name in self.variables, f"variable '{name}' must be added first with Kodiak.add_variable()"
 
@@ -182,42 +185,42 @@ class Kodiak:
     def print_expression(self, i):
         'print the expression with the given index to stdout'
 
-        self.init()
+        #self.init()
         self._print_expression(i)
 
 
     def make_double(self, d):
         'make and return an expression index for a double number'
 
-        self.init()
+        #self.init()
         return self._make_double(d)
 
 
     def make_mult(self, a, b):
         'make and return an expression index for a multiplication of the two passed-in expression indices'
 
-        self.init()
+        #self.init()
         return self._make_mult(a, b)
 
 
     def make_add(self, a, b):
         'make and return an expression index for an addition of the two passed-in expression indices'
 
-        self.init()
+        #self.init()
         return self._make_add(a, b)
 
 
     def make_sq(self, a):
         'make and return an expression index for the square of the the passed-in expression index'
 
-        self.init()
+        #self.init()
         return self._make_sq(a)
 
 
     def make_sqrt(self, a):
         'make and return an expression index for the square of the the passed-in expression index'
 
-        self.init()
+        #self.init()
         return self._make_sqrt(a)
 
 
@@ -226,28 +229,28 @@ class Kodiak:
         note: intb is an integer, not an expression index
         '''
 
-        self.init()
+        #self.init()
         return self._make_intpow(a, intb)
 
 
     def make_sin(self, a):
         'make and return an expression index for the sine of the the passed-in expression index'
 
-        self.init()
+        #self.init()
         return self._make_sin(a)
 
 
     def make_cos(self, a):
         'make and return an expression index for the cosine of the the passed-in expression index'
 
-        self.init()
+        #self.init()
         return self._make_cos(a)
 
 
     def make_atan(self, a):
         'make and return an expression index for the atan of the the passed-in expression index'
 
-        self.init()
+        #self.init()
         return self._make_atan(a)
 
 
@@ -258,7 +261,7 @@ class Kodiak:
         represents the (newly-constructed) expression
         '''
 
-        self.init()
+        #self.init()
 
         rv = None
         e = sympy_exp

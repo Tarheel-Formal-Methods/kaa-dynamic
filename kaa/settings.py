@@ -33,8 +33,8 @@ class KaaSettings:
     'Run Normalization method if condition number becomes too large.'
     NormalizeLinDir = False
 
-    DelFlowpipe = True
-
+    DelFlowpipe = False
+    
 class DebugSettings:
     TimerProfileLabels = set(["PCA Direction Generation", "Linear Direction Generation", "Open Strategy", "Close Strategy"])
 

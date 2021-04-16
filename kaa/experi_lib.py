@@ -108,7 +108,7 @@ Experiment to calculate and plot the phase plot.
 class PhasePlotExperiment(Experiment):
 
     def __init__(self, *inputs):
-        super().__init__(*inputs)
+        super().__init__(*inputs,reach_comp_mode=ReachCompMode.PhasePlotMode)
 
     def execute(self, *var_tup, separate=False, plot_border_traj=True):
         num_steps = self.max_num_steps

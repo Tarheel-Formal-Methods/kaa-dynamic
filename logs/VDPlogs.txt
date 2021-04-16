@@ -1,0 +1,100 @@
+[1m[37mStarted LP with c: [ 0.40403273 -0.91474453][0m
+Direction vector we are using: [ 0.40403273 -0.91474453]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.40403273  0.91474453][0m
+[1m[37mStarted LP with c: [-0.40403273  0.91474453][0m
+Direction vector we are using: [-0.40403273  0.91474453]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.91474453 -0.40403273][0m
+[1m[37mStarted LP with c: [-0.91474453 -0.40403273][0m
+Direction vector we are using: [-0.91474453 -0.40403273]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [0.91474453 0.40403273][0m
+[1m[37mStarted LP with c: [0.91474453 0.40403273][0m
+Direction vector we are using: [0.91474453 0.40403273]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.50663546  1.60063828][0m
+[1m[37mStarted LP with c: [-0.50663546  1.60063828][0m
+Direction vector we are using: [-0.50663546  1.60063828]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [ 0.50663546 -1.60063828][0m
+[1m[37mStarted LP with c: [ 0.50663546 -1.60063828][0m
+Direction vector we are using: [ 0.50663546 -1.60063828]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [0.65363441 1.66129767][0m
+[1m[37mStarted LP with c: [0.65363441 1.66129767][0m
+Direction vector we are using: [0.65363441 1.66129767]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.65363441 -1.66129767][0m
+[1m[37mStarted LP with c: [-0.65363441 -1.66129767][0m
+Direction vector we are using: [-0.65363441 -1.66129767]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [ 0.37975178 -0.92508842][0m
+[1m[37mStarted LP with c: [ 0.37975178 -0.92508842][0m
+Direction vector we are using: [ 0.37975178 -0.92508842]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.37975178  0.92508842][0m
+[1m[37mStarted LP with c: [-0.37975178  0.92508842][0m
+Direction vector we are using: [-0.37975178  0.92508842]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.92508842 -0.37975178][0m
+[1m[37mStarted LP with c: [-0.92508842 -0.37975178][0m
+Direction vector we are using: [-0.92508842 -0.37975178]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [0.92508842 0.37975178][0m
+[1m[37mStarted LP with c: [0.92508842 0.37975178][0m
+Direction vector we are using: [0.92508842 0.37975178]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.48823943  1.6810389 ][0m
+[1m[37mStarted LP with c: [-0.48823943  1.6810389 ][0m
+Direction vector we are using: [-0.48823943  1.6810389 ]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [ 0.48823943 -1.6810389 ][0m
+[1m[37mStarted LP with c: [ 0.48823943 -1.6810389 ][0m
+Direction vector we are using: [ 0.48823943 -1.6810389 ]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [0.6727276  1.83910282][0m
+[1m[37mStarted LP with c: [0.6727276  1.83910282][0m
+Direction vector we are using: [0.6727276  1.83910282]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.6727276  -1.83910282][0m
+[1m[37mStarted LP with c: [-0.6727276  -1.83910282][0m
+Direction vector we are using: [-0.6727276  -1.83910282]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [ 0.3542502  -0.93515068][0m
+[1m[37mStarted LP with c: [ 0.3542502  -0.93515068][0m
+Direction vector we are using: [ 0.3542502  -0.93515068]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.3542502   0.93515068][0m
+[1m[37mStarted LP with c: [-0.3542502   0.93515068][0m
+Direction vector we are using: [-0.3542502   0.93515068]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.93515068 -0.3542502 ][0m
+[1m[37mStarted LP with c: [-0.93515068 -0.3542502 ][0m
+Direction vector we are using: [-0.93515068 -0.3542502 ]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [0.93515068 0.3542502 ][0m
+[1m[37mStarted LP with c: [0.93515068 0.3542502 ][0m
+Direction vector we are using: [0.93515068 0.3542502 ]
+Propagation Done.
+Support Point Generated.
+[1m[37mEnded LP with c: [-0.47145036  1.76895031][0m

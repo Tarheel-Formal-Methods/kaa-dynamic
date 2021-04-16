@@ -97,3 +97,10 @@ class BernsteinProd(OptimizationProd):
     """
     def _choose(self, n, r):
         return factorial(n) // (factorial(r)*factorial(n-r))
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        pass

@@ -14,6 +14,7 @@ class KodiakProd(OptimizationProd):
         for var in bund.vars:
             self.kodiak.add_variable(str(var))
         self.kodiak_poly = self.kodiak.sympy_to_kodiak(self.poly)
+        Output.write(f"Top of Kodiak Stack: {self.kodiak_poly}")
 
     def getBounds(self):
         'Unit box bounds'
@@ -26,3 +27,9 @@ class KodiakProd(OptimizationProd):
         #Output.bold_write("Out of Kodiak")
 
         return ub, lb
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        self.kodiak.free_stack()

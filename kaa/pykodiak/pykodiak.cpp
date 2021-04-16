@@ -25,6 +25,12 @@ extern "C"
         Kodiak::set_safe_input(false);
     }
 
+    void free_stack()
+    {
+      reals.clear();
+      varToRealIndex.clear();
+    }
+
     // use bernstein expansion for solving? (false = interval artithmetic)
     void useBernstein(int val)
     {
@@ -87,7 +93,7 @@ extern "C"
             char msg[256];
             snprintf(msg, sizeof(msg), "%s() called with out-of-bounds expression index: %d, valid range is [0, %d]",
                      name, i, (int)reals.size());
-                
+
             throw runtime_error(msg);
         }
     }
@@ -97,7 +103,7 @@ extern "C"
     {
         checkIndex(__func__, a);
         checkIndex(__func__, b);
-        
+
         reals.push_back(reals[a] * reals[b]);
 
         return reals.size() - 1;
@@ -116,7 +122,7 @@ extern "C"
     {
         checkIndex(__func__, a);
         checkIndex(__func__, b);
-        
+
         reals.push_back(reals[a] + reals[b]);
 
         return reals.size() - 1;
@@ -126,7 +132,7 @@ extern "C"
     int makeSq(int a)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(Sq(reals[a]));
 
         return reals.size() - 1;
@@ -136,7 +142,7 @@ extern "C"
     int makeSqrt(int a)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(Sqrt(reals[a]));
 
         return reals.size() - 1;
@@ -146,7 +152,7 @@ extern "C"
     int makeIntPow(int a, int intp)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(reals[a]^intp);
 
         return reals.size() - 1;
@@ -155,25 +161,25 @@ extern "C"
     int makeSin(int a)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(Sin(reals[a]));
 
         return reals.size() - 1;
     }
-    
+
     int makeCos(int a)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(Cos(reals[a]));
 
         return reals.size() - 1;
     }
-    
+
     int makeAtan(int a)
     {
         checkIndex(__func__, a);
-        
+
         reals.push_back(Atan(reals[a]));
 
         return reals.size() - 1;
@@ -196,7 +202,7 @@ extern "C"
             char msg[256];
             snprintf(msg, sizeof(msg), "minmax_diff called with linearApprox with %d entries (system has %d variables)",
                      linearApproxSize, numVars);
-                
+
             throw runtime_error(msg);
         }
 
@@ -205,7 +211,7 @@ extern "C"
             char msg[256];
             snprintf(msg, sizeof(msg), "minmax_diff() called with %dx%d bounds (expected %dx2)",
                      boundsRows, boundsCols, numVars);
-                
+
             throw runtime_error(msg);
         }
 
@@ -231,7 +237,7 @@ extern "C"
 
         //cout << "Setting default enclosure method. \n";
         //cout << std::flush;
-        
+
         sys.setDefaultEnclosureMethodTrueForBernsteinAndFalseForIntervalArithmetic(bernstein);
         sys.set_precision(precision);
 
@@ -245,7 +251,7 @@ extern "C"
 
             sys.var(var, approx(bounds[row * 2]), approx(bounds[row * 2 + 1]));
         }
-        
+
         //cout << "Calling sys.minmax \n";
         //cout << std::flush;
 

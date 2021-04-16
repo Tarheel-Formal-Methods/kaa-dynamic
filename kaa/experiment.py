@@ -299,7 +299,7 @@ class Experiment(ABC):
     Sample points from the edges of the box and propagate them for a number of steps.
     """
     def simulate_border_points(self, num_steps):
-        init_box_inter = self.__get_init_box()
+        init_box_inter = self.model.init_box
         border_points = self.__get_init_box_borders(init_box_inter)
 
         trajs = [Traj(self.model, point, num_steps) for point in border_points]
