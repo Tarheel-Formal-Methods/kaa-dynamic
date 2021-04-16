@@ -13,7 +13,7 @@ from kaa.timer import Timer
 
 PlotSettings.save_fig = False
 def test_sapo_VDP():
-    num_steps = 30
+    num_steps = 70
 
     model = VanDerPol(delta=0.08)
 

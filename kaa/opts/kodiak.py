@@ -18,7 +18,7 @@ class KodiakProd(OptimizationProd):
 
     def getBounds(self):
         'Unit box bounds'
-        bounds = [[0,1] for _ in range(self.bund.dim)]
+        bounds = [(0,1) for _ in range(self.bund.dim)]
         jac_mat = np.zeros((self.bund.dim, self.bund.dim))
 
         #Output.bold_write("Calling Kodiak")
@@ -31,5 +31,5 @@ class KodiakProd(OptimizationProd):
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         self.kodiak.free_stack()
