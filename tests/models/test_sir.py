@@ -88,6 +88,62 @@ def test_sapo_skewed_compare_SIR():
     harosc = VolumeExperiment(experi_input_1, experi_input_2, label=f"SAPO1010COMP")
     harosc.execute(1)
 
+def test_init_reach_vol_SIR():
+    num_steps = 150
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+
+    pca_window_size = 8
+    lin_window_size = 12
+
+    inputs_one = []
+    inputs_two = []
+    for inc in range(0,5,1):
+        inc /= 500
+
+        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0.00099, 0.001))
+
+        unit_model = SIR_UnitBox(init_box=box)
+        model = SIR(init_box=box)
+
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
+
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"{model.name} SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+        experi_input_two = dict(model=model,
+                                strat=None,
+                                label=f"SapoSIR",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+
+        inputs_one.append(experi_input_one)
+        inputs_two.append(experi_input_two)
+
+
+    inputs = inputs_one + inputs_two
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = InitReachPlotExperiment(*inputs)
+    experi.execute()
+
 def test_vol_comp_SIR():
     unit_model = SIR_UnitBox()
     model = SIR()
@@ -105,7 +161,7 @@ def test_strat_comb_SIR():
 def test_skewed_sliding_strat_comb_SIR():
     unit_model = SIR_UnitBox()
     model = SIR()
-    test_skewed_sliding_strat_comb(unit_model, 100, 5000, use_supp=True, use_pregen=False)
+    test_skewed_sliding_strat_comb(unit_model, 100, 5000, use_supp=True, use_pregen=False, use_sapo=None)
 
 def test_sliding_strat_comb_SIR():
     model = SIR_UnitBox()

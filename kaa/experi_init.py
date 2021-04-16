@@ -213,13 +213,13 @@ def test_vol_comp(model, num_steps, num_trajs, num_trials=10, use_supp=True, use
     experi.execute(accum=True, plot_all_vol=True)
 
 
-def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_trials=10, use_supp=True, use_pregen=False, use_sapo=None):
+def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, incre=2, num_trials=10, use_supp=True, use_pregen=False, use_sapo=None):
     if use_supp:
         num_trials = 1
 
     inputs = []
-    for pca_window_size in range(5, 20, 5):
-        lin_window_size = 20 - pca_window_size
+    for pca_window_size in range(incre, num_temps, incre):
+        lin_window_size = num_temps - pca_window_size
 
         pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
         lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)

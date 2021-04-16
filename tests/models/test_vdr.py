@@ -171,7 +171,7 @@ def test_ani_pca_comp_VDP():
     Timer.generate_stats()
 
 def test_init_reach_vol_VDP():
-    num_steps = 30
+    num_steps = 70
     use_supp = True
     use_pregen = False
 
@@ -182,7 +182,7 @@ def test_init_reach_vol_VDP():
 
     inputs_one = []
     inputs_two = []
-    for inc in range(3):
+    for inc in range(10):
         inc /= 100
 
         box = ((0, 0.01+inc),(1.99 - inc, 2))
@@ -305,7 +305,7 @@ def test_strat_comb_VDP():
 def test_skewed_sliding_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     model = VanDerPol(delta=0.08)
-    test_skewed_sliding_strat_comb(unit_model, 5, 4000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 70, 4000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
