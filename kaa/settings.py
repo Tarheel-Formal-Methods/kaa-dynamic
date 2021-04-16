@@ -4,7 +4,7 @@ Simple settings file for the in-and-outs of Kaa.
 """
 class KaaSettings:
     'Should we try to parallelize the generator calculations?'
-    Parallelize = False
+    Parallelize = True
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
     OptProd = "Kodiak"
@@ -34,7 +34,7 @@ class KaaSettings:
     NormalizeLinDir = False
 
     DelFlowpipe = False
-    
+
 class DebugSettings:
     TimerProfileLabels = set(["PCA Direction Generation", "Linear Direction Generation", "Open Strategy", "Close Strategy"])
 

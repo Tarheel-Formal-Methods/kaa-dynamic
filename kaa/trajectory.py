@@ -35,6 +35,19 @@ class Traj:
     @params time_steps: number of time steps to generate trajectory
     """
     def propagate(self, time_steps):
+        df = self.model.f
+
+        'Propagate the points according to the dynamics for designated number of time steps.'
+        prev_point = self.end_point
+
+        for _ in range(time_steps):
+            var_sub = [(var, prev_point[var_idx]) for var_idx, var in enumerate(self.vars)]
+            next_point = [f.subs(var_sub) for f in df]
+            self.add_point(next_point)
+
+            prev_point = next_point
+
+        """
         df = self.model.lambdified_f
         prev_point = self.traj_mat[-1]
         base_idx = self.num_points
@@ -50,6 +63,8 @@ class Traj:
             new_traj_point_mat[idx] = next_point
 
             prev_point = next_point
+
+    """
 
     """
     Returns the projection of the trajectory onto an variable axis
