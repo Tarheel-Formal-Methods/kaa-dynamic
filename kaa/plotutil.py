@@ -258,8 +258,8 @@ class VolumeSubplot(Subplot):
         vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
 
         tot_vol_tup = flowpipe.all_total_volume
-        tot_conv_hull_vol = round(tot_vol_tup.TotalFlowpipeConvHullVol, 10) #Volume scaling from intial set dim
-        tot_envelop_box_vol = round(tot_vol_tup.TotalFlowpipeEnvelopBoxVol, 10)
+        tot_conv_hull_vol = tot_vol_tup.TotalFlowpipeConvHullVol
+        tot_envelop_box_vol = tot_vol_tup.TotalFlowpipeEnvelopBoxVol
 
         if self.plot_all_vol:
             ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")

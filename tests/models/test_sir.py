@@ -149,7 +149,6 @@ def test_vol_comp_SIR():
     model = SIR()
     test_vol_comp(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=None)
 
-
 def test_ran_strat_SIR():
     model = SIR_UnitBox()
     test_ran_strat(model, 150, 5000, use_supp = True, use_pregen = False)
@@ -161,7 +160,7 @@ def test_strat_comb_SIR():
 def test_skewed_sliding_strat_comb_SIR():
     unit_model = SIR_UnitBox()
     model = SIR()
-    test_skewed_sliding_strat_comb(unit_model, 100, 5000, use_supp=True, use_pregen=False, use_sapo=None)
+    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_SIR():
     model = SIR_UnitBox()

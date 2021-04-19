@@ -4,7 +4,7 @@ Simple settings file for the in-and-outs of Kaa.
 """
 class KaaSettings:
     'Should we try to parallelize the generator calculations?'
-    Parallelize = False
+    Parallelize = True
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
     OptProd = "Kodiak"
@@ -22,13 +22,13 @@ class KaaSettings:
     SaveStateonError = True
 
     'Path for data directory to save all xlsx files from experiments.'
-    DataDir = "/Users/edwardkim/Work/kaa-optimize/data"
+    DataDir = "/home/edward/work/kaa-optimize/data"
 
     'Flag to trigger enveloping box threshold checking'
     UseThreshold = False
 
     "Number of threads to instantiate when running parallel routines."
-    ThreadCount = 3
+    ThreadCount = 16
 
     'Run Normalization method if condition number becomes too large.'
     NormalizeLinDir = False
@@ -46,7 +46,7 @@ class PlotSettings:
     save_fig = False
 
     'Path to save figures'
-    default_fig_path = "/Users/edwardkim/Work/kaa-optimize/figures"
+    default_fig_path = "/home/edward/work/kaa-optimize/figures"
 
     'Figure dimensions'
     fig_size = (40,20)

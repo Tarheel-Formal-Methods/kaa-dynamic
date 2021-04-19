@@ -1,4 +1,4 @@
-from models.jetengine import JetEngine_UnitBox
+from models.jetengine import JetEngine_UnitBox, JetEngine
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.temp.random_static_strat import *
@@ -72,25 +72,25 @@ def test_init_reach_vol_JetEngine():
 
     num_trajs = 5000
 
-    pca_window_size = 8
-    lin_window_size = 12
+    pca_window_size = 2
+    lin_window_size = 3
 
     inputs_one = []
     inputs_two = []
     for inc in range(5):
-        inc /= 50
+        inc /= 100
 
         box = init_box=((0.8-inc,1.2), (0.8-inc,1.2))
 
-        unit_model = JetEngine_UnitBox(delta=0.08, init_box=box)
-        model = VanDerPol(delta=0.08, init_box=box)
+        unit_model = JetEngine_UnitBox(init_box=box)
+        model = JetEngine(init_box=box)
 
         pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
         lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"JetEngine SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
@@ -98,7 +98,7 @@ def test_init_reach_vol_JetEngine():
 
         experi_input_two = dict(model=model,
                                 strat=None,
-                                label=f"SapoVDP",
+                                label=f"SapoJetEngine",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
@@ -121,8 +121,6 @@ def test_init_reach_vol_JetEngine():
     experi = InitReachPlotExperiment(*inputs)
     experi.execute()
 
-
-
 def test_vol_comp_JetEngine():
     unit_model = JetEngine_UnitBox()
     test_vol_comp(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=None)
@@ -132,9 +130,9 @@ def test_ran_strat_JetEngine():
     test_ran_strat(model, 100, 5000, use_supp=True, use_pregen=False)
 
 def test_skewed_sliding_strat_comb_JetEngine():
-    unit_model = JetEngine_UnitBox(delta=0.1)
-    model = JetEngine(delta=0.1)
-    test_skewed_sliding_strat_comb(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=model)
+    unit_model = JetEngine_UnitBox()
+    model = JetEngine()
+    test_skewed_sliding_strat_comb(unit_model, 100, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_ran_strat_JetEngine():
     model = JetEngine_UnitBox(delta=0.1)

@@ -75,7 +75,7 @@ def test_sliding_skewed_plot_Phos():
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 150
+    num_steps = 100
 
     pca_window_size = 10
     lin_window_size = 10

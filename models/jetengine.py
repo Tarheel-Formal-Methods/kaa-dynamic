@@ -70,8 +70,6 @@ class JetEngine(Model):
         T[4][0] = 1; T[4][1] = 3;
         T[5][0] = 2; T[5][1] = 3; # SAme for neuron model, cvdp
 
-        T[0][0] = 0; T[0][1] = 1;
-
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 

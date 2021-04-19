@@ -177,8 +177,8 @@ def test_init_reach_vol_VDP():
 
     num_trajs = 5000
 
-    pca_window_size = 8
-    lin_window_size = 12
+    pca_window_size = 3
+    lin_window_size = 2
 
     inputs_one = []
     inputs_two = []

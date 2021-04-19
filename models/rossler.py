@@ -6,10 +6,10 @@ from kaa.bundle import Bundle
 
 class Rossler(Model):
 
-    def __init__(self, delta=0.025):
+    def __init__(self, delta=0.025, init_box=((0,0.1), (4.8,5), (0,0.1))):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
-        vars = [x, y, z]
+        vars = (x, y, z)
 
         dim_sys = len(vars)
 
@@ -17,13 +17,13 @@ class Rossler(Model):
         dy = y + (x + 0.1*y)*delta
         dz = z + (0.1 + z*(x-14))*delta
 
-        dyns = [dx, dy ,dz]
+        dyns = (dx, dy ,dz)
 
         num_direct = 5
         num_temps = 3
 
-        L = np.zeros([num_direct, dim_sys])
-        T = np.zeros([num_temps, dim_sys])
+        L = np.zeros((num_direct, dim_sys))
+        T = np.zeros((num_temps, dim_sys))
 
         L[0][0] = 1
         L[1][1] = 1
@@ -48,11 +48,11 @@ class Rossler(Model):
         offu[3] = 10; offl[3] = 0;
         offu[4] = 10; offl[4] = 0;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="Rossler")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Rossler")
 
 class Rossler_UnitBox(Model):
 
-    def __init__(self, delta=0.025):
+    def __init__(self, delta=0.025, init_box=((0,0.1), (4.8,5), (0,0.1))):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = [x, y, z]
@@ -63,13 +63,13 @@ class Rossler_UnitBox(Model):
         dy = y + (x + 0.1*y)*delta
         dz = z + (0.1 + z*(x-14))*delta
 
-        dyns = [dx, dy ,dz]
+        dyns = (dx, dy ,dz)
 
         num_direct = 3
         num_temps = 1
 
-        L = np.zeros([num_direct, dim_sys])
-        T = np.zeros([num_temps, dim_sys])
+        L = np.zeros((num_direct, dim_sys))
+        T = np.zeros((num_temps, dim_sys))
 
         L[0][0] = 1
         L[1][1] = 1
@@ -86,4 +86,4 @@ class Rossler_UnitBox(Model):
         #offu[3] = 10; offl[3] = 0;
         #offu[4] = 10; offl[4] = 0;
         #
-        super().__init__(dyns, vars, T, L, offu, offl, name="Rossler")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Rossler")
