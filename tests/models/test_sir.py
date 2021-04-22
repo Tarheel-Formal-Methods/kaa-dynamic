@@ -48,47 +48,49 @@ def test_sapo_vol_SIR():
     harosc = VolumeExperiment(experi_input)
     harosc.execute(1)
 
-def test_sapo_skewed_compare_SIR():
+def test_init_reach_vol_vs_ran_SIR():
     num_steps = 150
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 70
 
-    pca_window_size = 10
-    lin_window_size = 10
-    model_1 = SIR(delta=0.5)
+    pca_window_size = 8
+    lin_window_size = 12
 
-    experi_input_1 = dict(model=model_1, #Encompass strat initilizations?
-                        strat=None,
-                        label="SapoSIR",
-                        num_steps=num_steps-1,
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        max_steps=num_steps)
+    inputs = []
+    for inc in range(0,5,1):
+        inc /= 500
 
+        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0.00099, 0.001))
 
+        unit_model = SIR_UnitBox(init_box=box)
+        model = SIR(init_box=box)
 
-    model = SIR_UnitBox(delta=0.5)
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
-    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
-    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"SIR SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
 
-    experi_input_2 = dict(model=model,
-                        strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
+        inputs.append(experi_input_one)
 
-    harosc = VolumeExperiment(experi_input_1, experi_input_2, label=f"SAPO1010COMP")
-    harosc.execute(1)
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
 
-def test_init_reach_vol_SIR():
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi.execute()
+
+def test_init_reach_vol_vs_sapo_SIR():
     num_steps = 150
     use_supp = True
     use_pregen = False

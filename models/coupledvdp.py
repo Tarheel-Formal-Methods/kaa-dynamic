@@ -9,8 +9,9 @@ class CoupledVDP_UnitBox(Model):
 
     def __init__(self, delta=0.2):
 
+        init_box = ((1.25, 1.55), (2.25, 2.35),(1.25, 1.55), (2.25, 2.35))
         x1, y1, x2, y2 = sp.Symbol('x1'), sp.Symbol('y1'), sp.Symbol('x2'), sp.Symbol('y2')
-        vars = [x1, y1, x2, y2]
+        vars = (x1, y1, x2, y2)
 
         dim_sys = len(vars)
 
@@ -19,13 +20,13 @@ class CoupledVDP_UnitBox(Model):
         dx2 = x2 + (y2)*delta
         dy2 = y2 + ((1- x2**2)*y2 - x2 +(x1 - x2))*delta
 
-        dyns = [dx1, dy1, dx2, dy2]
+        dyns = (dx1, dy1, dx2, dy2)
 
         num_direct = 4
         num_temps = 1
 
-        L = np.zeros([num_direct, dim_sys])
-        T = np.zeros([num_temps, dim_sys])
+        L = np.zeros((num_direct, dim_sys))
+        T = np.zeros((num_temps, dim_sys))
 
         L[0][0] = 1
         L[1][1] = 1
@@ -42,4 +43,4 @@ class CoupledVDP_UnitBox(Model):
         offu[0] = 1.55; offl[0] = -1.25;
         offu[1] = 2.35; offl[1] = -2.25;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="CoupledVDP")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="CoupledVDP")

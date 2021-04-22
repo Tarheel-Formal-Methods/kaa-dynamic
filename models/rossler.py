@@ -19,8 +19,8 @@ class Rossler(Model):
 
         dyns = (dx, dy ,dz)
 
-        num_direct = 5
-        num_temps = 3
+        num_direct = 6
+        num_temps = 6
 
         L = np.zeros((num_direct, dim_sys))
         T = np.zeros((num_temps, dim_sys))
@@ -30,14 +30,21 @@ class Rossler(Model):
         L[2][2] = 1
 
         L[3][0] = 1
-        L[3][1] = 0.5
+        L[3][1] = 1
 
-        L[4][0] = 0.5
-        L[4][2] = 0.5
+        L[4][0] = 1
+        L[4][2] = 1
+
+        L[5][1] = 1
+        L[5][2] = 1
 
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2;
         T[1][0] = 1; T[1][1] = 2; T[1][2] = 3;
         T[2][0] = 2; T[2][1] = 3; T[2][2] = 4;
+        T[3][0] = 3; T[3][1] = 4; T[3][2] = 5;
+        T[4][0] = 0; T[4][1] = 1; T[4][2] = 3;
+        T[5][0] = 1; T[5][1] = 2; T[5][2] = 5;
+
 
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
@@ -47,6 +54,7 @@ class Rossler(Model):
         offu[2] = 0.1; offl[2] = 0;
         offu[3] = 10; offl[3] = 0;
         offu[4] = 10; offl[4] = 0;
+        offu[5] = 10; offl[5] = 0;
 
         super().__init__(dyns, vars, T, L, init_box, offl, offu, name="Rossler")
 

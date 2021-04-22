@@ -3,9 +3,11 @@ import numpy as np
 from kaa.trajectory import Traj, TrajCollection
 from kaa.log import Output
 from kaa.experiment import Experiment
+from kaa.temp.random_static_strat import RandomStaticStrat
 from kaa.spreadsheet import *
 from kaa.timer import Timer
 from kaa.flowpipe import ReachCompMode
+from kaa.linearsystem import calc_box_volume
 
 """
 Experiment to generate statistics useful for profiling Kaa
@@ -132,10 +134,52 @@ class InitReachPlotExperiment(Experiment):
 
     def execute(self):
         for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10) #fix this
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        self.plot.plot({'type': 'InitVolReachVol',
+                        'override': None})
+
+class InitReachVSRandomPlotExperiment(Experiment):
+    def __init__(self, *inputs,  num_ran_temps=20, num_trials=20):
+            super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
+            self.num_trials = num_trials
+            self.num_ran_temps = num_ran_temps
+
+    def execute(self):
+        override_inputs = []
+        for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 
-        self.plot.plot({'type': 'InitVolReachVol'})
+            override_inputs.append(self.avg_ran_flowpipes(experi_input))
+
+
+        self.plot.plot({'type': 'InitVolReachVol',
+                        'override': override_inputs})
+
+    def avg_ran_flowpipes(self, experi_input):
+        trial_vol_arr = np.empty(self.num_trials)
+        for trial in range(self.num_trials):
+            input_model = experi_input['model']
+            input_traj = experi_input['num_trajs']
+            input_supp = experi_input['supp_mode']
+            input_pregen = experi_input['pregen_mode']
+            num_steps = experi_input['num_steps']
+
+            ran_label=f"{input_model.name} Random Static Strat {self.num_trials} trials"
+
+            ran_experi_input = dict(model=input_model,
+                                    strat=RandomStaticStrat(input_model, self.num_ran_temps),
+                                    label=ran_label,
+                                    supp_mode = input_supp,
+                                    pregen_mode = input_pregen,
+                                    num_trajs=input_traj,
+                                    num_steps=num_steps)
+
+            trial_vol_arr[trial] = self.calc_flowpipe(ran_experi_input).total_volume
+
+        return (ran_label, calc_box_volume(input_model.init_box), np.average(trial_vol_arr))
 
 class VolumePlotExperiment(Experiment):
 

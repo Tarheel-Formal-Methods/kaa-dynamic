@@ -284,8 +284,9 @@ class VolumeSubplot(Subplot):
 
 class InitVolReachVolPlot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps):
+    def __init__(self, model, flowpipes, num_steps, override):
         super().__init__(model, "InitVolReachVol", flowpipes, 1, num_steps)
+        self.override = override
 
     def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting InitVolReachVol."
@@ -308,18 +309,18 @@ class InitVolReachVolPlot(Subplot):
 
             for flow_idx, flowpipe in enumerate(flowpipes):
 
-                #print(round(flowpipe.init_box_volume, 5))
-                #print(round(flowpipe.total_volume, 5))
-
                 init_vol_arr[flow_idx] = round(flowpipe.init_box_volume, 5)
                 reach_vol_arr[flow_idx] = round(flowpipe.total_volume, 5)
 
-
-            print(init_vol_arr)
-            print(reach_vol_arr)
             ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{label_idx}")
             axis_patches.append(pat.Patch(color=f"C{label_idx}",
                                           label=label))
+
+        if self.override: #Fix this, just bandaid for now
+            label, init_vol_arr, reach_vol_arr = zip(*self.override)
+            ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{2}")
+            axis_patches.append(pat.Patch(color=f"C{2}",
+                                          label=label[0]))
 
         ax.legend(handles=axis_patches)
 
@@ -377,7 +378,8 @@ class Plot:
             elif subplot_type == "InitVolReachVol":
                 subplot = InitVolReachVolPlot(self.model,
                                               self.flowpipes,
-                                              self.num_steps)
+                                              self.num_steps,
+                                              subplot_dict['override'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

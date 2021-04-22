@@ -41,12 +41,12 @@ class ReachSet:
                                 if KaaSettings.UseThreshold
                                 else -1)
 
-        for step in range(time_steps+1):
+        for step in range(time_steps):
             #Output.write("=========================================")
             #Output.write(f"DUMP OF STEP {step}")
 
             Timer.start('Reachable Set Computation')
-            starting_bund = copy.deepcopy(self.flowpipe[step])
+            starting_bund = copy.deepcopy(self.flowpipe[step]) #probably a better way of copying objects.
 
             #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
             #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))

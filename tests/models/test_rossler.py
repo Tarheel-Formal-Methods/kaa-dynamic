@@ -38,71 +38,48 @@ def test_sapo_vol_Rossler():
     harosc = VolumeExperiment(experi_input)
     harosc.execute(1)
 
-def test_rossler_phase():
-
-    model = Rossler()
-    mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(200)
-
-    rossler_plot = Plot()
-    rossler_plot.add(mod_flow)
-    rossler_plot.plot2DPhase(0,1)
-
-    Timer.generate_stats()
-
-def test_sliding_skewed_plot_Rossler():
+def test_init_reach_vol_vs_ran_Rossler():
+    num_steps = 150
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 150
 
-    model = Rossler_UnitBox(delta=0.5)
-    #pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
-    lin_strat = SlidingLinStrat(model, lifespan=20)
-    experi_input = dict(model=model,
-                        strat=lin_strat,
-                        label=f"SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
+    pca_window_size = 10
+    lin_window_size = 10
 
-    experi = ProjectionPlotExperiment(experi_input)
-    experi.execute(0, 1, 2)
-    Timer.generate_stats()
+    inputs = []
+    for inc in range(5):
+        inc /= 100
 
+        box = ((0,0.1 + inc), (4.8 - inc,5), (0,0.1))
 
-def test_pca_lin_Rossler():
-    NUM_STEPS = 5
-    ROSS_PCA_ITER_STEPS = 1 #Number of steps between each recomputation of PCA Templates.
-    'PCA Strategy Parameters'
-    ROSS_PCA_TRAJ_STEPS = 1 #Number of steps our sample trajectories should run.
-    ROSS_PCA_NUM_TRAJ = 200 #Number of sample trajectories we should use for the PCA routine.
+        unit_model = Rossler_UnitBox(init_box=box)
+        model = Rossler(init_box=box)
 
-    rossler_pca = Rossler_UnitBox(delta=0.5)
-    rossler_plot = Plot()
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
-    points = [[0.05,4.95,0.05], [0.1,4.95,0.05], [0.05,5,0.05], [0.1,5,0.05], [0.05,4.95,0.05], [0.05,4.95,0.1], [0.1,4.95,0.1], [0.1,5,0.1]]
-    trajs = [Traj(rossler_pca, point, NUM_STEPS) for point in points]
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"Rossler SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
 
-    pca_strat = PCALinStrat(rossler_pca, traj_steps=ROSS_PCA_TRAJ_STEPS, num_trajs=ROSS_PCA_NUM_TRAJ, iter_steps=ROSS_PCA_ITER_STEPS)
+        inputs.append(experi_input_one)
 
-    ross_pca_reach = ReachSet(rossler_pca)
-    ross_flow_pca = ross_pca_reach.computeReachSet(NUM_STEPS, tempstrat=pca_strat)
-    rossler_plot.add(ross_flow_pca, "SIR_LinApp&PCA")
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
 
-    'Add trajectories'
-    for traj in trajs:
-        rossler_plot.add(traj)
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi.execute()
 
-    rossler_plot.plot2DPhase(0,1,separate=True, plotvertices=True)
-    Timer.generate_stats()
-
-def test_strat_comb_Rossler():
-    model = Rossler_UnitBox()
-    test_strat_comb(model, (1,3,5), 150, )
 
 def test_sliding_strat_comb_Rossler():
     model = Rossler_UnitBox()
@@ -112,7 +89,7 @@ def test_sliding_strat_comb_Rossler():
 def test_skewed_sliding_strat_comb_Rossler():
     unit_model = Rossler_UnitBox()
     model = Rossler()
-    test_skewed_sliding_strat_comb(unit_model, 150, 4000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 150, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
     Timer.generate_stats()
 
 def test_sliding_pca_Rossler():

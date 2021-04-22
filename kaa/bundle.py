@@ -187,6 +187,8 @@ class Bundle:
     """
     def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
         assert len(dir_row_mat) == len(dir_labels), "Number of input direction rows must be one-to-one with the labels"
+        assert len(dir_row_mat) == self.dim, f"New directions matrix need {self.dim}"
+
         bund_sys = self.getIntersect()
         prev_len = self.num_dirs
 

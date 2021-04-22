@@ -33,26 +33,37 @@ def test_max_sliding_lin_strat_JetEngine():
     model = JetEngine_UnitBox(delta=0.1)
     test_max_sliding_lin_strat(model, num_steps)
 
-def test_pca_dominant_JetEngine():
+def test_init_reach_vol_vs_ran_JetEngine():
     num_steps = 100
-    model =  JetEngine_UnitBox()
-
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
 
-    pca_strat = SlidingPCAStrat(model, lifespan=15)
-    lin_strat = SlidingLinStrat(model, lifespan=5)
+    pca_window_size = 5
+    lin_window_size = 15
 
-    experi_input = dict(model=model,
-                        strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Size 15, SlidingLin Size 5",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
+    inputs = []
+    for inc in range(5):
+        inc /= 100
+
+        box = init_box=((0.8-inc,1.2), (0.8-inc,1.2))
+
+        unit_model = JetEngine_UnitBox(init_box=box)
+        model = JetEngine(init_box=box)
+
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
+
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"JetEngine SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+        inputs.append(experi_input_one)
 
     if use_supp:
         file_identifier = "(SUPP)"
@@ -61,9 +72,9 @@ def test_pca_dominant_JetEngine():
     else:
         file_identifier = "(RAND)"
 
-    experi = PhasePlotExperiment(experi_input)
-    experi.execute(0, 1, plot_border_traj=True)
-    Timer.generate_stats()
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi.execute()
+
 
 def test_init_reach_vol_JetEngine():
     num_steps = 100

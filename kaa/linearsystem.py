@@ -79,20 +79,18 @@ class LinearSystem:
     """
     @property
     def vertices(self):
-        try:
-            phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
-            center_pt = np.asarray(self.chebyshev_center.center)
+        phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
+        center_pt = np.asarray(self.chebyshev_center.center)
 
-            'Run scipy.spatial.HalfspaceIntersection.'
-            hs = HalfspaceIntersection(phase_intersect, center_pt)
-            vertices = np.asarray(hs.intersections)
+        'Run scipy.spatial.HalfspaceIntersection.'
+        hs = HalfspaceIntersection(phase_intersect, center_pt)
+        vertices = np.asarray(hs.intersections)
 
-            return vertices
+        return vertices
 
-        except QhullError:
-            Output.prominent("QHull vertex operation raised an error.")
-            return None
-
+    """
+    
+    """
     def calc_vol_conv_hull(self):
         if self.dim < 4:
             try:

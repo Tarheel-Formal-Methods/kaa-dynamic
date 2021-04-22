@@ -1,17 +1,8 @@
-from itertools import product
-
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
-from kaa.temp.pca_strat import *
-from kaa.temp.lin_app_strat import *
-from kaa.temp.random_static_strat import *
-from kaa.templates import MultiStrategy
 from kaa.experiment import *
 from kaa.experi_init import *
-
-from kaa.settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
 
-PlotSettings.save_fig = False
 def test_sapo_VDP():
     num_steps = 70
 
@@ -170,7 +161,50 @@ def test_ani_pca_comp_VDP():
 
     Timer.generate_stats()
 
-def test_init_reach_vol_VDP():
+def test_init_reach_vol_vs_ran_VDP():
+    num_steps = 70
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+
+    pca_window_size = 8
+    lin_window_size = 12
+
+    inputs = []
+    for inc in range(10):
+        inc /= 100
+
+        box = ((0, 0.01+inc),(1.99 - inc, 2))
+
+        unit_model = VanDerPol_UnitBox(delta=0.08, init_box=box)
+        model = VanDerPol(delta=0.08, init_box=box)
+
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
+
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+        inputs.append(experi_input_one)
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi.execute()
+
+
+def test_init_reach_vol_vs_sapo_VDP():
     num_steps = 70
     use_supp = True
     use_pregen = False
