@@ -97,11 +97,11 @@ class InitReachPlotExperiment(Experiment):
     def execute(self):
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10) #fix this
-            self.print_input_params(experi_input, trial_num=None)
+            #self.print_input_params(experi_input, trial_num=None)
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'InitVolReachVol',
-                        'override': None})
+                        'flowpipe_indepen_data': None})
 
 class InitReachVSRandomPlotExperiment(Experiment):
     def __init__(self, *inputs,  num_ran_temps=20, num_trials=20):

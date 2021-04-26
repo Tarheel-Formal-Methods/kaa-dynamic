@@ -276,7 +276,7 @@ class VolumeSubplot(Subplot):
                 return [pat.Patch(color = f"C{flow_idx}",
                                   label=f"{flowpipe.label} (Convex)")]
 
-            print(vol_data.FlowpipeEnvelopBoxVol)
+            #print(vol_data.FlowpipeEnvelopBoxVol)
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
 
             return [pat.Patch(color = f"C{flow_idx}",
@@ -317,7 +317,7 @@ class InitVolReachVolPlot(Subplot):
                                           label=label))
 
         if self.flowpipe_indepen_data:
-            label, init_vol_arr, reach_vol_arr = zip(*self.override)
+            label, init_vol_arr, reach_vol_arr = zip(*self.flowpipe_indepen_data)
             ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{2}")
             axis_patches.append(pat.Patch(color=f"C{2}",
                                           label=label[0]))
