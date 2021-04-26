@@ -256,6 +256,10 @@ extern "C"
         //cout << std::flush;
 
         sys.minmax(diff);
+        //sys.print();
+
+        //cout << "sys.minmax Done \n";
+        //cout << std::flush;
 
         MinMax answer = sys.answer();
         rv[0] = answer.lb_of_min();

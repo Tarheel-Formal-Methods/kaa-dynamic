@@ -88,7 +88,6 @@ class LPUtil:
         x = [i for i in map(lambda x: glpk.glp_get_col_prim(self.lp_prob, x+1), range(self.num_cols))]
 
         Timer.stop("LP Routines")
-        #Output.bold_write(f"Ended LP with c: {c}")
         return LPSolution(x, fun)
 
     def __normalize_constrs(self):

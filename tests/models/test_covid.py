@@ -48,45 +48,47 @@ def test_sapo_vol_Covid():
     harosc = VolumeExperiment(experi_input)
     harosc.execute(1)
 
-def test_sapo_skewed_compare_Covid():
-    num_steps = 100
+def test_init_reach_vol_vs_ran_Covid():
+    num_steps = 200
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
-    num_steps = 70
 
-    pca_window_size = 10
-    lin_window_size = 10
-    model_1 = Covid(delta=0.5)
+    pca_window_size = 8
+    lin_window_size = 12
 
-    experi_input_1 = dict(model=model_1, #Encompass strat initilizations?
-                        strat=None,
-                        label="SapoCovid",
-                        num_steps=num_steps-1,
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        max_steps=num_steps)
+    inputs = []
+    for inc in range(5):
+        inc /= 100
 
+        box = ((0.69 -inc, 0.70), (0.09-inc,0.1), (0.14-inc, 0.15), (0.04-inc, 0.05), (0.00099, 0.001), (0.00099, 0.001), (0.00099, 0.001))
 
+        unit_model = Covid_UnitBox(init_box=box)
 
-    model = Covid_UnitBox(delta=0.5)
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
-    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
-    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"COVID SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
 
-    experi_input_2 = dict(model=model,
-                        strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
-                        num_trajs=num_trajs,
-                        num_steps=num_steps-1,
-                        max_steps=num_steps)
+        inputs.append(experi_input_one)
 
-    harosc = Experiment(experi_input_1, experi_input_2, label=f"SAPO1010COMP")
-    harosc.execute(1)
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi.execute()
+
 
 def test_equal_sliding_strat_Covid():
     model = Covid_UnitBox()
@@ -99,7 +101,7 @@ def test_ran_strat_Covid():
 def test_skewed_sliding_strat_comb_Covid():
     unit_model = Covid_UnitBox()
     model = Covid()
-    test_skewed_sliding_strat_comb(unit_model, 200, 5000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 200, 5000, use_supp=True, use_pregen=False, use_sapo=None)
 
 def test_sliding_strat_comb_Covid():
     model = Covid_UnitBox()

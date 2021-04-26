@@ -6,7 +6,7 @@ from kaa.bundle import Bundle
 
 class Rossler(Model):
 
-    def __init__(self, delta=0.025, init_box=((0,0.1), (4.8,5), (0,0.1))):
+    def __init__(self, delta=0.025, init_box=((0,0.4), (4.8,5), (0,0.4))):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = (x, y, z)
@@ -49,9 +49,9 @@ class Rossler(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 0.1; offl[0] = 0;
+        offu[0] = 0.4; offl[0] = 0;
         offu[1] = 5; offl[1] = -4.8;
-        offu[2] = 0.1; offl[2] = 0;
+        offu[2] = 0.4; offl[2] = 0;
         offu[3] = 10; offl[3] = 0;
         offu[4] = 10; offl[4] = 0;
         offu[5] = 10; offl[5] = 0;
@@ -60,7 +60,7 @@ class Rossler(Model):
 
 class Rossler_UnitBox(Model):
 
-    def __init__(self, delta=0.025, init_box=((0,0.1), (4.8,5), (0,0.1))):
+    def __init__(self, delta=0.025, init_box=((0,0.4), (4.8,5), (0,0.4))):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = [x, y, z]
@@ -88,9 +88,9 @@ class Rossler_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        offu[0] = 0.1; offl[0] = 0;
+        offu[0] = 0.4; offl[0] = 0;
         offu[1] = 5; offl[1] = -4.8;
-        offu[2] = 0.1; offl[2] = 0;
+        offu[2] = 0.4; offl[2] = 0;
         #offu[3] = 10; offl[3] = 0;
         #offu[4] = 10; offl[4] = 0;
         #

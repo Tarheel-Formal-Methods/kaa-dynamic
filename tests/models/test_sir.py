@@ -65,8 +65,7 @@ def test_init_reach_vol_vs_ran_SIR():
         box = ((0.79-inc,0.8), (0.19-inc,0.2), (0.00099, 0.001))
 
         unit_model = SIR_UnitBox(init_box=box)
-        model = SIR(init_box=box)
-
+        
         pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
         lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
@@ -162,7 +161,7 @@ def test_strat_comb_SIR():
 def test_skewed_sliding_strat_comb_SIR():
     unit_model = SIR_UnitBox()
     model = SIR()
-    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 150, 5000, use_supp=True, use_pregen=False, use_sapo=None)
 
 def test_sliding_strat_comb_SIR():
     model = SIR_UnitBox()

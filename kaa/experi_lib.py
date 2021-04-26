@@ -26,43 +26,6 @@ class ProfileExperiment(Experiment):
         Timer.generate_stats()
 
 """
-Experiment to compute the reachable set and estimate the total volume of all of its overapproximations.
-"""
-class VolumeExperiment(Experiment):
-
-    def __init__(self, *inputs, label="Experiment"):
-        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode, label=label)
-
-    def execute(self, num_trials):
-        num_steps = self.max_num_steps
-        num_trajs = self.max_num_trajs
-
-        print(num_steps)
-
-        spreadsheet = SpreadSheet(self.model, self.label)
-        spreadsheet.generate_sheet(self.inputs, ("Volume", "Time"), num_trials)
-
-        for experi_input in self.inputs:
-            loaded_dirs = self.initialize_strat(experi_input, num_trials)
-            experi_strat = experi_input['strat']
-
-            for trial_num in range(num_trials):
-                self.print_input_params(experi_input, trial_num=trial_num)
-
-                flowpipe = self.gather_vol_data(experi_input)
-                flow_label, flow_vol = flowpipe.label, flowpipe.total_volume
-
-                if flowpipe.error:
-                    flow_vol = f"{flow_vol} (VOLUME TOO BLOATED) Stopped at {flowpipe.error.total_steps}"
-
-                reach_time = divmod(Timer.generate_stats(), 60)
-
-                spreadsheet.save_data_into_sheet(flow_label, trial_num, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
-                self.assign_dirs(experi_strat, trial_num, loaded_dirs)
-
-                experi_strat.reset() #Reset attributes for next independent trial.
-
-"""
 Experiment to measure deviations between generated directions for a strategy type over the course of the reachable set computation.
 """
 class DeviationExperiment(Experiment):
@@ -126,7 +89,6 @@ class PhasePlotExperiment(Experiment):
                         'vars': var_tup,
                         'separate_flag': False})
 
-
 class InitReachPlotExperiment(Experiment):
 
     def __init__(self, *inputs):
@@ -135,6 +97,7 @@ class InitReachPlotExperiment(Experiment):
     def execute(self):
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10) #fix this
+            self.print_input_params(experi_input, trial_num=None)
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'InitVolReachVol',
@@ -147,19 +110,21 @@ class InitReachVSRandomPlotExperiment(Experiment):
             self.num_ran_temps = num_ran_temps
 
     def execute(self):
-        override_inputs = []
+        ran_flow_data_tups = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
+            self.print_input_params(experi_input)
+
             self.plot.add(self.calc_flowpipe(experi_input))
 
-            override_inputs.append(self.avg_ran_flowpipes(experi_input))
-
+            ran_flow_data_tups.append(self.avg_ran_flowpipes(experi_input))
 
         self.plot.plot({'type': 'InitVolReachVol',
-                        'override': override_inputs})
+                        'flowpipe_indepen_data': ran_flow_data_tups})
 
     def avg_ran_flowpipes(self, experi_input):
         trial_vol_arr = np.empty(self.num_trials)
+
         for trial in range(self.num_trials):
             input_model = experi_input['model']
             input_traj = experi_input['num_trajs']
@@ -177,6 +142,7 @@ class InitReachVSRandomPlotExperiment(Experiment):
                                     num_trajs=input_traj,
                                     num_steps=num_steps)
 
+            self.print_input_params(ran_experi_input, trial_num=trial)
             trial_vol_arr[trial] = self.calc_flowpipe(ran_experi_input).total_volume
 
         return (ran_label, calc_box_volume(input_model.init_box), np.average(trial_vol_arr))
@@ -184,16 +150,26 @@ class InitReachVSRandomPlotExperiment(Experiment):
 class VolumePlotExperiment(Experiment):
 
     def __init__(self, *inputs, label="VolumePlotExperiment"):
-        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
+        super().__init__(*inputs, label=label, reach_comp_mode=ReachCompMode.VolMode)
 
     def execute(self, accum=True, plot_all_vol=False):
         num_steps = self.max_num_steps
 
+        spreadsheet = SpreadSheet(self.model, self.label)
+        spreadsheet.generate_sheet(self.inputs, ("Volume", "Time"), 1)
+
         for experi_input in self.inputs:
             self.print_input_params(experi_input)
-
             self.initialize_strat(experi_input, 10)
-            self.plot.add(self.calc_flowpipe(experi_input))
+
+            flowpipe = self.calc_flowpipe(experi_input)
+
+            flow_label = experi_input['label']
+            flow_vol = flowpipe.total_volume
+            reach_time = divmod(Timer.generate_stats(), 60)
+
+            spreadsheet.save_data_into_sheet(flow_label, 0, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
+            self.plot.add(flowpipe)
 
         self.plot.plot({'type': 'Volume',
                         'accum_flag': accum,

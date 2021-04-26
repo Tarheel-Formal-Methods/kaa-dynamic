@@ -22,7 +22,7 @@ class KaaSettings:
     SaveStateonError = True
 
     'Path for data directory to save all xlsx files from experiments.'
-    DataDir = "/home/edward/work/kaa-optimize/data"
+    DataDir = "/home/edward/work/kaa-dynamic/data"
 
     'Flag to trigger enveloping box threshold checking'
     UseThreshold = False
@@ -46,7 +46,7 @@ class PlotSettings:
     save_fig = False
 
     'Path to save figures'
-    default_fig_path = "/home/edward/work/kaa-optimize/figures"
+    default_fig_path = "/home/edward/work/kaa-dynamic/figures"
 
     'Figure dimensions'
     fig_size = (40,20)

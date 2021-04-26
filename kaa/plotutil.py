@@ -266,27 +266,27 @@ class VolumeSubplot(Subplot):
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx + self.num_flowpipes}")
 
             return [pat.Patch(color = f"C{flow_idx}",
-                              label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})"),
+                              label=f"{flowpipe.label} (Convex)"),
                     pat.Patch(color = f"C{flow_idx+ self.num_flowpipes}",
-                              label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+                              label=f"{flowpipe.label} (EnvelopBox)")]
 
         else:
             if tot_conv_hull_vol > 0:
                 ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
                 return [pat.Patch(color = f"C{flow_idx}",
-                                  label=f"{flowpipe.label} (Convex) (Total Volume: {tot_conv_hull_vol})")]
+                                  label=f"{flowpipe.label} (Convex)")]
 
             print(vol_data.FlowpipeEnvelopBoxVol)
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
 
             return [pat.Patch(color = f"C{flow_idx}",
-                              label=f"{flowpipe.label} (EnvelopBox) (Total Volume: {tot_envelop_box_vol})")]
+                              label=f"{flowpipe.label} (EnvelopBox)")]
 
 class InitVolReachVolPlot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, override):
+    def __init__(self, model, flowpipes, num_steps, flowpipe_indepen_data):
         super().__init__(model, "InitVolReachVol", flowpipes, 1, num_steps)
-        self.override = override
+        self.flowpipe_indepen_data = flowpipe_indepen_data
 
     def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting InitVolReachVol."
@@ -316,7 +316,7 @@ class InitVolReachVolPlot(Subplot):
             axis_patches.append(pat.Patch(color=f"C{label_idx}",
                                           label=label))
 
-        if self.override: #Fix this, just bandaid for now
+        if self.flowpipe_indepen_data:
             label, init_vol_arr, reach_vol_arr = zip(*self.override)
             ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{2}")
             axis_patches.append(pat.Patch(color=f"C{2}",
@@ -379,7 +379,7 @@ class Plot:
                 subplot = InitVolReachVolPlot(self.model,
                                               self.flowpipes,
                                               self.num_steps,
-                                              subplot_dict['override'])
+                                              subplot_dict['flowpipe_indepen_data'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

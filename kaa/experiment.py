@@ -258,21 +258,17 @@ class Experiment(ABC):
             self.max_num_steps = max(self.max_num_steps, num_steps)
 
     def calc_flowpipe(self, experi_input):
-        model = experi_input['model']
-        strat = experi_input['strat']
-        flow_label = experi_input['label']
-        num_steps = experi_input['num_steps']
-
-        mod_reach = ReachSet(model, strat=strat, label=flow_label, reachcompmode=self.reach_comp_mode)
-        mod_flow = mod_reach.computeReachSet(num_steps)
-
-        return mod_flow
-
-
-    def gather_vol_data(self, experi_input):
         try:
-            flowpipe = self.calc_flowpipe(experi_input)
-            return flowpipe
+            model = experi_input['model']
+            strat = experi_input['strat']
+            flow_label = experi_input['label']
+            num_steps = experi_input['num_steps']
+
+            mod_reach = ReachSet(model, strat=strat, label=flow_label, reachcompmode=self.reach_comp_mode)
+            mod_flow = mod_reach.computeReachSet(num_steps)
+
+            return mod_flow
+
         except Exception as excep:
             raise
             return (experi_input['label'], str(excep))

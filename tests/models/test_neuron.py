@@ -33,7 +33,7 @@ def test_init_reach_vol_vs_ran_Neuron():
     lin_window_size = 2
 
     inputs = []
-    for inc in range(0,5,1):
+    for inc in range(0,10,1):
         inc /= 500
 
         box = ((0.9-inc,1.1), (2.4-inc,2.6))
@@ -166,7 +166,7 @@ def test_ran_strat_Neuron():
 def test_skewed_sliding_strat_comb_Neuron():
     unit_model =  Neuron_UnitBox()
     model = Neuron()
-    test_skewed_sliding_strat_comb(model, 500, 5000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(model, 500, 5000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_pca_Neuron():
     model =  Neuron_UnitBox()
