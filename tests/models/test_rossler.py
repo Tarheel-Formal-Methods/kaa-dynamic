@@ -83,13 +83,13 @@ def test_init_reach_vol_vs_ran_Rossler():
 
 def test_sliding_strat_comb_Rossler():
     model = Rossler_UnitBox()
-    test_sliding_strat_comb(model, 150, 4000, use_supp=True, use_pregen=False)
+    test_sliding_strat_comb(model, 100, 4000, use_supp=True, use_pregen=False)
     Timer.generate_stats()
 
 def test_skewed_sliding_strat_comb_Rossler():
     unit_model = Rossler_UnitBox()
     model = Rossler()
-    test_skewed_sliding_strat_comb(unit_model, 150, 4000, num_temps=20, incre=2, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 100, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
     Timer.generate_stats()
 
 def test_sliding_pca_Rossler():

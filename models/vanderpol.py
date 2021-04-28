@@ -10,7 +10,7 @@ class VanDerPol(Model):
 
         x, y = sp.Symbol('x'), sp.Symbol('y')
         dx = x + y*delta
-        dy = y + (1*(1-x**2)*y - 2*x + x)*delta
+        dy = y + (1*(1-x**2)*y - x)*delta
 
         vars = (x, y)
         dyns = (dx, dy)

@@ -101,7 +101,8 @@ class LinStrat(AbstractLinStrat):
     Opening LinApp routine
     """
     def open_strat(self, bund, step_num):
-        if not step_num % self.iter_steps:
+        if (self.iter_steps and
+            not step_num % self.iter_steps):
             lin_dir, lin_dir_labels = self.generate_lin_dir(bund, step_num) #Generate or fetch the LinApp directions.
 
             'Add the components to the bundle and save last generated ptope data.'
@@ -114,7 +115,9 @@ class LinStrat(AbstractLinStrat):
     Closing LinApp routine
     """
     def close_strat(self, bund, step_num):
-        if not step_num % self.iter_steps and step_num > 0:
+        if (self.iter_steps > 0 and
+            not step_num % self.iter_steps and
+            step_num > 0):
                 self.rm_ptope_from_bund(bund, self.ptope_queue.pop(0))
 
     """
@@ -139,17 +142,18 @@ class SlidingLinStrat(AbstractLinStrat):
     """
     def open_strat(self, bund, step_num):
         #Output.bold_write(f"Calling Open Strat for {str(self)}")
-        self.__add_new_ptope(bund, step_num)
+        if self.lifespan > 0:
+            self.__add_new_ptope(bund, step_num)
 
-        'Remove dead templates'
-        for ptope_label in list(self.lin_ptope_life_counter.keys()):
-            self.lin_ptope_life_counter[ptope_label] -= 1
+            'Remove dead templates'
+            for ptope_label in list(self.lin_ptope_life_counter.keys()):
+                self.lin_ptope_life_counter[ptope_label] -= 1
 
-            if self.lin_ptope_life_counter[ptope_label] == 0:
-                self.rm_ptope_from_bund(bund, ptope_label)
-                self.lin_ptope_life_counter.pop(ptope_label)
+                if self.lin_ptope_life_counter[ptope_label] == 0:
+                    self.rm_ptope_from_bund(bund, ptope_label)
+                    self.lin_ptope_life_counter.pop(ptope_label)
 
-        assert len(self.lin_ptope_life_counter) == min(step_num+1, self.lifespan), f"Number of templates don't match. {len(self.lin_ptope_life_counter)} at step num {step_num}"
+            assert len(self.lin_ptope_life_counter) == min(step_num+1, self.lifespan), f"Number of templates don't match. {len(self.lin_ptope_life_counter)} at step num {step_num}"
 
     """
     Closing LinApp routine
@@ -314,7 +318,7 @@ def find_closest_dirs(dir_mat):
     for (first_idx, first_dir), (second_idx, second_dir) in product(enumerate(dir_mat), repeat=2):
         curr_product = np.dot(first_dir, second_dir)
 
-        if curr_product > closest_dot_prod and first_idx != second_idx:
+        if abs(curr_product) > closest_dot_prod and first_idx != second_idx:
             closest_pair = (first_idx, second_idx)
             closest_dot_prod = curr_product
 

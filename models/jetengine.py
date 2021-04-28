@@ -17,7 +17,7 @@ class JetEngine_UnitBox(Model):
         dx = x + (-y - 1.5*x**2 - 0.5*x**3 - 0.5)*delta
         dy = y + (3*x - y)*delta
 
-        dyns = [dx, dy]
+        dyns = (dx, dy)
 
         num_direct = 2
         num_temps = 1

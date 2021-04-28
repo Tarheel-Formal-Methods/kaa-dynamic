@@ -137,7 +137,7 @@ def test_vol_comp_JetEngine():
     test_vol_comp(unit_model, 100, 4000, use_supp=True, use_pregen=False, use_sapo=None)
 
 def test_ran_strat_JetEngine():
-    model = JetEngine_UnitBox(delta=0.1)
+    model = JetEngine_UnitBox()
     test_ran_strat(model, 100, 5000, use_supp=True, use_pregen=False)
 
 def test_skewed_sliding_strat_comb_JetEngine():

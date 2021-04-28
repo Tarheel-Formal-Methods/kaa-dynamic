@@ -89,7 +89,7 @@ class LinearSystem:
         return vertices
 
     """
-    
+
     """
     def calc_vol_conv_hull(self):
         if self.dim < 4:
@@ -239,9 +239,8 @@ class LinearSystem:
             time_steps: number of steps to
     """
     def generate_supp_trajs(self, dir_vecs, steps):
-        #Output.bold_write("Generating Support Points Traj")
+        Output.bold_write("Generating Support Points Traj")
         #Output.write(f"DIR VEC MAT: {dir_vecs}")
-
         #print(f"Number of Directions: {len(input_params)}")
         if KaaSettings.Parallelize:
             output_queue = mp.Manager().Queue()
@@ -275,7 +274,6 @@ class LinearSystem:
                     #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
                     #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
 
-        #Output.bold_write("End of Generating Support Points Traj")
         return TrajCollection(self.model, output_list)
 
 

@@ -7,14 +7,13 @@ from kaa.model import Model
 
 class LotkaVolterra(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.01, init_box = ((0.9,1),(0.9,1),(0.9,1),(0.9,1),(0.9,1))):
         dim_sys = 5
         x1, x2, x3, x4, x5 = sp.Symbol("x1"), sp.Symbol("x2"), sp.Symbol("x3"), sp.Symbol("x4"), sp.Symbol("x5")
         vars = [x1, x2, x3, x4, x5]
 
         alpha = 0.85
         beta = 0.5
-        delta = 0.01
 
         dx1 = x1 + ( x1*(1 - (x1 + alpha*x2 + beta*x5)) )*delta
         dx2 = x2 + (x2*(1 - (x2 + alpha*x3 + beta*x1)) )*delta
@@ -25,7 +24,7 @@ class LotkaVolterra(Model):
         dyns = [dx1, dx2, dx3, dx4, dx5]
 
         num_dirs = 7
-        num_temps = 3
+        num_temps = 4
 
         L = np.zeros([num_dirs,dim_sys])
         T = np.zeros([num_temps,dim_sys])
@@ -39,33 +38,27 @@ class LotkaVolterra(Model):
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4;
         T[1][0] = 5; T[1][1] = 6; T[1][2] = 1; T[1][3] = 2; T[1][4] = 3;
         T[2][0] = 5; T[2][1] = 6; T[2][2] = 2; T[2][3] = 3; T[2][4] = 4;
+        T[3][0] = 5; T[3][1] = 6; T[3][2] = 0; T[3][3] = 1; T[3][4] = 2;
 
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 1.0; offl[0] = -0.90;
-        offu[1] = 1.0; offl[1] = -0.90;
-        offu[2] = 1.0; offl[2] = -0.90;
-        offu[3] = 1.0; offl[3] = -0.90;
-        offu[4] = 1.0; offl[4] = -0.90;
-
         offu[5] = 10.0; offl[5] = 1;
         offu[6] = 10.0; offl[6] = 1;
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="LV")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LV")
 
 
 class LotkaVolterra_UnitBox(Model):
 
-    def __init__(self):
+    def __init__(self, delta=0.01, init_box = ((0.9,1),(0.9,1),(0.9,1),(0.9,1),(0.9,1))
+):
         dim_sys = 5
         x1, x2, x3, x4, x5 = sp.Symbol("x1"), sp.Symbol("x2"), sp.Symbol("x3"), sp.Symbol("x4"), sp.Symbol("x5")
         vars = [x1, x2, x3, x4, x5]
 
         alpha = 0.85
         beta = 0.5
-        delta = 0.01
-
 
         dx1 = x1 + ( x1*(1 - (x1 + alpha*x2 + beta*x5)) )*delta
         dx2 = x2 + (x2*(1 - (x2 + alpha*x3 + beta*x1)) )*delta
@@ -89,12 +82,4 @@ class LotkaVolterra_UnitBox(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        offu[0] = 1.0; offl[0] = -0.90;
-        offu[1] = 1.0; offl[1] = -0.90;
-        offu[2] = 1.0; offl[2] = -0.90;
-        offu[3] = 1.0; offl[3] = -0.90;
-        offu[4] = 1.0; offl[4] = -0.90;
-
-        #offu[5] = 10.0; offl[5] = 1;
-        #offu[6] = 10.0; offl[6] = 1;
-        super().__init__(dyns, vars, T, L, offu, offl, name="LV")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LV")

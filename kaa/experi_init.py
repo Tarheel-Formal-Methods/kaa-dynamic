@@ -159,7 +159,7 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, in
         num_trials = 1
 
     inputs = []
-    for pca_window_size in range(incre, num_temps, incre):
+    for pca_window_size in range(0, num_temps+incre, incre):
         lin_window_size = num_temps - pca_window_size
 
         pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)

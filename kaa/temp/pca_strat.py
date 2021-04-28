@@ -68,7 +68,9 @@ class PCAStrat(AbstractPCAStrat):
     Opening PCA routine
     """
     def open_strat(self, bund, step_num):
-        if not step_num % self.iter_steps:
+        if (self.iter_steps > 0 and
+            not step_num % self.iter_steps):
+
             pca_comps, pca_comp_labels  = self.generate_pca_dir(bund, step_num)
 
             'Add the components to the bundle and save last generated ptope data.'
@@ -79,7 +81,10 @@ class PCAStrat(AbstractPCAStrat):
     Closing PCA routine
     """
     def close_strat(self, bund, step_num):
-        if not step_num % self.iter_steps and step_num > 0:
+        if (self.iter_steps > 0 and
+            not step_num % self.iter_steps and
+            step_num > 0):
+            
             self.rm_ptope_from_bund(bund, self.ptope_queue.pop(0))
 
     """
@@ -103,18 +108,19 @@ class SlidingPCAStrat(AbstractPCAStrat):
         self.lifespan = lifespan
 
     def open_strat(self, bund, step_num):
-        #Output.bold_write(f"Calling Open Strat for {str(self)}")
-        self.__add_new_ptope(bund, step_num)
+        #Output.bold_write(f"Calling Open Strat for {str(self)}"
+        if self.lifespan > 0:
+            self.__add_new_ptope(bund, step_num)
 
-        'Remove dead templates'
-        for ptope_label in list(self.pca_ptope_life_counter.keys()):
-            self.pca_ptope_life_counter[ptope_label] -= 1
+            'Remove dead templates'
+            for ptope_label in list(self.pca_ptope_life_counter.keys()):
+                self.pca_ptope_life_counter[ptope_label] -= 1
 
-            if self.pca_ptope_life_counter[ptope_label] == 0:
-                self.rm_ptope_from_bund(bund, ptope_label)
-                self.pca_ptope_life_counter.pop(ptope_label)
+                if self.pca_ptope_life_counter[ptope_label] == 0:
+                    self.rm_ptope_from_bund(bund, ptope_label)
+                    self.pca_ptope_life_counter.pop(ptope_label)
 
-        assert len(self.pca_ptope_life_counter) == min(step_num + 1, self.lifespan), f"Number of templates don't match. {len(self.pca_ptope_life_counter)} at step num {step_num}"
+            assert len(self.pca_ptope_life_counter) == min(step_num + 1, self.lifespan), f"Number of templates don't match. {len(self.pca_ptope_life_counter)} at step num {step_num}"
 
     def close_strat(self, bund, step_num):
         #Output.bold_write(f"Calling Closing Strat for {str(self)}")

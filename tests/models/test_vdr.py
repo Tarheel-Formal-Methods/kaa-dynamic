@@ -245,7 +245,7 @@ def test_strat_comb_VDP():
 def test_skewed_sliding_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)
     model = VanDerPol(delta=0.08)
-    test_skewed_sliding_strat_comb(unit_model, 70, 4000, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 70, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

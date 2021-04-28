@@ -1,16 +1,9 @@
-from kaa.reach import ReachSet
-from kaa.plotutil import Plot
+from kaa.experiment import *
+from kaa.experi_init import *
+from kaa.timer import Timer
 from models.lotkavolterra import LotkaVolterra, LotkaVolterra_UnitBox
 
-from kaa.timer import Timer
-def test_LV():
-
+def test_skewed_sliding_strat_comb_LV():
+    unit_model = LotkaVolterra_UnitBox()
     model = LotkaVolterra()
-    mod_reach = ReachSet(model)
-    mod_flow = mod_reach.computeReachSet(100)
-
-    plot = Plot()
-    plot.add(mod_flow)
-    plot.plot(0,1,2)
-
-    Timer.generate_stats()
+    test_skewed_sliding_strat_comb(unit_model, 100, 5000, num_temps=4, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
