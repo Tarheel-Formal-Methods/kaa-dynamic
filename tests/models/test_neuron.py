@@ -64,7 +64,7 @@ def test_init_reach_vol_vs_ran_Neuron():
     experi.execute()
 
 def test_init_reach_vol_Neuron():
-    num_steps = 500
+    num_steps = 200
     use_supp = True
     use_pregen = False
 
@@ -87,7 +87,7 @@ def test_init_reach_vol_Neuron():
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"{model.name} SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"Neuron SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
@@ -116,16 +116,6 @@ def test_init_reach_vol_Neuron():
 
     experi = InitReachPlotExperiment(*inputs)
     experi.execute()
-
-def test_sliding_equal_Neuron():
-    num_steps = 500
-    model =  Neuron_UnitBox()
-    test_equal_sliding_strat(model, num_steps)
-
-def test_max_sliding_lin_strat_Neuron():
-    num_steps = 500
-    model =  Neuron_UnitBox()
-    test_max_sliding_lin_strat(model, num_steps)
 
 def test_pca_dominant_Neuron():
     num_steps = 500
@@ -166,7 +156,7 @@ def test_ran_strat_Neuron():
 def test_skewed_sliding_strat_comb_Neuron():
     unit_model =  Neuron_UnitBox()
     model = Neuron()
-    test_skewed_sliding_strat_comb(model, 500, 5000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(model, 200, 5000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_pca_Neuron():
     model =  Neuron_UnitBox()

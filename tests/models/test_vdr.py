@@ -106,9 +106,8 @@ def test_init_reach_vol_vs_ran_VDP():
     else:
         file_identifier = "(RAND)"
 
-    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10, ran_diag=True)
     experi.execute()
-
 
 def test_init_reach_vol_vs_sapo_VDP():
     num_steps = 70
@@ -224,6 +223,10 @@ def test_ani_pca_lin_VDP():
     vdp_pca.execute()
     vdp_pca.animate(0,1, lin_1, lin_2)
     Timer.generate_stats()
+
+def test_ran_diag_static_VDP():
+    unit_model = VanDerPol_UnitBox(delta=0.08)
+    test_ran_diag_static(unit_model, 70, 5)
 
 def test_vol_comp_VDP():
     unit_model = VanDerPol_UnitBox(delta=0.08)

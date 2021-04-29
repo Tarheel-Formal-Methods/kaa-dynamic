@@ -4,6 +4,7 @@ from kaa.trajectory import Traj, TrajCollection
 from kaa.log import Output
 from kaa.experiment import Experiment
 from kaa.temp.random_static_strat import RandomStaticStrat
+from kaa.temp.diag_static_strat import RandomDiagStaticStrat
 from kaa.spreadsheet import *
 from kaa.timer import Timer
 from kaa.flowpipe import ReachCompMode
@@ -75,7 +76,7 @@ class PhasePlotExperiment(Experiment):
     def __init__(self, *inputs):
         super().__init__(*inputs,reach_comp_mode=ReachCompMode.PhasePlotMode)
 
-    def execute(self, *var_tup, separate=False, plot_border_traj=True):
+    def execute(self, *var_tup, separate=False, plot_border_traj=False):
         num_steps = self.max_num_steps
 
         if plot_border_traj:
@@ -104,20 +105,26 @@ class InitReachPlotExperiment(Experiment):
                         'flowpipe_indepen_data': None})
 
 class InitReachVSRandomPlotExperiment(Experiment):
-    def __init__(self, *inputs,  num_ran_temps=20, num_trials=20):
+    def __init__(self, *inputs,  num_ran_temps=20, num_trials=10, ran_diag=False):
             super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
             self.num_trials = num_trials
             self.num_ran_temps = num_ran_temps
+            self.ran_diag_flag = ran_diag
 
     def execute(self):
+        spreadsheet = SpreadSheet(self.model, self.label)
+        spreadsheet.generate_sheet(self.inputs, ("InitBoxVolume", "ReachSetVolume"), 1)
+
         ran_flow_data_tups = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             self.print_input_params(experi_input)
 
+            ran_data_tup = self.avg_ran_flowpipes(experi_input)
+            ran_flow_data_tups.append(ran_data_tup)
             self.plot.add(self.calc_flowpipe(experi_input))
 
-            ran_flow_data_tups.append(self.avg_ran_flowpipes(experi_input))
+            spreadsheet.save_data_into_sheet(flow_label, 0, (ran_data_tup[1], ran_data_tup[2]))
 
         self.plot.plot({'type': 'InitVolReachVol',
                         'flowpipe_indepen_data': ran_flow_data_tups})
@@ -132,10 +139,12 @@ class InitReachVSRandomPlotExperiment(Experiment):
             input_pregen = experi_input['pregen_mode']
             num_steps = experi_input['num_steps']
 
-            ran_label=f"{input_model.name} Random Static Strat {self.num_trials} trials"
+            ran_label=f"{input_model.name} Random Static {'Diag' if self.ran_diag_flag else ''} Strat {self.num_trials} trials"
+            ran_strat = (RandomDiagStaticStrat(input_model, self.num_ran_temps) if self.ran_diag_flag else
+                         RandomStaticStrat(input_model, self.num_ran_temps))
 
             ran_experi_input = dict(model=input_model,
-                                    strat=RandomStaticStrat(input_model, self.num_ran_temps),
+                                    strat=ran_strat,
                                     label=ran_label,
                                     supp_mode = input_supp,
                                     pregen_mode = input_pregen,
@@ -146,6 +155,35 @@ class InitReachVSRandomPlotExperiment(Experiment):
             trial_vol_arr[trial] = self.calc_flowpipe(ran_experi_input).total_volume
 
         return (ran_label, calc_box_volume(input_model.init_box), np.average(trial_vol_arr))
+
+
+class VolumeDataExperiment(Experiment):
+    def __init__(self, *inputs, label="VolumeDataExperiment", num_trials=1):
+        super().__init__(*inputs, label=label, reach_comp_mode=ReachCompMode.VolMode)
+        self.num_trials = num_trials
+
+    def execute(self):
+        num_steps = self.max_num_steps
+
+        spreadsheet = SpreadSheet(self.model, self.label)
+        spreadsheet.generate_sheet(self.inputs, ("Volume", "Time"), self.num_trials)
+
+        for experi_input in self.inputs:
+            self.print_input_params(experi_input)
+            self.initialize_strat(experi_input, 10)
+            experi_strat = experi_input['strat']
+
+            for trial_num in range(self.num_trials):
+                flowpipe = self.calc_flowpipe(experi_input)
+
+                flow_label = experi_input['label']
+                flow_vol = flowpipe.total_volume
+                reach_time = divmod(Timer.generate_stats(), 60)
+
+                spreadsheet.save_data_into_sheet(flow_label, trial_num, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
+                experi_strat.reset()
+
+
 
 class VolumePlotExperiment(Experiment):
 

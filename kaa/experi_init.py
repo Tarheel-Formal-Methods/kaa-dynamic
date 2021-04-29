@@ -7,6 +7,7 @@ from itertools import product, chain
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.temp.random_static_strat import *
+from kaa.temp.diag_static_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experi_lib import *
 from kaa.settings import KaaSettings
@@ -198,27 +199,16 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, in
     experi = VolumePlotExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
     experi.execute()
 
-def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
-    if use_supp:
-        num_trials = 1
+def test_ran_diag_static(model, num_steps, num_temps, num_trials=10, use_supp=True, use_pregen=False):
 
-    pca_iter_steps = step_tup
-    lin_iter_steps = step_tup
-
-    inputs = []
-    for pca_step, lin_step in product(pca_iter_steps, lin_iter_steps): #model tossed around too many times.
-        pca_strat = PCAStrat(model, iter_steps=pca_step)
-        lin_strat = LinStrat(model, iter_steps=lin_step)
-        experi_input = dict(model=model,
-                            strat=MultiStrategy(pca_strat, lin_strat),
-                            label=f"PCA Step {pca_step} and Lin Step {lin_step}",
-                            supp_mode = use_supp,
-                            pregen_mode = use_pregen,
-                            num_trajs=num_trajs,
-                            num_steps=num_steps-1,
-                            max_steps=num_steps)
-
-        inputs.append(experi_input)
+    experi_input = dict(model=model,
+                        strat=RandomDiagStaticStrat(model, num_temps),
+                        label=f"Random Diag Static Strat Num Trials: {num_trials}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=5000,
+                        num_steps=num_steps,
+                        max_steps=num_steps)
 
     if use_supp:
         file_identifier = "(SUPP)"
@@ -227,8 +217,8 @@ def test_strat_comb(model, step_tup, num_steps, num_trajs, num_trials=10, use_su
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"Combination with PCA and Lin Strats {model.name} {file_identifier}")
-    experi.execute(num_trials)
+    experi = VolumeDataExperiment(experi_input, label=f"Random Diag Static Strat {model.name} {file_identifier}", num_trials=num_trials)
+    experi.execute()
 
 def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
     if use_supp:

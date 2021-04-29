@@ -49,7 +49,7 @@ def test_sapo_vol_SIR():
     harosc.execute(1)
 
 def test_init_reach_vol_vs_ran_SIR():
-    num_steps = 150
+    num_steps = 50
     use_supp = True
     use_pregen = False
 
@@ -59,10 +59,10 @@ def test_init_reach_vol_vs_ran_SIR():
     lin_window_size = 12
 
     inputs = []
-    for inc in range(0,5,1):
-        inc /= 500
+    for inc in range(1,6,1):
+        inc /= 100
 
-        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0.00099, 0.001))
+        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0, inc))
 
         unit_model = SIR_UnitBox(init_box=box)
 
@@ -89,22 +89,22 @@ def test_init_reach_vol_vs_ran_SIR():
     experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
     experi.execute()
 
-def test_init_reach_vol_vs_sapo_SIR():
+def test_init_reach_vol_SIR():
     num_steps = 150
     use_supp = True
     use_pregen = False
 
     num_trajs = 5000
 
-    pca_window_size = 8
-    lin_window_size = 12
+    lin_window_size = 2
+    pca_window_size = 0
 
     inputs_one = []
     inputs_two = []
-    for inc in range(0,5,1):
-        inc /= 500
+    for inc in range(1,6,1):
+        inc /= 100
 
-        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0.00099, 0.001))
+        box = ((0.79-inc,0.8), (0.19-inc,0.2), (0, inc))
 
         unit_model = SIR_UnitBox(init_box=box)
         model = SIR(init_box=box)
@@ -114,7 +114,7 @@ def test_init_reach_vol_vs_sapo_SIR():
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"{model.name} SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"SIR SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
@@ -144,6 +144,10 @@ def test_init_reach_vol_vs_sapo_SIR():
 
     experi = InitReachPlotExperiment(*inputs)
     experi.execute()
+
+def test_ran_diag_static_SIR():
+    unit_model = SIR_UnitBox()
+    test_ran_diag_static(unit_model, 150, 2)
 
 def test_vol_comp_SIR():
     unit_model = SIR_UnitBox()

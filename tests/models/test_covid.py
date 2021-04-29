@@ -89,6 +89,61 @@ def test_init_reach_vol_vs_ran_Covid():
     experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
     experi.execute()
 
+def test_init_reach_vol_Covid():
+    num_steps = 20
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+
+    lin_window_size = 2
+    pca_window_size = 1
+
+    inputs_one = []
+    inputs_two = []
+    for inc in range(1,6,1):
+        inc /= 50
+
+        box = ((0.69 - inc, 0.70), (0.09-inc,0.1), (0.14-inc, 0.15), (0.04-inc, 0.05), (0, inc), (0, inc), (0, inc))
+
+        unit_model = Covid_UnitBox(init_box=box)
+        model = Covid(init_box=box)
+
+        pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
+        lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
+
+        experi_input_one = dict(model=unit_model,
+                                strat=MultiStrategy(pca_strat, lin_strat),
+                                label=f"Covid SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+        experi_input_two = dict(model=model,
+                                strat=None,
+                                label=f"SapoCovid",
+                                supp_mode = use_supp,
+                                pregen_mode = use_pregen,
+                                num_trajs=num_trajs,
+                                num_steps=num_steps)
+
+
+        inputs_one.append(experi_input_one)
+        inputs_two.append(experi_input_two)
+
+
+    inputs = inputs_one + inputs_two
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = InitReachPlotExperiment(*inputs)
+    experi.execute()
 
 def test_equal_sliding_strat_Covid():
     model = Covid_UnitBox()
@@ -101,7 +156,7 @@ def test_ran_strat_Covid():
 def test_skewed_sliding_strat_comb_Covid():
     unit_model = Covid_UnitBox()
     model = Covid()
-    test_skewed_sliding_strat_comb(unit_model, 200, 5000, num_temps=3, incre=1, use_supp=True, use_pregen=False, use_sapo=)
+    test_skewed_sliding_strat_comb(unit_model, 200, 5000, num_temps=3, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_sliding_strat_comb_Covid():
     model = Covid_UnitBox()
