@@ -37,34 +37,38 @@ def test_sapo_vol_VDP():
     harosc = VolumePlotExperiment(experi_input)
     harosc.execute()
 
-def test_ani_pca_comp_VDP():
-    NUM_STEPS = 5
-    NUM_TRAJS = 5000
-    unit_model = VanDerPol_UnitBox(delta=0.08)
+def test_sliding_phase_plot_VDP():
+    use_supp = True
+    use_pregen = False
 
-    ran_pca_strat = SlidingPCAStrat(unit_model, lifespan=20)
-    ran_experi_input = dict(model=unit_model, #Encompass strat initilizations?
-                            strat=ran_pca_strat,
-                            label="PCA Pre-gen",
-                            num_steps=NUM_STEPS,
-                            max_steps=70,
-                            num_trajs=NUM_TRAJS,
-                            supp_mode=False,
-                            pregen_mode=True)
+    num_trajs = 5000
+    num_steps = 70
 
-    supp_pca_strat = SlidingPCAStrat(unit_model, lifespan=20)
-    supp_experi_input = dict(model=unit_model,
-                            strat=supp_pca_strat,
-                            label="PCA Supp Points",
-                            num_steps=NUM_STEPS,
-                            max_steps=70,
-                            num_trajs=NUM_TRAJS,
-                            supp_mode=True,
-                            pregen_mode=False)
+    model = VanDerPol_UnitBox(delta=0.08)
 
-    vdp_pca = CompAniExperiment(ran_experi_input, supp_experi_input)
-    vdp_pca.execute(0, 1, 1, "VDPPCAComp", plot_pts=[False, True])
+    pca_window_size = 0
+    lin_window_size = 5
 
+    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
+    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+
+    experi_input = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps)
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = PhasePlotExperiment(experi_input)
+    experi.execute(0,1, plot_border_traj=False)
     Timer.generate_stats()
 
 def test_init_reach_vol_vs_ran_VDP():

@@ -21,7 +21,7 @@ def test_sapo_CVDP():
 def test_skewed_sliding_strat_comb_CVDP():
     unit_model = CoupledVDP_UnitBox(delta=0.08)
     model = CoupledVDP(delta=0.08)
-    test_skewed_sliding_strat_comb(unit_model, 30, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
+    test_skewed_sliding_strat_comb(unit_model, 50, 4000, num_temps=5, incre=1, use_supp=True, use_pregen=False, use_sapo=model)
 
 def test_ran_strat_CVDP():
   model = VanDerPol_UnitBox(delta=0.08)

@@ -189,8 +189,8 @@ class PhaseSubplot(Subplot):
 
         #axis_patches = []
         #for flow_idx, flowpipe in enumerate(self.flowpipes):
-        #    for strat_idx, strat in enumerate(flowpipe):
-        #        axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
+        #       for strat_idx, strat in enumerate(flowpipe):
+        # axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
 
         #phase_ax.legend(handles=axis_patches)
 
