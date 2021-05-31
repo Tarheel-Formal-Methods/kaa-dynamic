@@ -13,7 +13,7 @@ def test_arch_Chem():
     num_steps = 40
     delta = 0.005
 
-    model_one = Chem_UnitBox(1000, 100000, delta=delta)
+    model_one = Chem_UnitBox(100, 1000, delta=delta)
     #model_two = CoupledVDP_UnitBox(delta=delta, init_box=init_box , mu=2)
 
     pca_window_size = 5
@@ -31,5 +31,5 @@ def test_arch_Chem():
                         num_trajs=num_trajs,
                         trans_mode=BundleTransMode.AFO)
 
-    experi = ProjectionPlotExperiment(experi_input_one)
-    experi.execute(3)
+    experi = ProjectionPlotExperiment(experi_input_one, plot_total_width=True)
+    experi.execute()
