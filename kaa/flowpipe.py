@@ -11,23 +11,12 @@ from kaa.linearsystem import calc_box_volume
 FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
 TotalFlowpipeVolTup = namedtuple('FlowpipeVolDataTup', ['TotalFlowpipeConvHullVol', 'TotalFlowpipeEnvelopBoxVol'])
 
-class ReachCompMode(Enum):
-    'Computes only the volume statistics of flowpipe. Discards bundle matrices once done.'
-    VolMode = auto()
-
-    'Computes only the maximum, minimum values along axes. Discards bundle matrices once done.'
-    ProjPlotMode = auto()
-
-    'Most expensive mode in terms of memory usage. Keeps all bundle matrices in memory.'
-    PhasePlotMode = auto()
-
-
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of Bundle objects.
 """
 class FlowPipe:
 
-    def __init__(self, model, strat, label, reach_comp_mode, flowpipe=None):
+    def __init__(self, model, strat, label, flowpipe=None):
         self.flowpipe = [model.bund]
         self.num_bunds = 1
         self.model = model
@@ -35,12 +24,6 @@ class FlowPipe:
         self.vars = model.vars
         self.dim = model.dim
         self.label = label
-        self.reach_comp_mode = reach_comp_mode
-
-
-        self.traj_data = None
-        self.volume_data = None
-        self.proj_data = None
         self.error = None
 
     """
@@ -57,8 +40,7 @@ class FlowPipe:
     """
     @property
     def all_total_volume(self):
-        #assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-        vol_data = self.volume_data if self.volume_data else self.get_volume_data()
+        vol_data = self.get_volume_data()
         return TotalFlowpipeVolTup(np.sum(vol_data.FlowpipeConvHullVol),
                                    np.sum(vol_data.FlowpipeEnvelopBoxVol))
 
@@ -68,9 +50,7 @@ class FlowPipe:
     """
     @property
     def total_volume(self):
-        #assert self.volume_data, "self.volume_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-
-        vol_data = self.volume_data if self.volume_data else self.get_volume_data()
+        vol_data = self.get_volume_data()
         tot_conv_vol = np.sum(vol_data.FlowpipeConvHullVol)
 
         if tot_conv_vol > 0:
@@ -78,6 +58,9 @@ class FlowPipe:
 
         return np.sum(vol_data.FlowpipeEnvelopBoxVol)
 
+    """
+    Returns volume of the initial box defined at the beginning of this flowpipe.
+    """
     @property
     def init_box_volume(self):
         init_box = self.model.init_box
@@ -167,7 +150,7 @@ class FlowPipe:
         Timer.start('Proj')
 
         'Vector of minimum and maximum points of the polytope represented by parallelotope bundle.'
-        y_min, y_max = np.empty(len(self)), np.empty(len(self))
+        y_min, y_max = np.empty(self.num_bunds), np.empty(self.num_bunds)
 
         'Initialize objective function'
         y_obj = np.zeros(self.dim)
@@ -176,8 +159,8 @@ class FlowPipe:
         'Calculate the minimum and maximum points through LPs for every iteration of the bundle.'
         for bund_ind, bund in enumerate(self.flowpipe):
             bund_sys = bund.getIntersect()
-            y_min[bund_ind] = bund_sys.max_opt(y_obj).fun
-            y_max[bund_ind] = bund_sys.min_opt(y_obj).fun
+            y_min[bund_ind] = bund_sys.min_obj(y_obj).fun
+            y_max[bund_ind] = bund_sys.max_obj(y_obj).fun
         Timer.stop("Proj")
 
         return y_min, y_max
@@ -188,12 +171,22 @@ class FlowPipe:
     @params var: The variable for the reachable set to be projected onto.
     @returns list of minimum and maximum points of projected set at each time step.
     """
-    def getProj(self, var_ind):
-        #assert self.proj_data, "self.proj_data not initialized. Did you run Flowpipe.calc_flowpipe_data?"
-        if self.proj_data:
-            return self.proj_data[2*var_ind], self.proj_data[2*var_ind + 1]
-
+    def get_proj(self, var_ind):
         return self.__calc_bounds_along_var(var_ind)
+
+    """
+    Returns reachable set of the sum of all the variables.
+    """
+    def get_total_width_reachable_set(self):
+        min_width, max_width = np.empty((self.dim, self.num_bunds)), np.empty((self.dim, self.num_bunds))
+
+        for var_idx in range(self.dim):
+            var_min, var_max = self.get_proj(var_idx)
+
+            min_width[var_idx] = var_min
+            max_width[var_idx] = var_max
+
+        return np.sum(min_width, axis=0), np.sum(max_width, axis=0)
 
     def __len__(self):
         return self.num_bunds

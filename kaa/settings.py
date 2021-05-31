@@ -4,7 +4,7 @@ Simple settings file for the in-and-outs of Kaa.
 """
 class KaaSettings:
     'Should we try to parallelize the generator calculations?'
-    Parallelize = True
+    Parallelize = False
 
     'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
     OptProd = "Kodiak"
@@ -36,11 +36,11 @@ class KaaSettings:
     DelFlowpipe = False
 
 class DebugSettings:
-    TimerProfileLabels = set(["PCA Direction Generation", "Linear Direction Generation", "Open Strategy", "Close Strategy"])
+    TimerProfileLabels = set()
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
-    plot_font = 15
+    PlotFont = 19
 
     'Toggle to save the figures to disk'
     save_fig = False
@@ -49,4 +49,6 @@ class PlotSettings:
     default_fig_path = "/home/edward/work/kaa-dynamic/figures"
 
     'Figure dimensions'
-    fig_size = (40,20)
+    fig_size = (60, 60)
+
+    NumSteps = 2

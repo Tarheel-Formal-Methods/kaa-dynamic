@@ -7,7 +7,6 @@ from kaa.temp.random_static_strat import RandomStaticStrat
 from kaa.temp.diag_static_strat import RandomDiagStaticStrat
 from kaa.spreadsheet import *
 from kaa.timer import Timer
-from kaa.flowpipe import ReachCompMode
 from kaa.linearsystem import calc_box_volume
 
 """
@@ -32,7 +31,7 @@ Experiment to measure deviations between generated directions for a strategy typ
 class DeviationExperiment(Experiment):
 
     def __init__(self, *inputs, experi_type, label="Experiment"):
-        super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode, label=label)
+        super().__init__(*inputs, label=label)
         self.experi_type = experi_type
 
     def execute(self, num_trials):
@@ -73,13 +72,15 @@ Experiment to calculate and plot the phase plot.
 """
 class PhasePlotExperiment(Experiment):
 
-    def __init__(self, *inputs):
-        super().__init__(*inputs,reach_comp_mode=ReachCompMode.PhasePlotMode)
+    def __init__(self, *inputs, separate=False, plot_border_traj=False):
+        super().__init__(*inputs)
+        self.separate = separate
+        self.plot_border_traj = plot_border_traj
 
-    def execute(self, *var_tup, separate=False, plot_border_traj=False):
+    def execute(self, *var_tup, xlims=None, ylims=None):
         num_steps = self.max_num_steps
 
-        if plot_border_traj:
+        if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
 
         for experi_input in self.inputs:
@@ -88,12 +89,15 @@ class PhasePlotExperiment(Experiment):
 
         self.plot.plot({'type': 'Phase',
                         'vars': var_tup,
-                        'separate_flag': False})
+                        'separate_flag': self.separate,
+                        'xlims': xlims,
+                        'ylims': ylims})
 
 class InitReachPlotExperiment(Experiment):
 
-    def __init__(self, *inputs):
-            super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
+    def __init__(self, *inputs, log_scale=False):
+            super().__init__(*inputs)
+            self.log_scale_flag = log_scale
 
     def execute(self):
         for experi_input in self.inputs:
@@ -102,44 +106,50 @@ class InitReachPlotExperiment(Experiment):
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'InitVolReachVol',
-                        'flowpipe_indepen_data': None})
+                        'flowpipe_indepen_data': None,
+                        'log_scale_flag': self.log_scale_flag})
 
 class InitReachVSRandomPlotExperiment(Experiment):
-    def __init__(self, *inputs,  num_ran_temps=20, num_trials=10, ran_diag=False):
-            super().__init__(*inputs, reach_comp_mode=ReachCompMode.VolMode)
+    def __init__(self, *inputs,  num_ran_temps=20, num_trials=10, ran_diag=False, log_scale=False, precalc_vals=None):
+            super().__init__(*inputs)
             self.num_trials = num_trials
             self.num_ran_temps = num_ran_temps
             self.ran_diag_flag = ran_diag
+            self.log_scale_flag = log_scale
+            self.precalc_vals = precalc_vals
 
     def execute(self):
-        spreadsheet = SpreadSheet(self.model, self.label)
-        spreadsheet.generate_sheet(self.inputs, ("InitBoxVolume", "ReachSetVolume"), 1)
-
         ran_flow_data_tups = []
-        for experi_input in self.inputs:
+        for input_idx, experi_input in enumerate(self.inputs):
             self.initialize_strat(experi_input, 10)
             self.print_input_params(experi_input)
 
-            ran_data_tup = self.avg_ran_flowpipes(experi_input)
+            ran_data_tup = self.__avg_ran_flowpipes(experi_input, input_idx)
             ran_flow_data_tups.append(ran_data_tup)
             self.plot.add(self.calc_flowpipe(experi_input))
 
-            spreadsheet.save_data_into_sheet(flow_label, 0, (ran_data_tup[1], ran_data_tup[2]))
+            #spreadsheet.save_data_into_sheet(flow_label, 0, (ran_data_tup[1], ran_data_tup[2]))
 
         self.plot.plot({'type': 'InitVolReachVol',
-                        'flowpipe_indepen_data': ran_flow_data_tups})
+                        'flowpipe_indepen_data': ran_flow_data_tups,
+                        'log_scale_flag': self.log_scale_flag})
 
-    def avg_ran_flowpipes(self, experi_input):
+    def __avg_ran_flowpipes(self, experi_input, input_idx):
+        input_model = experi_input['model']
+        input_traj = experi_input['num_trajs']
+        input_supp = experi_input['supp_mode']
+        input_pregen = experi_input['pregen_mode']
+        num_steps = experi_input['num_steps']
+
+        ran_label=f"{input_model.name} Random Static {'Diag' if self.ran_diag_flag else ''} Strat 10 trials"
+
+        if self.precalc_vals:
+            assert len(self.precalc_vals) == len(self.inputs), "Averaged precalculated flowpipe values must correspond to each input."
+            return (ran_label, calc_box_volume(input_model.init_box), self.precalc_vals[input_idx])
+
         trial_vol_arr = np.empty(self.num_trials)
 
         for trial in range(self.num_trials):
-            input_model = experi_input['model']
-            input_traj = experi_input['num_trajs']
-            input_supp = experi_input['supp_mode']
-            input_pregen = experi_input['pregen_mode']
-            num_steps = experi_input['num_steps']
-
-            ran_label=f"{input_model.name} Random Static {'Diag' if self.ran_diag_flag else ''} Strat {self.num_trials} trials"
             ran_strat = (RandomDiagStaticStrat(input_model, self.num_ran_temps) if self.ran_diag_flag else
                          RandomStaticStrat(input_model, self.num_ran_temps))
 
@@ -153,13 +163,16 @@ class InitReachVSRandomPlotExperiment(Experiment):
 
             self.print_input_params(ran_experi_input, trial_num=trial)
             trial_vol_arr[trial] = self.calc_flowpipe(ran_experi_input).total_volume
+            #spreadsheet.save_data_into_sheet(ran_label, trial_num, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
+
+            Output.write(f"INPUT: {input_model.init_box} Trial {trial}: {trial_vol_arr[trial]}")
 
         return (ran_label, calc_box_volume(input_model.init_box), np.average(trial_vol_arr))
 
 
 class VolumeDataExperiment(Experiment):
     def __init__(self, *inputs, label="VolumeDataExperiment", num_trials=1):
-        super().__init__(*inputs, label=label, reach_comp_mode=ReachCompMode.VolMode)
+        super().__init__(*inputs, label=label)
         self.num_trials = num_trials
 
     def execute(self):
@@ -184,13 +197,14 @@ class VolumeDataExperiment(Experiment):
                 experi_strat.reset()
 
 
-
 class VolumePlotExperiment(Experiment):
 
-    def __init__(self, *inputs, label="VolumePlotExperiment"):
-        super().__init__(*inputs, label=label, reach_comp_mode=ReachCompMode.VolMode)
+    def __init__(self, *inputs, label="VolumePlotExperiment", accum = True, plot_all_vol=False):
+        super().__init__(*inputs, label=label)
+        self.accum_flag = accum
+        self.plot_all_vol_flag = plot_all_vol
 
-    def execute(self, accum=True, plot_all_vol=False):
+    def execute(self):
         num_steps = self.max_num_steps
 
         spreadsheet = SpreadSheet(self.model, self.label)
@@ -210,21 +224,24 @@ class VolumePlotExperiment(Experiment):
             self.plot.add(flowpipe)
 
         self.plot.plot({'type': 'Volume',
-                        'accum_flag': accum,
-                        'plot_all_vol_flag': plot_all_vol})
+                        'accum_flag': self.accum_flag,
+                        'plot_all_vol_flag': self.plot_all_vol_flag})
 
 """
 Experiment to calculate and plot the projection reachable sets.
 """
 class ProjectionPlotExperiment(Experiment):
 
-    def __init__(self, *inputs):
-        super().__init__(*inputs, reach_comp_mode=ReachCompMode.ProjPlotMode)
+    def __init__(self, *inputs, separate=False, plot_border_traj=False, plot_total_width=False):
+        super().__init__(*inputs)
+        self.separate_flag = separate
+        self.plot_border_traj = plot_border_traj
+        self.plot_total_width_flag = plot_total_width
 
-    def execute(self, *var_tup, separate=False, plot_border_traj=True):
+    def execute(self, *var_tup, xlims=None, ylims=None):
         num_steps = self.max_num_steps
 
-        if plot_border_traj:
+        if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
 
         for experi_input in self.inputs:
@@ -234,12 +251,15 @@ class ProjectionPlotExperiment(Experiment):
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'Projection',
-                        'vars': var_tup})
+                        'vars': var_tup,
+                        'plot_width_flag': self.plot_total_width_flag,
+                        'xlims': xlims,
+                        'ylims': ylims})
 
 class CompAniExperiment(Experiment):
 
     def __init__(self, *inputs):
-        super().__init__(*inputs, reach_comp_mode=ReachCompMode.PhasePlotMode)
+        super().__init__(*inputs)
 
     def execute(self, x , y, ptope_order, filename, plot_pts=None):
         if not plot_pts: plot_pts = [False for _ in enumerate(self.inputs)]

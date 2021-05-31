@@ -31,4 +31,5 @@ def test_arch_LOVO21():
                             trans_mode=BundleTransMode.AFO)
 
     experi = PhasePlotExperiment(experi_input_one)
-    experi.execute(0, 1)
+    experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4))
+    Timer.generate_stats()

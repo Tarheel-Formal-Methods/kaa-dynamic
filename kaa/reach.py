@@ -1,9 +1,8 @@
-
 import copy
 from termcolor import colored
 
 from kaa.timer import Timer
-from kaa.bundle import Bundle, BundleTransformer, BundleMode
+from kaa.bundle import Bundle, BundleTransformer, BundleTransMode
 from kaa.flowpipe import FlowPipe
 from kaa.settings import KaaSettings
 from kaa.templates import StaticStrat, MultiStrategy
@@ -22,11 +21,11 @@ Object handling all reachable flowpipe computations.
 """
 class ReachSet:
 
-    def __init__(self, model, reachcompmode, strat=None, label="", transmode=BundleMode.AFO):
+    def __init__(self, model, strat=None, label="", trans_mode=BundleTransMode.AFO):
         self.model = model
-        self.trans_mode = transmode
+        self.trans_mode = trans_mode
         self.strat = StaticStrat(self.model) if strat is None else strat
-        self.flowpipe = FlowPipe(self.model, strat, label, reachcompmode)
+        self.flowpipe = FlowPipe(self.model, strat, label)
 
 
     """

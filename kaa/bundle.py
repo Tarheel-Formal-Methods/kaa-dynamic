@@ -7,7 +7,6 @@ from enum import Enum
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
 from kaa.linearsystem import LinearSystem, intersect
-from kaa.lputil import minLinProg, maxLinProg
 from kaa.settings import KaaSettings
 from kaa.timer import Timer
 from kaa.log import Output
@@ -114,8 +113,8 @@ class Bundle:
         L = self.L
 
         for row_ind, row in enumerate(L):
-            self.offu[row_ind] = bund_sys.max_opt(row).fun
-            self.offl[row_ind] = bund_sys.max_opt(np.negative(row)).fun
+            self.offu[row_ind] = bund_sys.max_obj(row).fun
+            self.offl[row_ind] = bund_sys.max_obj(np.negative(row)).fun
 
     """
     Returns list of Parallelotopes by the strategy they are associated with.
@@ -196,8 +195,8 @@ class Bundle:
         labeled_L_ents = zip(dir_row_mat, self.__get_global_labels(asso_strat, dir_labels))
         self.labeled_L = np.append(self.labeled_L, list(labeled_L_ents), axis=0)
 
-        new_uoffsets = [[ bund_sys.max_opt(row).fun for row in dir_row_mat ]]
-        new_loffsets = [[ bund_sys.max_opt(np.negative(row)).fun for row in dir_row_mat ]]
+        new_uoffsets = [[ bund_sys.max_obj(row).fun for row in dir_row_mat ]]
+        new_loffsets = [[ bund_sys.max_obj(np.negative(row)).fun for row in dir_row_mat ]]
 
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
@@ -309,7 +308,7 @@ class Bundle:
 """
 Wrapper over bundle transformation modes.
 """
-class BundleMode(Enum):
+class BundleTransMode(Enum):
     AFO = False
     OFO = True
 

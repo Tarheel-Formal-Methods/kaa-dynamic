@@ -7,11 +7,11 @@ from kaa.model import Model
 
 class LL(Model):
 
-    def __init__(self, delta=0.05, init_box = ((1.19, 1.21), (1.04. 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46), (2.81, 2.87), (2.58, 2.66))):
+    def __init__(self, delta=0.05, init_box = ((1.19, 1.21), (1.04, 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46), (2.81, 2.87), (2.58, 2.66))):
 
         x1, x2, x3, x4, x5, x6, x7 = sp.Symbol('x1'), sp.Symbol('x2'), sp.Symbol('x3'), sp.Symbol('x4'),sp.Symbol('x5'), sp.Symbol('x6'), sp.Symbol('x7')
 
-        dx1 =  x1 + (1.4*x3 - 0.9*x1)*delta
+        dx1 = x1 + (1.4*x3 - 0.9*x1)*delta
         dx2 = x2 + (2.5*x5 - 1.5*x2)*delta
         dx3 = x3 + (0.6*x7 - 0.8*x2*x3)*delta
         dx4 = x4 + (2 - 1.3*x3*x4)*delta
@@ -42,12 +42,12 @@ class LL(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="LL")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LL")
 
 
 class LL_UnitBox(Model):
 
-    def __init__(self, delta=0.05, init_box = ((1.19, 1.21), (1.04. 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46), (2.81, 2.87), (2.58, 2.66))):
+    def __init__(self, delta=0.05, init_box = ((1.19, 1.21), (1.04, 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46))):
 
         x1, x2, x3, x4, x5, x6, x7 = sp.Symbol('x1'), sp.Symbol('x2'), sp.Symbol('x3'), sp.Symbol('x4'),sp.Symbol('x5'), sp.Symbol('x6'), sp.Symbol('x7')
         delta = 0.05
@@ -82,4 +82,4 @@ class LL_UnitBox(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="LL")
+        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LL")

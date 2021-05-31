@@ -16,8 +16,7 @@ from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.parallelotope import LinearSystem
 
-
-plt.rcParams.update({'font.size': PlotSettings.plot_font})
+#plt.rcParams.update({'font.size': PlotSettings.PlotFont})
 
 def plot_traj_proj(model, ax, trajs, x, num_steps):
     if not trajs: return
@@ -60,23 +59,28 @@ class Subplot:
 
 class ProjectionSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, trajs, vars):
-        self.vars = model.vars if not vars else vars
+    def __init__(self, model, vars, flowpipes, num_steps, trajs, plot_width_flag, x_lims, y_lims):
+        self.vars = vars
         self.trajs = trajs
-        super().__init__(model,  "Projection", flowpipes, len(self.vars), num_steps)
+        self.plot_width_flag = plot_width_flag
+        self.x_lims = x_lims
+        self.y_lims = y_lims
+        super().__init__(model,
+                         "Projection",
+                         flowpipes,
+                         len(self.vars) + 1 if plot_width_flag else len(self.vars),
+                         num_steps)
 
     """
     Plots the projections of the trajectories and flowpipes stored in Plot object.
     @params: *var_tup: indices of desired variables
-         path: optional variable designated the path to store the generated matplotlib figure.
+              path: optional variable designated the path to store the generated matplotlib figure.
     """
     def plot(self, axs):
-
-        num_var = len(self.vars)
+        num_vars = len(self.vars)
         num_flowpipes = len(self.flowpipes)
 
         assert self.model is not None, "No data has been added to the Plot object."
-        assert len(axs) == num_var, "Number of plot axes must match the number of variables to plot."
 
         for ax_idx, (var_idx, ax) in enumerate(zip(self.vars, axs)):
             var = self.model.vars[var_idx]
@@ -85,27 +89,57 @@ class ProjectionSubplot(Subplot):
             plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps)
 
             for flow_idx, flowpipe in enumerate(self.flowpipes):
-                flow_min, flow_max = flowpipe.getProj(var_idx)
+                flow_min, flow_max = flowpipe.get_proj(var_idx)
                 flowpipe_label = flowpipe.label
 
                 t = np.arange(0, len(flowpipe), 1)
                 ax.fill_between(t, flow_min, flow_max, label=flowpipe_label,
-                                color=f"C{flow_idx}", alpha=0.5)
+                                color=f"C{flow_idx}", alpha=0.4)
 
-                ax.set_xlabel("t: time steps")
-                ax.set_ylabel(f"Reachable Set for {var}")
+                ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
+                ax.set_ylabel(f"Reachable Set for {var}", fontsize=PlotSettings.PlotFont)
                 ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
                 ax.legend()
 
+                if self.x_lims:
+                    ax.set_xlim(self.x_lims)
+                if self.y_lims:
+                    ax.set_ylim(self.y_lims)
+
+        'Total width is displayed on the last subplot by default'
+        ax = axs[num_vars]
+        if self.plot_width_flag:
+            for flow_idx, flowpipe in enumerate(self.flowpipes):
+                flow_min, flow_max = flowpipe.get_total_width_reachable_set()
+                flowpipe_label = flowpipe.label
+
+                print(flow_min)
+                print(flow_max)
+
+                t = np.arange(0, len(flowpipe), 1)
+                ax.fill_between(t, flow_min, flow_max, label=flowpipe_label,
+                                color=f"C{flow_idx}", alpha=0.4)
+
+                ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
+                ax.set_ylabel(f"Reachable Set for s", fontsize=PlotSettings.PlotFont)
+                ax.set_title(f"Projection of Reachable Set for s")
+                ax.legend()
+
+        if self.x_lims:
+            ax.set_xlim(self.x_lims)
+        if self.y_lims:
+            ax.set_ylim(self.y_lims)
+
 class PhaseSubplot(Subplot):
 
-    def __init__(self, model, vars, flowpipes, num_steps, separate_flag, trajs):
+    def __init__(self, model, vars, flowpipes, num_steps, separate_flag, trajs, x_lims, y_lims):
         assert len(vars) == 2, "Phase is 2D, so vars can only be a 2-element tuple."
         self.x = vars[0]
         self.y = vars[1]
         self.separate_flag = separate_flag
         self.trajs = trajs
-        self.lims = None
+        self.x_lims = x_lims
+        self.y_lims = y_lims
         super().__init__(model, "Phase", flowpipes, 1, num_steps)
 
     """
@@ -127,6 +161,16 @@ class PhaseSubplot(Subplot):
         plot_trajs(self.model, ax, self.trajs, self.x, self.y)
         self.__phase_plot_legend(self.x, self.y, ax)
 
+        if self.x_lims:
+            ax.set_xlim(self.x_lims)
+        if self.y_lims:
+            ax.set_ylim(self.y_lims)
+
+        cir = plt.Circle((1,1), 0.161, color='b', fill=False)
+        ax.add_artist(cir)
+
+        ax.set_aspect('equal')
+
         phase_time = Timer.stop('Phase')
         x_var, y_var = self.model.vars[self.x], self.model.vars[self.y]
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
@@ -138,7 +182,7 @@ class PhaseSubplot(Subplot):
     def __halfspace_inter_plot(self, ax, x, y, flowpipe, flow_idx):
         for bund in flowpipe:
             if not self.separate_flag:
-                'Temp patch. Revise to start using LinearSystems for future work.'
+                'Temp patch. Revise to start using Line, fontsize=25arSystems for future work.'
                 self.__plot_halfspace(x, y, ax,
                                       bund.getIntersect(),
                                       idx_offset=flow_idx)
@@ -149,8 +193,7 @@ class PhaseSubplot(Subplot):
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
-    def __plot_halfspace(self, x, y, ax, sys, idx_offset=0, alpha=0.4):
-
+    def __plot_halfspace(self, x, y, ax, sys, idx_offset=0, alpha=0.3):
         'Routines in Bundle give None values for queries of non-existent ptopes'
         if sys is None: return sys
 
@@ -171,7 +214,7 @@ class PhaseSubplot(Subplot):
         ax.add_patch(ptope)
 
         inter_x, inter_y = zip(*proj_vertices)
-        ax.scatter(inter_x, inter_y, s=0.1)
+        ax.scatter(inter_x, inter_y, s=0.01)
 
     """
     Routine to populate the legend information for a phase plot.
@@ -187,16 +230,12 @@ class PhaseSubplot(Subplot):
         phase_ax.set_ylabel(f'{y_var}')
         phase_ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
 
-        #axis_patches = []
-        #for flow_idx, flowpipe in enumerate(self.flowpipes):
-        #       for strat_idx, strat in enumerate(flowpipe):
-        # axis_patches.append(pat.Patch(color = f"C{flow_idx + strat_idx}", label=str(strat)))
+        axis_patches = []
+        for flow_idx, flowpipe in enumerate(self.flowpipes):
+            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=flowpipe.label))
 
-        #phase_ax.legend(handles=axis_patches)
+        phase_ax.legend(handles=axis_patches)
 
-        if self.lims is not None:
-           phase_ax.set_xlim(lims)
-           phase_ax.set_ylim(lims)
 
     def __support_plot(self, flowpipe, flow_idx, x, y, ax):
         dim = self.model.dim
@@ -230,9 +269,9 @@ TODO document expected dict setup.
 class VolumeSubplot(Subplot):
 
     def __init__(self, model, flowpipes, num_steps, accum_flag, plot_all_vol):
-        super().__init__(model, "Volume", flowpipes, 1, num_steps)
         self.accum_flag = accum_flag
         self.plot_all_vol = plot_all_vol # Flag for plotting volumes for all methods (ConvHull, Enveloping box)
+        super().__init__(model, "Volume", flowpipes, 1, num_steps)
 
     """
     Plots volume estimation data from self.flowpipes into input Axis object
@@ -276,7 +315,6 @@ class VolumeSubplot(Subplot):
                 return [pat.Patch(color = f"C{flow_idx}",
                                   label=f"{flowpipe.label} (Convex)")]
 
-            #print(vol_data.FlowpipeEnvelopBoxVol)
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
 
             return [pat.Patch(color = f"C{flow_idx}",
@@ -284,17 +322,20 @@ class VolumeSubplot(Subplot):
 
 class InitVolReachVolPlot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, flowpipe_indepen_data):
+    def __init__(self, model, flowpipes, num_steps, flowpipe_indepen_data, log_scale_flag):
         super().__init__(model, "InitVolReachVol", flowpipes, 1, num_steps)
         self.flowpipe_indepen_data = flowpipe_indepen_data
+        self.log_scale_flag = log_scale_flag
 
     def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting InitVolReachVol."
         ax = ax[0]
 
-        ax.set_xlabel("Volume of Initial Box")
-        ax.set_ylabel("Total Volume of Reachable Set")
-        ax.set_title(f"Initial Box Volume VS Reachable Set Volume Plot for {self.model.name}")
+        ax.set_xlabel("Volume of Initial Box", fontsize=PlotSettings.PlotFont)
+        ax.set_ylabel("Total Volume of Reachable Set", fontsize=PlotSettings.PlotFont)
+        ax.set_title(f"Initial Box Volume VS Reachable Set Volume Plot for {self.model.name}", fontsize=PlotSettings.PlotFont)
+
+        ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
 
         key = lambda pipe: pipe.label
         flow_dict = groupby(sorted(self.flowpipes, key=key), key=key)
@@ -308,9 +349,8 @@ class InitVolReachVolPlot(Subplot):
             reach_vol_arr = np.empty(tot_labeled_flow)
 
             for flow_idx, flowpipe in enumerate(flowpipes):
-
-                init_vol_arr[flow_idx] = round(flowpipe.init_box_volume, 5)
-                reach_vol_arr[flow_idx] = round(flowpipe.total_volume, 5)
+                init_vol_arr[flow_idx] = flowpipe.init_box_volume
+                reach_vol_arr[flow_idx] = flowpipe.total_volume
 
             ax.plot(init_vol_arr, reach_vol_arr, marker='o', color=f"C{label_idx}")
             axis_patches.append(pat.Patch(color=f"C{label_idx}",
@@ -323,7 +363,25 @@ class InitVolReachVolPlot(Subplot):
                                           label=label[0]))
 
         ax.legend(handles=axis_patches)
+        y_start, y_end = ax.get_ylim()
 
+        x_start = max(init_vol_arr[0], 0)
+        x_end = init_vol_arr[-1]
+
+        y_start = max(y_start, 0)
+
+        num_steps = PlotSettings.NumSteps
+        x_step_size = (x_end - x_start) / num_steps
+        y_step_size = (y_end - y_start) / num_steps
+
+        x_ticks = np.arange(x_start, x_end + x_step_size, x_step_size)
+        y_ticks = np.arange(y_start, y_end + y_step_size, y_step_size)
+
+        ax.set_xticks(x_ticks)
+        ax.set_yticks(np.round(y_ticks))
+
+        if self.log_scale_flag:
+            ax.set_yscale('log')
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
@@ -355,10 +413,13 @@ class Plot:
 
             if subplot_type == "Projection":
                 subplot = ProjectionSubplot(self.model,
+                                            subplot_dict['vars'],
                                             self.flowpipes,
                                             self.num_steps,
                                             self.trajs,
-                                            subplot_dict['vars'])
+                                            subplot_dict['plot_width_flag'],
+                                            subplot_dict['xlims'],
+                                            subplot_dict['ylims'])
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,
@@ -366,7 +427,9 @@ class Plot:
                                        self.flowpipes,
                                        self.num_steps,
                                        subplot_dict['separate_flag'],
-                                       self.trajs)
+                                       self.trajs,
+                                       subplot_dict['xlims'],
+                                       subplot_dict['ylims'])
 
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,
@@ -379,13 +442,14 @@ class Plot:
                 subplot = InitVolReachVolPlot(self.model,
                                               self.flowpipes,
                                               self.num_steps,
-                                              subplot_dict['flowpipe_indepen_data'])
+                                              subplot_dict['flowpipe_indepen_data'],
+                                              subplot_dict['log_scale_flag'],)
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
             subplot_objs.append(subplot)
 
-        figure = plt.figure(figsize=PlotSettings.fig_size)
+        figure = plt.figure(figsize=PlotSettings.fig_size, dpi=100)
         total_num_subplots = sum(subplot.num_plots for subplot in subplot_objs)
 
         for subplot_idx,_ in enumerate(subplot_objs):
@@ -397,6 +461,7 @@ class Plot:
             subplot_obj.plot(axes_tup)
 
         #figure_name = "Kaa{}Phase{}--{}.png".format(self.model.name, self.__create_strat_str())
+
         self.__plot_figure(figure, "Fig")
 
     """
@@ -405,8 +470,6 @@ class Plot:
     """
     def __add_traj(self, traj_col):
         assert isinstance(traj_col, TrajCollection), "Only TrajCollection objects can be added through Plot.__add_flowpipe"
-        #if self.model is not None:
-        #    assert self.model.name == traj.model_name, "Trajectories and Plot must describe the same system."
 
         self.trajs = traj_col
         self.model = traj_col.model if self.model is None else self.model
@@ -418,10 +481,7 @@ class Plot:
             label: optional string argument to label the Flowpipe object in the matplotlib figure.
     """
     def __add_flowpipe(self, flowpipe):
-
         assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
-        #if self.model is not None:
-        #      assert self.model.name == flowpipe.model_name, "FlowPipe and Plot must describe the same system."
 
         self.flowpipes.append(flowpipe)
         self.model = flowpipe.model if self.model is None else self.model

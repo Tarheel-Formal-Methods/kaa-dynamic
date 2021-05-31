@@ -1,7 +1,8 @@
 from kaa.experi_init import *
 
-from models.LL import LL
+from models.LL import LL, LL_UnitBox
 from kaa.timer import Timer
+from kaa.bundle import BundleTransMode
 
 def test_LL():
     num_steps = 200
@@ -22,11 +23,11 @@ def test_arch_LL():
     num_trajs = 5000
 
     num_steps = 120
-    delta = 0.05
+    delta = 0.1
 
-    #init_box = ((1.19, 1.21), (1.04. 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46), (2.81, 2.87), (2.58, 2.66))
+    init_box_one = ((1.19, 1.21), (1.04, 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46))
 
-    model_one = LL_UnitBox(delta=delta, init_box=init_box)
+    model_one = LL_UnitBox(delta=delta, init_box=init_box_one)
 
     pca_window_size = 5
     lin_window_size = 5

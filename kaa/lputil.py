@@ -15,12 +15,14 @@ class LPSolution:
         self.x = x
         self.fun = fun
 
-'LP routines for problems without warm start'
-minLinProg = lambda model, c, A, b, constr_mat: OneTimeLinProg(model, c, A, b, constr_mat, "Min")
-maxLinProg = lambda model, c, A, b, constr_mat: OneTimeLinProg(model, c, A, b, constr_mat, "Max")
+def minLinProg(model, c, A, b, constr_mat=None, method='Simplex'):
+    return OneTimeLinProg(model, c, A, b, constr_mat, "Min", method)
 
-def OneTimeLinProg(model, c, A, b, constr_mat, glb_obj):
-    with LPUtil(model, c, A, b, constr_mat) as lp_inst:
+def maxLinProg(model, c, A, b, constr_mat=None, method='Simplex'):
+    return OneTimeLinProg(model, c, A, b, constr_mat, "Max", method)
+
+def OneTimeLinProg(model, c, A, b, constr_mat, glb_obj, method):
+    with LPUtil(model, c, A, b, constr_mat, method) as lp_inst:
         lp_inst.populate_consts()
         lp_inst.populate_obj_vec()
         lp_sol = lp_inst.solve(glb_obj)
@@ -29,7 +31,7 @@ def OneTimeLinProg(model, c, A, b, constr_mat, glb_obj):
 
 class LPUtil:
 
-    def __init__(self, model, c=None, A=None, b=None, constr_mat=None):
+    def __init__(self, model, c, A, b, constr_mat, method):
         self.model = model
         self.dim = model.dim
         self.c = c
@@ -39,10 +41,22 @@ class LPUtil:
         self.num_cols = None
         self.lp_prob = glpk.glp_create_prob()
 
-        self.params = glpk.glp_smcp()
-        glpk.glp_init_smcp(self.params)
-        self.params.msg_lev = glpk.GLP_MSG_ERR
-        self.params.meth = glpk.GLP_DUAL
+        if method == 'Simplex':
+            self.simplex = True
+            self.interior = False
+        elif method == 'Interior':
+            self.simplex = False
+            self.interior = True
+
+        if self.interior:
+            self.params = glpk.glp_iptcp()
+            glpk.glp_init_iptcp(self.params)
+        elif self.simplex:
+            self.params = glpk.glp_smcp()
+            glpk.glp_init_smcp(self.params)
+
+            self.params.msg_lev = glpk.GLP_MSG_ERR
+            self.params.meth = glpk.GLP_DUAL
 
         self.__normalize_constrs()
 
@@ -82,13 +96,22 @@ class LPUtil:
         Timer.start("LP Routines")
         glpk.glp_set_obj_dir(self.lp_prob, glp_obj)
 
-        glpk.glp_simplex(self.lp_prob, self.params)
+        if self.interior:
+            glpk.glp_interior(self.lp_prob, self.params)
+        elif self.simplex:
+            glpk.glp_simplex(self.lp_prob, self.params)
 
-        fun = glpk.glp_get_obj_val(self.lp_prob)
-        x = [i for i in map(lambda x: glpk.glp_get_col_prim(self.lp_prob, x+1), range(self.num_cols))]
+        if self.interior:
+            fun = glpk.glp_ipt_obj_val(self.lp_prob)
+            col_func = glpk.glp_ipt_col_prim
+        elif self.simplex:
+            fun = glpk.glp_get_obj_val(self.lp_prob)
+            col_func = glpk.glp_get_col_prim
 
+        x = [col_func(self.lp_prob, x+1) for x in range(self.num_cols)]
         Timer.stop("LP Routines")
-        return LPSolution(x, fun)
+
+        return LPSolution(np.asarray(x), fun)
 
     def __normalize_constrs(self):
         if self.constr_mat is not None:
@@ -101,17 +124,3 @@ class LPUtil:
     def __exit__(self, exc_type, exc_value, traceback):
         glpk.glp_delete_prob(self.lp_prob)
         glpk.glp_free_env()
-
-"""
-def __scipy_linprog(c, A, b, obj):
-    if obj == "min":
-        obj_c_vec = c
-    elif obj == "max":
-        obj_c_vec = np.negative(c)
-    else:
-        raise RuntimeException("Obj should either be min or max")
-
-    print(obj_c_vec)
-    lin_result = linprog(obj_c_vec, A_ub=A, b_ub=b, bounds=(None,None), method='revised simplex')
-    return LPSolution(lin_result.x, lin_result.fun)
-"""

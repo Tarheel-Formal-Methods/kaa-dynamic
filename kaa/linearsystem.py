@@ -47,7 +47,7 @@ class LinearSystem:
         row_norm = np.reshape(np.linalg.norm(self.A, axis=1), (self.A.shape[0], 1))
         center_A = np.hstack((self.A, row_norm))
 
-        center_pt = maxLinProg(self.model, c, center_A, self.b, None).x
+        center_pt = maxLinProg(self.model, c, center_A, self.b).x
         return ChebyCenter(center_pt[:-1], center_pt[-1])
 
     """
@@ -62,44 +62,36 @@ class LinearSystem:
 
         return VolDataTuple(conv_hull_vol, envelop_box_vol)
 
-        """
-        num_samples = KaaSettings.VolumeSamples
-        sampled_points = self.sample_ran_pts_envelop_box(num_samples)
-
-        check_point_membership = lambda point: 1 if self.check_membership(point) else 0
-        point_value = map(check_point_membership, sampled_points)
-        num_contained_points = reduce(add, point_value)
-
-        return (num_contained_points / num_samples) * self.calc_vol_envelop_box()
-        """
-        'Just return volume of enveloping box.'
-
     """
     Find vertices of this linear system.
     """
     @property
     def vertices(self):
         phase_intersect = np.hstack((self.A, - np.asarray([self.b]).T))
-        center_pt = np.asarray(self.chebyshev_center.center)
 
         'Run scipy.spatial.HalfspaceIntersection.'
-        hs = HalfspaceIntersection(phase_intersect, center_pt)
-        vertices = np.asarray(hs.intersections)
+        try:
+            center_pt = np.asarray(self.chebyshev_center.center)
+            hs = HalfspaceIntersection(phase_intersect, center_pt)
+        except QhullError:
+            feasible_pt = self.feasible_point()
+            #print(feasible_pt)
+            hs = HalfspaceIntersection(phase_intersect, feasible_pt)
 
+        vertices = np.asarray(hs.intersections)
         return vertices
 
-    """
+    def feasible_point(self, use_interior_point=True, num_samples=5):
+        if use_interior_point:
+            return minLinProg(self, np.zeros(self.dim), self.A, self.b, method='Interior').x
+        else:
+            sample_mat = np.random.randn(num_samples, self.dim)
 
-    """
-    def calc_vol_conv_hull(self):
-        if self.dim < 4:
-            try:
-                return ConvexHull(self.vertices).volume
+            perturbed_feasible_pts = np.empty((num_samples, self.dim))
+            for idx, perturbed_obj in enumerate(sample_mat):
+                perturbed_feasible_pts[idx] = self.min_obj(perturbed_obj).x
 
-            except QhullError:
-                Output.prominent("Convexhull volume operation raised an error.")
-
-        return None
+            return np.mean(perturbed_feasible_pts, axis=0)
 
     """
     Calculate the volume of the smallest enveloping box of linear system.
@@ -113,18 +105,18 @@ class LinearSystem:
     @params y: linear function to optimize over
     @returns LinProgResult
     """
-    def max_opt(self, y):
+    def max_obj(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return maxLinProg(self.model, y, self.A, self.b, self.constr_mat)
+        return maxLinProg(self.model, y, self.A, self.b, constr_mat=self.constr_mat)
 
     """
     Minimize optimization function y over Ax \leq b
     @params y: linear function to optimize over
     @returns LinProgResult
     """
-    def min_opt(self, y):
+    def min_obj(self, y):
         assert len(y) == self.dim, "Linear optimization function must be of same dimension as system."
-        return minLinProg(self.model, y,self.A, self.b, self.constr_mat)
+        return minLinProg(self.model, y, self.A, self.b, constr_mat=self.constr_mat)
 
     """
     Checks if point is indeed contained in Ax \leq b
@@ -150,8 +142,8 @@ class LinearSystem:
             y = np.zeros(self.dim)
             y[i] = 1
 
-            maxCood = self.max_opt(y).fun
-            minCood = self.min_opt(y).fun
+            maxCood = self.max_obj(y).fun
+            minCood = self.min_obj(y).fun
             box_interval[i] = [minCood, maxCood]
 
         return box_interval
@@ -178,7 +170,6 @@ class LinearSystem:
             output_queue.put(Traj(self.model, point, steps=steps))
         else:
             return Traj(self.model, point, steps=steps)
-
 
     """
     Auxiliary method to convert Manager.Queue object into list.
@@ -226,8 +217,8 @@ class LinearSystem:
     Worker for trajectory generation using support points.
     """
     def generate_supp_worker(self, dir_vec, steps, output_queue=None):
-        supp_point = self.max_opt(dir_vec).x
-        neg_supp_point = self.min_opt(dir_vec).x
+        supp_point = self.max_obj(dir_vec).x
+        neg_supp_point = self.min_obj(dir_vec).x
 
         #Output.write("Support Points Generated.")
         return [self.create_traj(supp_point, steps, output_queue),
@@ -256,13 +247,11 @@ class LinearSystem:
 
             output_list = self.queue_to_list(output_queue)
         else:
-            #Output.write("Non parallel routine")
             'Exploiting Warm-start LP'
             output_list = []
-            with LPUtil(self.model, A=self.A, b=self.b) as lp_inst:
+            with LPUtil(self.model, None, self.A, self.b, None, 'Simplex') as lp_inst:
                 lp_inst.populate_consts()
                 for dir_vec in dir_vecs:
-                    #Output.write(f"Direction vector we are using: {dir_vec}")
                     lp_inst.c = dir_vec
                     lp_inst.populate_obj_vec()
 
@@ -271,11 +260,8 @@ class LinearSystem:
 
                     output_list += [self.create_traj(supp_point, steps),
                                     self.create_traj(neg_supp_point, steps)]
-                    #Output.write(f"Direction vector we are using: {np.negative(dir_vec)}")
-                    #output_list.append(self.generate_supp_worker(np.negative(dir_vec), steps))
 
         return TrajCollection(self.model, output_list)
-
 
     def sample_ran_pts_envelop_box(self, num_trajs):
         box_intervals = self.__calc_envelop_box()

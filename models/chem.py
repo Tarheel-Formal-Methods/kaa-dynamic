@@ -6,21 +6,20 @@ from kaa.bundle import Bundle
 
 class Chem_UnitBox(Model):
 
-    def __init__(self, beta, gamma, delta=0.2, init_box=((0.9999,1), (0.0000099, 0.00001), (0.0000099, 0.00001), (0.9999, 1))):
+    def __init__(self, beta, gamma, delta=0.2, init_box=((0.99999,1), (0.0000001, 0.0000001), (0.0000001, 0.0000001))):
 
-        x, y, z, s = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z'), sp.Symbol('s')
-        vars = (x, y, z, s)
+        x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
+        vars = (x, y, z)
 
         dim_sys = len(vars)
 
         dx = x + (-0.4*x + beta*y*z)*delta
         dy = y + (0.4*x - beta*y*z - gamma*y**2)*delta
         dz = z + (gamma*y**2)*delta
-        ds = s + (x + y + z)*delta
 
-        dyns = (dx, dy, dz, ds)
+        dyns = (dx, dy, dz)
 
-        num_direct = 4
+        num_direct = 3
         num_temps = 1
 
         L = np.zeros((num_direct, dim_sys))
@@ -29,9 +28,8 @@ class Chem_UnitBox(Model):
         L[0][0] = 1
         L[1][1] = 1
         L[2][2] = 1
-        L[3][3] = 1
 
-        T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3;
+        T[0][0] = 0; T[0][1] = 1; T[0][2] = 2;
 
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)

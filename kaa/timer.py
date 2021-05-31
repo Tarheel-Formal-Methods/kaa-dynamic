@@ -73,7 +73,7 @@ class Timer:
 
             if end_label in DebugSettings.TimerProfileLabels:
                 Output.write(f"Label: {end_label} Duration: {end_timer.formatted_duration} \n")
-                
+
             return end_timer.duration
 
         else:
