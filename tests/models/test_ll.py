@@ -14,3 +14,34 @@ def test_LL():
 
     harosc = ProjectionPlotExperiment(experi_input)
     harosc.execute(0, 1, 2, plot_border_traj=False)
+
+def test_arch_LL():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+
+    num_steps = 120
+    delta = 0.05
+
+    #init_box = ((1.19, 1.21), (1.04. 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46), (2.81, 2.87), (2.58, 2.66))
+
+    model_one = LL_UnitBox(delta=delta, init_box=init_box)
+
+    pca_window_size = 5
+    lin_window_size = 5
+
+    pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size)
+    lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
+
+    experi_input_one = dict(model=model_one,
+                            strat=MultiStrategy(pca_strat_one, lin_strat_one),
+                            label=f"LALO21",
+                            num_steps=num_steps,
+                            supp_mode = use_supp,
+                            pregen_mode = use_pregen,
+                            num_trajs=num_trajs,
+                            trans_mode=BundleTransMode.AFO)
+
+    experi = ProjectionPlotExperiment(experi_input_one)
+    experi.execute(3)

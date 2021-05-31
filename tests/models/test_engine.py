@@ -23,14 +23,18 @@ def test_box_JetEngine():
     experi.execute(0, 1, plot_border_traj=True)
     Timer.generate_stats()
 
+def test_ran_diag_static_JetEngine():
+    unit_model = JetEngine_UnitBox()
+    test_ran_diag_static(unit_model, 100, 5)
+
 def test_sliding_equal_JetEngine():
     num_steps = 250
-    model = JetEngine_UnitBox(delta=0.05)
+    model = JetEngine_UnitBox()
     test_equal_sliding_strat(model, num_steps)
 
 def test_max_sliding_lin_strat_JetEngine():
     num_steps = 100
-    model = JetEngine_UnitBox(delta=0.1)
+    model = JetEngine_UnitBox()
     test_max_sliding_lin_strat(model, num_steps)
 
 def test_init_reach_vol_vs_ran_JetEngine():
@@ -50,14 +54,13 @@ def test_init_reach_vol_vs_ran_JetEngine():
         box = init_box=((0.8-inc,1.2), (0.8-inc,1.2))
 
         unit_model = JetEngine_UnitBox(init_box=box)
-        model = JetEngine(init_box=box)
 
         pca_strat = SlidingPCAStrat(unit_model, lifespan=pca_window_size)
         lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"JetEngine SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"JetEngine PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
@@ -72,7 +75,7 @@ def test_init_reach_vol_vs_ran_JetEngine():
     else:
         file_identifier = "(RAND)"
 
-    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=5)
     experi.execute()
 
 
@@ -101,7 +104,7 @@ def test_init_reach_vol_JetEngine():
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"JetEngine SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"JetEngine PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,

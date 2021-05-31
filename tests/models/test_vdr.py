@@ -2,19 +2,21 @@ from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.experiment import *
 from kaa.experi_init import *
 from kaa.timer import Timer
+from kaa.bundle import BundleTransMode
 
 def test_sapo_VDP():
     num_steps = 70
 
-    model = VanDerPol(delta=0.08)
+    model = VanDerPol(delta=0.08,init_box=((0, 0.05),(1.95, 2)))
 
     experi_input = dict(model=model,
                         strat=None,
                         label=f"Sapo's Reachable Set",
-                        num_steps=num_steps)
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
 
     experi = PhasePlotExperiment(experi_input)
-    experi.execute(0, 1, plot_border_traj=True)
+    experi.execute(0, 1)
     Timer.generate_stats()
 
 def test_sapo_vol_VDP():
@@ -32,7 +34,8 @@ def test_sapo_vol_VDP():
                         pregen_mode = use_pregen,
                         num_trajs=num_trajs,
                         num_steps=num_steps-1,
-                        max_steps=num_steps)
+                        max_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
 
     harosc = VolumePlotExperiment(experi_input)
     harosc.execute()
@@ -44,17 +47,17 @@ def test_sliding_phase_plot_VDP():
     num_trajs = 5000
     num_steps = 70
 
-    model = VanDerPol_UnitBox(delta=0.08)
+    model = VanDerPol_UnitBox(delta=0.08, init_box=((0, 0.05),(1.95, 2)))
 
-    pca_window_size = 0
-    lin_window_size = 5
+    pca_window_size = 5
+    lin_window_size = 0
 
     pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
     lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
 
     experi_input = dict(model=model,
                         strat=MultiStrategy(pca_strat, lin_strat),
-                        label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
                         supp_mode = use_supp,
                         pregen_mode = use_pregen,
                         num_trajs=num_trajs,
@@ -67,8 +70,54 @@ def test_sliding_phase_plot_VDP():
     else:
         file_identifier = "(RAND)"
 
-    experi = PhasePlotExperiment(experi_input)
-    experi.execute(0,1, plot_border_traj=False)
+    experi = PhasePlotExperiment(experi_input, separate=True)
+    experi.execute(0,1)
+    Timer.generate_stats()
+
+def test_OFO_vs_AFO_phase_plot_VDP():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+    num_steps = 70
+
+    model = VanDerPol_UnitBox(delta=0.08, init_box=((0, 0.01),(1.99, 2)))
+
+    pca_window_size = 0
+    lin_window_size = 20
+
+    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
+    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+
+    experi_input_afo = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"VDP AFO SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
+
+    experi_input_ofo = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"VDP OFO SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.OFO)
+
+
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = PhasePlotExperiment(experi_input_afo, experi_input_ofo, separate=False)
+    experi.execute(0,1)
     Timer.generate_stats()
 
 def test_init_reach_vol_vs_ran_VDP():
@@ -82,7 +131,7 @@ def test_init_reach_vol_vs_ran_VDP():
     lin_window_size = 12
 
     inputs = []
-    for inc in range(10):
+    for inc in range(5):
         inc /= 100
 
         box = ((0, 0.01+inc),(1.99 - inc, 2))
@@ -110,10 +159,10 @@ def test_init_reach_vol_vs_ran_VDP():
     else:
         file_identifier = "(RAND)"
 
-    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10, ran_diag=True)
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
     experi.execute()
 
-def test_init_reach_vol_vs_sapo_VDP():
+def test_init_reach_vol_VDP():
     num_steps = 70
     use_supp = True
     use_pregen = False
@@ -125,7 +174,7 @@ def test_init_reach_vol_vs_sapo_VDP():
 
     inputs_one = []
     inputs_two = []
-    for inc in range(10):
+    for inc in range(5):
         inc /= 100
 
         box = ((0, 0.01+inc),(1.99 - inc, 2))
@@ -138,7 +187,7 @@ def test_init_reach_vol_vs_sapo_VDP():
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"VDP PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,

@@ -6,7 +6,7 @@ from kaa.bundle import Bundle
 
 class CoupledVDP(Model):
 
-    def __init__(self, delta=0.1, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35))):
+    def __init__(self, delta=0.1, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35)), mu=1):
 
         x1, y1, x2, y2  = sp.Symbol('x1'), sp.Symbol('y1'), sp.Symbol('x2'), sp.Symbol('y2')
         vars = (x1, y1, x2, y2)
@@ -14,10 +14,9 @@ class CoupledVDP(Model):
         dim_sys = len(vars)
 
         dx1 = x1 + y1*delta
-        dy1 = y1 + ((1-x1**2)*y1 - 2*x1 + x2)*delta
+        dy1 = y1 + (mu*(1-x1**2)*y1 - 2*x1 + x2)*delta
         dx2 = x2 + y2*delta
-        dy2 = y2 + ((1-x2**2)*y2 - 2*x2 + x1)*delta
-
+        dy2 = y2 + (mu*(1-x2**2)*y2 - 2*x2 + x1)*delta
 
         dyns = (dx1, dy1, dx2, dy2)
 
@@ -57,7 +56,7 @@ class CoupledVDP(Model):
 
 class CoupledVDP_UnitBox(Model):
 
-    def __init__(self, delta=0.2, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35))):
+    def __init__(self, delta=0.2, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35)), mu=1):
 
         x1, y1, x2, y2  = sp.Symbol('x1'), sp.Symbol('y1'), sp.Symbol('x2'), sp.Symbol('y2')
         vars = (x1, y1, x2, y2)
@@ -65,9 +64,9 @@ class CoupledVDP_UnitBox(Model):
         dim_sys = len(vars)
 
         dx1 = x1 + y1*delta
-        dy1 = y1 + ((1-x1**2)*y1 - 2*x1 + x2)*delta
+        dy1 = y1 + (mu*(1-x1**2)*y1 - 2*x1 + x2)*delta
         dx2 = x2 + y2*delta
-        dy2 = y2 + ((1-x2**2)*y2 - 2*x2 + x1)*delta
+        dy2 = y2 + (mu*(1-x2**2)*y2 - 2*x2 + x1)*delta
 
 
         dyns = (dx1, dy1, dx2, dy2)

@@ -9,7 +9,7 @@ from kaa.timer import Timer
 from kaa.trajectory import Traj
 from kaa.experi_init import *
 
-from kaa.bundle import BundleMode
+from kaa.bundle import BundleTransMode
 
 def test_sapo_SIR():
     num_steps = 150
@@ -26,6 +26,51 @@ def test_sapo_SIR():
 
     harosc = ProjectionPlotExperiment(experi_input)
     harosc.execute(0,1,2)
+    Timer.generate_stats()
+
+def test_OFO_vs_AFO_phase_plot_SIR():
+    use_supp = True
+    use_pregen = False
+
+    num_trajs = 5000
+    num_steps = 150
+
+    model = SIR_UnitBox()
+
+    pca_window_size = 8
+    lin_window_size = 12
+
+    pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
+    lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
+
+    experi_input_afo = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"SIR AFO SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
+
+    experi_input_ofo = dict(model=model,
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"SIR OFO SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.OFO)
+
+
+    if use_supp:
+        file_identifier = "(SUPP)"
+    elif use_pregen:
+        file_identifier = f"(PREGEN: {num_trajs})"
+    else:
+        file_identifier = "(RAND)"
+
+    experi = ProjectionPlotExperiment(experi_input_afo, experi_input_ofo)
+    experi.execute(0,1,2)
     Timer.generate_stats()
 
 def test_sapo_vol_SIR():
@@ -49,7 +94,7 @@ def test_sapo_vol_SIR():
     harosc.execute(1)
 
 def test_init_reach_vol_vs_ran_SIR():
-    num_steps = 50
+    num_steps = 150
     use_supp = True
     use_pregen = False
 
@@ -86,7 +131,7 @@ def test_init_reach_vol_vs_ran_SIR():
     else:
         file_identifier = "(RAND)"
 
-    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=10)
+    experi = InitReachVSRandomPlotExperiment(*inputs, num_ran_temps=pca_window_size+lin_window_size, num_trials=3, log_scale=True)
     experi.execute()
 
 def test_init_reach_vol_SIR():
@@ -101,7 +146,7 @@ def test_init_reach_vol_SIR():
 
     inputs_one = []
     inputs_two = []
-    for inc in range(1,6,1):
+    for inc in range(5):
         inc /= 100
 
         box = ((0.79-inc,0.8), (0.19-inc,0.2), (0, inc))
@@ -114,7 +159,7 @@ def test_init_reach_vol_SIR():
 
         experi_input_one = dict(model=unit_model,
                                 strat=MultiStrategy(pca_strat, lin_strat),
-                                label=f"SIR SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
+                                label=f"SIR PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
                                 supp_mode = use_supp,
                                 pregen_mode = use_pregen,
                                 num_trajs=num_trajs,
