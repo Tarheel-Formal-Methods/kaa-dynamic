@@ -16,7 +16,7 @@ from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 from kaa.parallelotope import LinearSystem
 
-#plt.rcParams.update({'font.size': PlotSettings.PlotFont})
+plt.rcParams.update({'font.size': PlotSettings.PlotFont})
 
 def plot_traj_proj(model, ax, trajs, x, num_steps):
     if not trajs: return
@@ -93,22 +93,28 @@ class ProjectionSubplot(Subplot):
                 flowpipe_label = flowpipe.label
 
                 t = np.arange(0, len(flowpipe), 1)
-                ax.fill_between(t, flow_min, flow_max, label=flowpipe_label,
-                                color=f"C{flow_idx}", alpha=0.4)
+                ax.fill_between(t, flow_min, flow_max,
+                                label=flowpipe_label,
+                                color=f"C{flow_idx}",
+                                alpha= 0.8-(flow_idx/10),
+                                zorder= num_flowpipes - flow_idx)
 
-                ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
-                ax.set_ylabel(f"Reachable Set for {var}", fontsize=PlotSettings.PlotFont)
-                ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
-                ax.legend()
+            ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
+            ax.set_ylabel(f"Reachable Set for {var}", fontsize=PlotSettings.PlotFont)
+            ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
+            ax.legend(loc=2)
 
-                if self.x_lims:
-                    ax.set_xlim(self.x_lims)
-                if self.y_lims:
-                    ax.set_ylim(self.y_lims)
+            ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
+
+            if self.x_lims:
+                ax.set_xlim(self.x_lims)
+            if self.y_lims:
+                ax.set_ylim(self.y_lims)
 
         'Total width is displayed on the last subplot by default'
-        ax = axs[num_vars]
         if self.plot_width_flag:
+            ax = axs[num_vars]
+
             for flow_idx, flowpipe in enumerate(self.flowpipes):
                 flow_min, flow_max = flowpipe.get_total_width_reachable_set()
                 flowpipe_label = flowpipe.label
@@ -117,18 +123,22 @@ class ProjectionSubplot(Subplot):
                 print(flow_max)
 
                 t = np.arange(0, len(flowpipe), 1)
-                ax.fill_between(t, flow_min, flow_max, label=flowpipe_label,
-                                color=f"C{flow_idx}", alpha=0.4)
+                ax.fill_between(t, flow_min, flow_max,
+                                label=flowpipe_label,
+                                color=f"C{flow_idx}", alpha= 0.4+(flow_idx/10),
+                                zorder= num_flowpipes - flow_idx)
 
-                ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
-                ax.set_ylabel(f"Reachable Set for s", fontsize=PlotSettings.PlotFont)
-                ax.set_title(f"Projection of Reachable Set for s")
-                ax.legend()
+            ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
+            ax.set_ylabel(f"Reachable Set for s", fontsize=PlotSettings.PlotFont)
+            ax.set_title(f"Projection of Reachable Set for s")
+            ax.legend(loc=2)
 
-        if self.x_lims:
-            ax.set_xlim(self.x_lims)
-        if self.y_lims:
-            ax.set_ylim(self.y_lims)
+            ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
+
+            if self.x_lims:
+                ax.set_xlim(self.x_lims)
+            if self.y_lims:
+                ax.set_ylim(self.y_lims)
 
 class PhaseSubplot(Subplot):
 
@@ -155,7 +165,7 @@ class PhaseSubplot(Subplot):
         Timer.start('Phase')
         ax = ax[0]
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            self.__halfspace_inter_plot(ax, self.x, self.y, flowpipe, flow_idx)
+            self.__halfspace_inter_plot(ax, self.x, self.y, flowpipe, flow_idx, 0.8-(flow_idx/10))
             #self.__support_plot(flowpipe, flow_idx,  x, y, ax)
 
         plot_trajs(self.model, ax, self.trajs, self.x, self.y)
@@ -166,8 +176,8 @@ class PhaseSubplot(Subplot):
         if self.y_lims:
             ax.set_ylim(self.y_lims)
 
-        cir = plt.Circle((1,1), 0.161, color='b', fill=False)
-        ax.add_artist(cir)
+        #cir = plt.Circle((1,1), 0.161, color='b', fill=False)
+        #ax.add_artist(cir)
 
         ax.set_aspect('equal')
 
@@ -179,21 +189,24 @@ class PhaseSubplot(Subplot):
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
-    def __halfspace_inter_plot(self, ax, x, y, flowpipe, flow_idx):
+    def __halfspace_inter_plot(self, ax, x, y, flowpipe, flow_idx, alpha):
         for bund in flowpipe:
             if not self.separate_flag:
                 'Temp patch. Revise to start using Line, fontsize=25arSystems for future work.'
                 self.__plot_halfspace(x, y, ax,
                                       bund.getIntersect(),
-                                      idx_offset=flow_idx)
+                                      alpha,
+                                      flow_idx)
             else:
                 for ptope_idx, ptope in enumerate(bund.all_ptopes):
-                    self.__plot_halfspace(x, y, ax, ptope,
-                                          idx_offset=flow_idx+ptope_idx)
+                    self.__plot_halfspace(x, y, ax,
+                                          ptope,
+                                          alpha,
+                                          flow_idx+ptope_idx)
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
-    def __plot_halfspace(self, x, y, ax, sys, idx_offset=0, alpha=0.3):
+    def __plot_halfspace(self, x, y, ax, sys, alpha, idx_offset):
         'Routines in Bundle give None values for queries of non-existent ptopes'
         if sys is None: return sys
 
@@ -229,6 +242,8 @@ class PhaseSubplot(Subplot):
         phase_ax.set_xlabel(f'{x_var}')
         phase_ax.set_ylabel(f'{y_var}')
         phase_ax.set_title("Projection of Phase Plot for {} Variables: {}".format(self.model.name, (x_var, y_var)))
+
+        phase_ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
 
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):

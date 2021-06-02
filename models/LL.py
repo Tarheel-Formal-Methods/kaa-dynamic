@@ -50,9 +50,8 @@ class LL_UnitBox(Model):
     def __init__(self, delta=0.05, init_box = ((1.19, 1.21), (1.04, 1.06), (1.49, 1.51), (2.39, 2.41), (0.99, 1.01), (0.09, 0.11), (0.44, 0.46))):
 
         x1, x2, x3, x4, x5, x6, x7 = sp.Symbol('x1'), sp.Symbol('x2'), sp.Symbol('x3'), sp.Symbol('x4'),sp.Symbol('x5'), sp.Symbol('x6'), sp.Symbol('x7')
-        delta = 0.05
 
-        dx1 =  x1 + (1.4*x3 - 0.9*x1)*delta
+        dx1 = x1 + (1.4*x3 - 0.9*x1)*delta
         dx2 = x2 + (2.5*x5 - 1.5*x2)*delta
         dx3 = x3 + (0.6*x7 - 0.8*x2*x3)*delta
         dx4 = x4 + (2 - 1.3*x3*x4)*delta
@@ -64,17 +63,13 @@ class LL_UnitBox(Model):
         dyns = [dx1, dx2, dx3, dx4, dx5, dx6, dx7]
 
         dim_sys = 7
-        num_dirs = 9
+        num_dirs = 7
         num_temps = 1
 
         L = np.zeros([num_dirs, dim_sys])
 
         for i in range(dim_sys):
             L[i][i] = 1
-
-        L[7][2] = 1; L[7][3] = 1;
-        L[8][3] = 1; L[8][4] = 1;
-
 
         T = np.zeros([num_temps, dim_sys])
         T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4; T[0][5] = 5; T[0][6] = 6;

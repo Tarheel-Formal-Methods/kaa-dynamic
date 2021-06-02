@@ -77,7 +77,7 @@ class PhasePlotExperiment(Experiment):
         self.separate = separate
         self.plot_border_traj = plot_border_traj
 
-    def execute(self, *var_tup, xlims=None, ylims=None):
+    def populate_plot(self):
         num_steps = self.max_num_steps
 
         if self.plot_border_traj:
@@ -87,11 +87,17 @@ class PhasePlotExperiment(Experiment):
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 
+    def plot_flowpipes(self, *var_tup, xlims, ylims):
         self.plot.plot({'type': 'Phase',
                         'vars': var_tup,
                         'separate_flag': self.separate,
                         'xlims': xlims,
                         'ylims': ylims})
+
+    def execute(self, *var_tup, xlims=None, ylims=None):
+        self.populate_plot()
+        self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
+
 
 class InitReachPlotExperiment(Experiment):
 
@@ -127,8 +133,6 @@ class InitReachVSRandomPlotExperiment(Experiment):
             ran_data_tup = self.__avg_ran_flowpipes(experi_input, input_idx)
             ran_flow_data_tups.append(ran_data_tup)
             self.plot.add(self.calc_flowpipe(experi_input))
-
-            #spreadsheet.save_data_into_sheet(flow_label, 0, (ran_data_tup[1], ran_data_tup[2]))
 
         self.plot.plot({'type': 'InitVolReachVol',
                         'flowpipe_indepen_data': ran_flow_data_tups,
@@ -238,7 +242,7 @@ class ProjectionPlotExperiment(Experiment):
         self.plot_border_traj = plot_border_traj
         self.plot_total_width_flag = plot_total_width
 
-    def execute(self, *var_tup, xlims=None, ylims=None):
+    def populate_plot(self):
         num_steps = self.max_num_steps
 
         if self.plot_border_traj:
@@ -250,11 +254,16 @@ class ProjectionPlotExperiment(Experiment):
             self.initialize_strat(experi_input, 10)
             self.plot.add(self.calc_flowpipe(experi_input))
 
+    def plot_flowpipes(self, *var_tup, xlims, ylims):
         self.plot.plot({'type': 'Projection',
                         'vars': var_tup,
                         'plot_width_flag': self.plot_total_width_flag,
                         'xlims': xlims,
                         'ylims': ylims})
+
+    def execute(self, *var_tup, xlims=None, ylims=None):
+        self.populate_plot()
+        self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
 
 class CompAniExperiment(Experiment):
 

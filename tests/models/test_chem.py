@@ -10,43 +10,67 @@ def test_arch_Chem():
 
     num_trajs = 5000
 
-    num_steps = 100
-    delta_one = 0.005
-    delta_two = 0.005
+    num_steps_one = 40
+    num_steps_two = 40
+    num_steps_three = 40
+
+    delta_one = 0.05
+    delta_two = 0.0075
+    delta_three = 0.00005
 
     model_one = Chem_UnitBox(100, 1000, delta=delta_one)
     model_two = Chem_UnitBox(1000, 100000, delta=delta_two)
-    #model_two = CoupledVDP_UnitBox(delta=delta, init_box=init_box , mu=2)
+    model_three = Chem_UnitBox(1000, 10000000, delta=delta_three)
 
-    pca_window_size = 2
-    lin_window_size = 2
+    pca_window_size_one = 10
+    lin_window_size_one = 0
 
-    pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size)
-    lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
+    pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size_one)
+    lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size_one)
 
     experi_input_one = dict(model=model_one,
                         strat=MultiStrategy(pca_strat_one, lin_strat_one),
                         label=f"ROBE21 Case 1",
-                        num_steps=num_steps,
+                        num_steps=num_steps_one,
                         supp_mode = use_supp,
                         pregen_mode = use_pregen,
                         num_trajs=num_trajs,
                         trans_mode=BundleTransMode.AFO)
 
-    pca_strat_two = SlidingPCAStrat(model_one, lifespan=pca_window_size)
-    lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size)
+    pca_window_size_two = 5
+    lin_window_size_two = 5
+
+    pca_strat_two = SlidingPCAStrat(model_two, lifespan=pca_window_size_two)
+    lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size_two)
 
     experi_input_two = dict(model=model_two,
                         strat=MultiStrategy(pca_strat_two, lin_strat_two),
                         label=f"ROBE21 Case 2",
-                        num_steps=num_steps,
+                        num_steps=num_steps_two,
                         supp_mode = use_supp,
                         pregen_mode = use_pregen,
                         num_trajs=num_trajs,
                         trans_mode=BundleTransMode.AFO)
 
-    experi = ProjectionPlotExperiment(experi_input_two, experi_input_one, plot_total_width=True)
+    pca_window_size_three = 0
+    lin_window_size_three = 0
+
+    pca_strat_three = SlidingPCAStrat(model_three, lifespan=pca_window_size_three)
+    lin_strat_three = SlidingLinStrat(model_three, lifespan=lin_window_size_three)
+
+    experi_input_three = dict(model=model_three,
+                        strat=MultiStrategy(pca_strat_three, lin_strat_three),
+                        label=f"ROBE21 Case 3",
+                        num_steps=num_steps_three,
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        trans_mode=BundleTransMode.AFO)
+
+    experi = ProjectionPlotExperiment(experi_input_three, plot_total_width=True)
     experi.execute(ylims=(0.999,1.001))
+
+    Timer.generate_stats()
 
 
 def plot_arch_robe21():
