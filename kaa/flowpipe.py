@@ -174,6 +174,7 @@ class FlowPipe:
     def get_proj(self, var_ind):
         return self.__calc_bounds_along_var(var_ind)
 
+
     """
     Returns reachable set of the sum of all the variables.
     """

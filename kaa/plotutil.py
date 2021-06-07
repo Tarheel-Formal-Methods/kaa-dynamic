@@ -18,6 +18,7 @@ from kaa.parallelotope import LinearSystem
 
 plt.rcParams.update({'font.size': PlotSettings.PlotFont})
 
+
 def plot_traj_proj(model, ax, trajs, x, num_steps):
     if not trajs: return
 
@@ -28,6 +29,7 @@ def plot_traj_proj(model, ax, trajs, x, num_steps):
         y_coord = y_coord[:num_steps]
 
         ax.plot(t, y_coord, color="k", linewidth=0.3)
+
 
 def plot_trajs(model, ax, trajs, x, y, num_steps=0):
     if not trajs: return
@@ -41,6 +43,7 @@ def plot_trajs(model, ax, trajs, x, y, num_steps=0):
             y_coord = y_coord[:num_steps]
 
         ax.plot(x_coord, y_coord, color="k", linewidth=0.3)
+
 
 class Subplot:
 
@@ -57,9 +60,10 @@ class Subplot:
         pass
 
 
+# Some sort of organization through inheritance is warranted.
 class ProjectionSubplot(Subplot):
 
-    def __init__(self, model, vars, flowpipes, num_steps, trajs, plot_width_flag, x_lims, y_lims):
+    def __init__(self, model, vars, flowpipes, num_steps, trajs, plot_width_flag, x_lims, y_lims, ):
         self.vars = vars
         self.trajs = trajs
         self.plot_width_flag = plot_width_flag
@@ -76,15 +80,16 @@ class ProjectionSubplot(Subplot):
     @params: *var_tup: indices of desired variables
               path: optional variable designated the path to store the generated matplotlib figure.
     """
+
     def plot(self, axs):
         num_vars = len(self.vars)
         num_flowpipes = len(self.flowpipes)
+        name = self.model.name
 
         assert self.model is not None, "No data has been added to the Plot object."
 
         for ax_idx, (var_idx, ax) in enumerate(zip(self.vars, axs)):
             var = self.model.vars[var_idx]
-            name = self.model.name
 
             plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps)
 
@@ -96,8 +101,9 @@ class ProjectionSubplot(Subplot):
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
                                 color=f"C{flow_idx}",
-                                alpha= 0.8-(flow_idx/10),
-                                zorder= num_flowpipes - flow_idx)
+                                alpha=0.8 - (flow_idx / 10),
+                                zorder=num_flowpipes - flow_idx)
+
 
             ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
             ax.set_ylabel(f"Reachable Set for {var}", fontsize=PlotSettings.PlotFont)
@@ -119,14 +125,14 @@ class ProjectionSubplot(Subplot):
                 flow_min, flow_max = flowpipe.get_total_width_reachable_set()
                 flowpipe_label = flowpipe.label
 
-                print(flow_min)
-                print(flow_max)
+                #print(flow_min)
+                #print(flow_max)
 
                 t = np.arange(0, len(flowpipe), 1)
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
-                                color=f"C{flow_idx}", alpha= 0.4+(flow_idx/10),
-                                zorder= num_flowpipes - flow_idx)
+                                color=f"C{flow_idx}", alpha=0.4 + (flow_idx / 10),
+                                zorder=num_flowpipes - flow_idx)
 
             ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
             ax.set_ylabel(f"Reachable Set for s", fontsize=PlotSettings.PlotFont)
@@ -139,6 +145,69 @@ class ProjectionSubplot(Subplot):
                 ax.set_xlim(self.x_lims)
             if self.y_lims:
                 ax.set_ylim(self.y_lims)
+
+"""
+Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-Model.pdf
+"""
+class CovidProjectionDateSubplot(Subplot):
+
+    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, total_pop):
+        self.data_dict = data_dict
+        #self.steps_in_day = steps_in_day
+        self.total_pop = total_pop
+        super().__init__(model, "CovidProj", flowpipes, 4, num_steps)
+
+
+    def plot(self, axs):
+        num_flowpipes = len(self.flowpipes)
+        name = self.model.name
+        step_size = self.model.step_size
+
+        ax_labels = ('Susceptible', 'Confirmed', 'Recovered', 'Deceased')
+
+        for ax_idx, (ax_label, ax) in enumerate(zip(ax_labels, axs)):
+            shift_ax_idx = 2 * ax_idx
+            #plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps) need arithmetic for trajs
+
+            if ax_idx > 0:
+                ax_data = [list(date_data.values())[ax_idx-1] for date_data in self.data_dict.values()]
+                #num_of_days = self.num_steps * step_size
+                #assert len(ax_data) == num_of_days, f"Number of steps have to be exactly step_size * num_dates. Sizes:{len(ax_data)},{num_of_days}"
+                print(ax_data)
+                ax.scatter(t, ax_data, color='r')
+
+            for flow_idx, flowpipe in enumerate(self.flowpipes):
+                if ax_label != "Deceased":
+                    first_flow_min, first_flow_max = flowpipe.get_proj(shift_ax_idx)
+                    second_flow_min, second_flow_max = flowpipe.get_proj(shift_ax_idx+1)
+
+                    flow_min = first_flow_min + second_flow_min
+                    flow_max = first_flow_max + second_flow_max
+                else:
+                    flow_min, flow_max = flowpipe.get_proj(shift_ax_idx)
+
+                flowpipe_label = flowpipe.label
+
+                print(flow_min[-1] * self.total_pop, flow_max[-1] * self.total_pop)
+
+                t = np.arange(0, len(flowpipe), 1)
+                ax.fill_between(t, flow_min * self.total_pop, flow_max * self.total_pop,
+                                label=flowpipe_label,
+                                color=f"C{flow_idx}",
+                                alpha= 0.8 - (flow_idx / 10)
+                )
+
+
+            ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
+            ax.set_ylabel(f"Reachable Set for {ax_label}", fontsize=PlotSettings.PlotFont)
+            ax.set_title(f"Projection for {ax_label} Against Indian Data")
+            ax.legend(loc=2)
+
+            #ax.set_yscale('log')
+
+            #ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
+
+
 
 class PhaseSubplot(Subplot):
 
@@ -159,14 +228,15 @@ class PhaseSubplot(Subplot):
     @params x: index of variable to be plotted as x-axis of desired phase
             y: index of variable to be plotted as y-axis of desired phase
     """
+
     def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting phase."
 
         Timer.start('Phase')
         ax = ax[0]
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            self.__halfspace_inter_plot(ax, self.x, self.y, flowpipe, flow_idx, 0.8-(flow_idx/10))
-            #self.__support_plot(flowpipe, flow_idx,  x, y, ax)
+            self.__halfspace_inter_plot(ax, self.x, self.y, flowpipe, flow_idx, 0.8 - (flow_idx / 10))
+            # self.__support_plot(flowpipe, flow_idx,  x, y, ax)
 
         plot_trajs(self.model, ax, self.trajs, self.x, self.y)
         self.__phase_plot_legend(self.x, self.y, ax)
@@ -176,8 +246,8 @@ class PhaseSubplot(Subplot):
         if self.y_lims:
             ax.set_ylim(self.y_lims)
 
-        #cir = plt.Circle((1,1), 0.161, color='b', fill=False)
-        #ax.add_artist(cir)
+        # cir = plt.Circle((1,1), 0.161, color='b', fill=False)
+        # ax.add_artist(cir)
 
         ax.set_aspect('equal')
 
@@ -189,6 +259,7 @@ class PhaseSubplot(Subplot):
     Use scipy.HalfspaceIntersection to fill in phase plot projections.
     @params: flowpipe: FlowPipe object to plot.
     """
+
     def __halfspace_inter_plot(self, ax, x, y, flowpipe, flow_idx, alpha):
         for bund in flowpipe:
             if not self.separate_flag:
@@ -202,26 +273,28 @@ class PhaseSubplot(Subplot):
                     self.__plot_halfspace(x, y, ax,
                                           ptope,
                                           alpha,
-                                          flow_idx+ptope_idx)
+                                          flow_idx + ptope_idx)
+
     """
     Plot linear system through scipy.HalfspaceIntersection
     """
+
     def __plot_halfspace(self, x, y, ax, sys, alpha, idx_offset):
         'Routines in Bundle give None values for queries of non-existent ptopes'
         if sys is None: return sys
 
         dim = self.model.dim
-        comple_dim = np.asarray([True if i in [x,y] else False for i in range(dim)])
+        comple_dim = np.asarray([True if i in [x, y] else False for i in range(dim)])
 
         vertices = sys.vertices
 
         if vertices is None: return sys
 
-        proj_vertices = np.unique(vertices[:,comple_dim], axis=0).tolist()
+        proj_vertices = np.unique(vertices[:, comple_dim], axis=0).tolist()
         center_pt = sys.chebyshev_center.center
 
         'Sort by polar coordinates to ensure proper plotting of boundary'
-        proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1] , v[0] - center_pt[0]))
+        proj_vertices.sort(key=lambda v: math.atan2(v[1] - center_pt[1], v[0] - center_pt[0]))
 
         ptope = pat.Polygon(proj_vertices, fill=True, color=f"C{idx_offset}", alpha=alpha)
         ax.add_patch(ptope)
@@ -236,6 +309,7 @@ class PhaseSubplot(Subplot):
             phase_ax: Axis object associated to phase plot.
             lims: optional data denoting x,y axis dimensions
     """
+
     def __phase_plot_legend(self, x, y, phase_ax):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
 
@@ -247,25 +321,26 @@ class PhaseSubplot(Subplot):
 
         axis_patches = []
         for flow_idx, flowpipe in enumerate(self.flowpipes):
-            axis_patches.append(pat.Patch(color = f"C{flow_idx}", label=flowpipe.label))
+            axis_patches.append(pat.Patch(color=f"C{flow_idx}", label=flowpipe.label))
 
         phase_ax.legend(handles=axis_patches)
-
 
     def __support_plot(self, flowpipe, flow_idx, x, y, ax):
         dim = self.model.dim
 
         'Define the following projected normal vectors.'
         norm_vecs = np.zeros([4, dim])
-        norm_vecs[0][x] = 1; norm_vecs[1][y] = 1;
-        norm_vecs[2][x] = -1; norm_vecs[3][y] = -1;
+        norm_vecs[0][x] = 1;
+        norm_vecs[1][y] = 1;
+        norm_vecs[2][x] = -1;
+        norm_vecs[3][y] = -1;
 
         for bund in flowpipe:
             bund_sys = bund.getIntersect()
 
-            supp_points = np.asarray([bund_sys.max_opt(vec).x  for vec in norm_vecs])
-            x_points = supp_points[:,x]
-            y_points = supp_points[:,y]
+            supp_points = np.asarray([bund_sys.max_opt(vec).x for vec in norm_vecs])
+            x_points = supp_points[:, x]
+            y_points = supp_points[:, y]
 
             ax.scatter(x_points, y_points, label=flowpipe.label, color="r")
 
@@ -278,20 +353,24 @@ class PhaseSubplot(Subplot):
         for points in supp_traj_points:
             ax.plot(points[0], points[1], color=f"C{flow_idx}")
 
+
 """
 TODO document expected dict setup.
 """
+
+
 class VolumeSubplot(Subplot):
 
     def __init__(self, model, flowpipes, num_steps, accum_flag, plot_all_vol):
         self.accum_flag = accum_flag
-        self.plot_all_vol = plot_all_vol # Flag for plotting volumes for all methods (ConvHull, Enveloping box)
+        self.plot_all_vol = plot_all_vol  # Flag for plotting volumes for all methods (ConvHull, Enveloping box)
         super().__init__(model, "Volume", flowpipes, 1, num_steps)
 
     """
     Plots volume estimation data from self.flowpipes into input Axis object
     @params ax: Axis object to plot volume data into
     """
+
     def plot(self, ax):
         assert len(ax) == 1, "Only one axis object for plotting phase."
         ax = ax[0]
@@ -319,21 +398,22 @@ class VolumeSubplot(Subplot):
             ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx + self.num_flowpipes}")
 
-            return [pat.Patch(color = f"C{flow_idx}",
+            return [pat.Patch(color=f"C{flow_idx}",
                               label=f"{flowpipe.label} (Convex)"),
-                    pat.Patch(color = f"C{flow_idx+ self.num_flowpipes}",
+                    pat.Patch(color=f"C{flow_idx + self.num_flowpipes}",
                               label=f"{flowpipe.label} (EnvelopBox)")]
 
         else:
             if tot_conv_hull_vol > 0:
                 ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
-                return [pat.Patch(color = f"C{flow_idx}",
+                return [pat.Patch(color=f"C{flow_idx}",
                                   label=f"{flowpipe.label} (Convex)")]
 
             ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
 
-            return [pat.Patch(color = f"C{flow_idx}",
+            return [pat.Patch(color=f"C{flow_idx}",
                               label=f"{flowpipe.label} (EnvelopBox)")]
+
 
 class InitVolReachVolPlot(Subplot):
 
@@ -348,7 +428,8 @@ class InitVolReachVolPlot(Subplot):
 
         ax.set_xlabel("Volume of Initial Box", fontsize=PlotSettings.PlotFont)
         ax.set_ylabel("Total Volume of Reachable Set", fontsize=PlotSettings.PlotFont)
-        ax.set_title(f"Initial Box Volume VS Reachable Set Volume Plot for {self.model.name}", fontsize=PlotSettings.PlotFont)
+        ax.set_title(f"Initial Box Volume VS Reachable Set Volume Plot for {self.model.name}",
+                     fontsize=PlotSettings.PlotFont)
 
         ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
 
@@ -357,7 +438,7 @@ class InitVolReachVolPlot(Subplot):
 
         axis_patches = []
         for label_idx, (label, flowpipes_grouper) in enumerate(flow_dict):
-            flowpipes = list(flowpipes_grouper) # Grouper needs to be turned into a list
+            flowpipes = list(flowpipes_grouper)  # Grouper needs to be turned into a list
             tot_labeled_flow = len(flowpipes)
 
             init_vol_arr = np.empty(tot_labeled_flow)
@@ -397,9 +478,13 @@ class InitVolReachVolPlot(Subplot):
 
         if self.log_scale_flag:
             ax.set_yscale('log')
+
+
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
+
+
 class Plot:
 
     def __init__(self):
@@ -412,6 +497,7 @@ class Plot:
     Add plottable object.
     @params plottable: Traj or Flowpipe object to plot.
     """
+
     def add(self, plottable, label=None):
         if isinstance(plottable, TrajCollection):
             self.__add_traj(plottable)
@@ -422,7 +508,7 @@ class Plot:
 
     def plot(self, *subplots):
         axes = []
-        subplot_objs =[]
+        subplot_objs = []
         for subplot_dict in subplots:
             subplot_type = subplot_dict['type']
 
@@ -434,7 +520,8 @@ class Plot:
                                             self.trajs,
                                             subplot_dict['plot_width_flag'],
                                             subplot_dict['xlims'],
-                                            subplot_dict['ylims'])
+                                            subplot_dict['ylims']
+                )
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,
@@ -444,21 +531,33 @@ class Plot:
                                        subplot_dict['separate_flag'],
                                        self.trajs,
                                        subplot_dict['xlims'],
-                                       subplot_dict['ylims'])
+                                       subplot_dict['ylims']
+                )
 
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,
                                         self.flowpipes,
                                         self.num_steps,
                                         subplot_dict['accum_flag'],
-                                        subplot_dict['plot_all_vol_flag'])
+                                        subplot_dict['plot_all_vol_flag']
+                )
 
             elif subplot_type == "InitVolReachVol":
                 subplot = InitVolReachVolPlot(self.model,
                                               self.flowpipes,
                                               self.num_steps,
                                               subplot_dict['flowpipe_indepen_data'],
-                                              subplot_dict['log_scale_flag'],)
+                                              subplot_dict['log_scale_flag']
+                )
+
+            elif subplot_type == "CovidProj":
+                subplot = CovidProjectionDateSubplot(self.model,
+                                                    self.flowpipes,
+                                                    self.num_steps,
+                                                    self.trajs,
+                                                    subplot_dict['data_dict'],
+                                                    subplot_dict['total_pop']
+                )
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
@@ -467,15 +566,16 @@ class Plot:
         figure = plt.figure(figsize=PlotSettings.fig_size, dpi=100)
         total_num_subplots = sum(subplot.num_plots for subplot in subplot_objs)
 
-        for subplot_idx,_ in enumerate(subplot_objs):
+        for subplot_idx, _ in enumerate(subplot_objs):
             offset = sum(subplot.num_plots for subplot in subplots[:subplot_idx])
-            subplot_tup = [ figure.add_subplot(1, total_num_subplots, offset + (i+1)) for i in range(subplot.num_plots) ]
+            subplot_tup = [figure.add_subplot(1, total_num_subplots, offset + (i + 1)) for i in
+                           range(subplot.num_plots)]
             axes.append(subplot_tup)
 
         for axes_tup, subplot_obj in zip(axes, subplot_objs):
             subplot_obj.plot(axes_tup)
 
-        #figure_name = "Kaa{}Phase{}--{}.png".format(self.model.name, self.__create_strat_str())
+        # figure_name = "Kaa{}Phase{}--{}.png".format(self.model.name, self.__create_strat_str())
 
         self.__plot_figure(figure, "Fig")
 
@@ -483,8 +583,10 @@ class Plot:
     Adds trajectory to be plotted.
     @params traj: Traj object to plot.
     """
+
     def __add_traj(self, traj_col):
-        assert isinstance(traj_col, TrajCollection), "Only TrajCollection objects can be added through Plot.__add_flowpipe"
+        assert isinstance(traj_col,
+                          TrajCollection), "Only TrajCollection objects can be added through Plot.__add_flowpipe"
 
         self.trajs = traj_col
         self.model = traj_col.model if self.model is None else self.model
@@ -495,6 +597,7 @@ class Plot:
     @params flowpipe: Flowpipe object to plot.
             label: optional string argument to label the Flowpipe object in the matplotlib figure.
     """
+
     def __add_flowpipe(self, flowpipe):
         assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
 
@@ -506,6 +609,7 @@ class Plot:
     Creates simple string of strategy names to denote each flowpipe in an experiment. Is/was used to create unique filenames for experiment results.
     @returns string
     """
+
     def __create_strat_str(self):
         return ' vs '.join([str(pipe) for pipe in self.flowpipes])
 
@@ -514,6 +618,7 @@ class Plot:
     @params var_idxs: list or tuple of variable indices pointing to its location in model.vars
     @returns string
     """
+
     def __create_var_str(self, var_idxs):
         return ''.join([str(self.model.vars[var_idx]).upper() for var_idx in var_idxs])
 
@@ -522,6 +627,7 @@ class Plot:
     @params figure: Figure object carrying data to plot/save
             filename: filename string to save to disk
     """
+
     def __plot_figure(self, figure, filename):
         fig_path = self.__gen_plot_directory()
         if PlotSettings.save_fig:
@@ -533,16 +639,19 @@ class Plot:
     Generates directory path used to save spreadsheet into disk.
     @returns total path to data directory
     """
+
     def __gen_plot_directory(self):
         data_pwd = os.path.join(PlotSettings.default_fig_path, 'Plots', date.today().isoformat(), str(self.model))
         Path(data_pwd).mkdir(parents=True, exist_ok=True)
         return data_pwd
+
 
 class CombinedPlot:
 
     def __init__(self):
         self.intersectPlot = None
         self.sampledTrajPlot = None
+
 
 class TrajLine:
 
@@ -565,7 +674,8 @@ class SlideCompareAnimation(Plot):
         self.model = flowpipes[0].model
 
     def animate(self, x, y, ptope_order, plot_samp_pts_flags, filename, show_recent=True):
-        assert len(plot_samp_pts_flags) == len(self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
+        assert len(plot_samp_pts_flags) == len(
+            self.flowpipes), "There should be a plot points Boolean flag for each flowpipe to be plotted."
 
         figure, ax_list = self.__init_subplots(x, y, plot_samp_pts_flags)
 
@@ -593,12 +703,12 @@ class SlideCompareAnimation(Plot):
                 flowpipe_traj_data = self.flowpipes[ax_idx].traj_data
                 plot_samp_pt_flag = plot_samp_pts_flags[ax_idx]
 
-                #if not flowpipe_ptope:
+                # if not flowpipe_ptope:
                 #    continue
 
                 ax_ptope, comple_ax_ptope = flowpipe_ptope
 
-                if plot_samp_pt_flag: #Check plotting flags
+                if plot_samp_pt_flag:  # Check plotting flags
 
                     intersectPlot = ax.intersectPlot
                     sampledTrajPlot = ax.sampledTrajPlot
@@ -614,36 +724,36 @@ class SlideCompareAnimation(Plot):
                     else:
                         'Plot ptope and its complement.'
                         self.plot_halfspace(x, y, intersectPlot, ax_ptope, idx_offset=0, alpha=0.7)
-                        self.plot_halfspace(x, y, intersectPlot, comple_ax_ptope, idx_offset=2,alpha=0.4)
+                        self.plot_halfspace(x, y, intersectPlot, comple_ax_ptope, idx_offset=2, alpha=0.4)
 
                     'Plot ptope and its sampled trajectory data.'
                     initial_points = flowpipe_traj_data.initial_points[i]
                     image_points = flowpipe_traj_data.image_points[i]
 
-                    self.plot_halfspace(x, y, sampledTrajPlot, ax_ptope, idx_offset=0) #Plot desired ptope.
+                    self.plot_halfspace(x, y, sampledTrajPlot, ax_ptope, idx_offset=0)  # Plot desired ptope.
 
                     line_obj_list = self.__plot_samp_trajs(sampledTrajPlot, x, y, initial_points, image_points)
                     line_objs_by_ax.append(line_obj_list)
 
-                    self.plot_trajs(x, y, intersectPlot, num_steps=i+1)
+                    self.plot_trajs(x, y, intersectPlot, num_steps=i + 1)
 
                 else:
                     self.plot_halfspace(x, y, ax, ax_ptope, idx_offset=0, alpha=0.7)
                     self.plot_halfspace(x, y, ax, comple_ax_ptope, idx_offset=2, alpha=0.4)
-                    line_objs_by_ax.append([]) #Placeholder for plots not having trajectory data plotted
+                    line_objs_by_ax.append([])  # Placeholder for plots not having trajectory data plotted
 
                 'Matrix of rows representing generator vectors for ax_ptope'
                 gen_vecs_list.append(ax_ptope.generatorVecs)
 
-            #self.__draw_comp_stats(ax_list[0], gen_vecs_list)
-            prev_line_objs = line_objs_by_ax #Store current line objects for removal during next step
+            # self.__draw_comp_stats(ax_list[0], gen_vecs_list)
+            prev_line_objs = line_objs_by_ax  # Store current line objects for removal during next step
 
         ani = animate.FuncAnimation(figure, update, frames=num_steps)
 
         Writer = animate.writers['ffmpeg']
-        writer = Writer(fps=7,bitrate=-1)
+        writer = Writer(fps=7, bitrate=-1)
 
-        ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
+        ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer)  # save animation
 
     def __init_subplots(self, x, y, plot_samp_pts_flags):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
@@ -657,10 +767,10 @@ class SlideCompareAnimation(Plot):
 
             if plot_flag:
                 subplot = CombinedPlot()
-                subplot.intersectPlot = figure.add_subplot(1, num_plots, plot_idx+1)
-                subplot.sampledTrajPlot = figure.add_subplot(1, num_plots, plot_idx+2)
+                subplot.intersectPlot = figure.add_subplot(1, num_plots, plot_idx + 1)
+                subplot.sampledTrajPlot = figure.add_subplot(1, num_plots, plot_idx + 2)
             else:
-                subplot = figure.add_subplot(1, num_plots, plot_idx+1)
+                subplot = figure.add_subplot(1, num_plots, plot_idx + 1)
 
             ax_list.append(subplot)
 
@@ -690,9 +800,9 @@ class SlideCompareAnimation(Plot):
         for init_pt, img_pt in zip(init_pts, img_pts):
             traj_line_pts = np.asarray([init_pt, img_pt])
 
-            line, = ax.plot(traj_line_pts[:,x], traj_line_pts[:,y], c="r", linewidth=0.3) #Plot lines.
-            start_pt = ax.scatter(traj_line_pts[0,x], traj_line_pts[0,y])
-            end_pt = ax.scatter(traj_line_pts[1,x], traj_line_pts[1,y], marker='x')
+            line, = ax.plot(traj_line_pts[:, x], traj_line_pts[:, y], c="r", linewidth=0.3)  # Plot lines.
+            start_pt = ax.scatter(traj_line_pts[0, x], traj_line_pts[0, y])
+            end_pt = ax.scatter(traj_line_pts[1, x], traj_line_pts[1, y], marker='x')
 
             traj_line_obj = TrajLine(line,
                                      start_pt,
@@ -725,7 +835,7 @@ class TempAnimation(Plot):
         x_var, y_var = self.model.vars[x], self.model.vars[y]
 
         figure = plt.figure(figsize=PlotSettings.fig_size)
-        ax = figure.add_subplot(1,1,1)
+        ax = figure.add_subplot(1, 1, 1)
 
         ax.set_xlabel(f"{x_var}")
         ax.set_ylabel(f"{y_var}")
@@ -742,10 +852,10 @@ class TempAnimation(Plot):
         ani = animate.FuncAnimation(figure, update, frames=len(self.flowpipe))
 
         Writer = animate.writers['ffmpeg']
-        writer = Writer(fps=7,bitrate=-1)
+        writer = Writer(fps=7, bitrate=-1)
 
         filename = f"{self.model.name}: {' vs '.join(map(str, strats))}"
-        ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer) #save animation
+        ani.save(os.path.join(PlotSettings.default_fig_path, filename + ".mp4"), writer=writer)  # save animation
 
     def __draw_animation_legend(self, ax, *strats):
         axis_patches = []

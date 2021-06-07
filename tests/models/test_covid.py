@@ -176,6 +176,11 @@ def test_init_reach_vol_Covid():
     experi = InitReachPlotExperiment(*inputs, log_scale=True)
     experi.execute()
 
+def test_covid_data_plot():
+    experi = CovidDataPlotExperiment(earliest_date='06/21/20', latest_date='06/26/20')
+    experi.execute()
+
+
 def test_equal_sliding_strat_Covid():
     model = Covid_UnitBox()
     test_equal_sliding_strat(model, 100, vars=(3,4,6))

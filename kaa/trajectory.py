@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 
+from kaa.settings import KaaSettings
+
 from kaa.log import Output
 """
 Wrapper around list for representing arbitrary trajectories of a system.
@@ -35,32 +37,22 @@ class Traj:
     @params time_steps: number of time steps to generate trajectory
     """
     def propagate(self, time_steps):
-        """
-        df = self.model.lambdified_f
-        prev_point = self.traj_mat[-1]
-        base_idx = self.num_points
 
-        'Propagate the points according to the dynamics for designated number of time steps.'
-        self.traj_mat = np.append(self.traj_mat,
-                                  np.empty((time_steps, self.dim)), axis=0)
-
-        new_traj_point_mat = self.traj_mat[base_idx:,:]
-
-        for idx in range(time_steps):
-            next_point = [f(*prev_point) for f in df] #slow
-            new_traj_point_mat[idx] = next_point
-
-            prev_point = next_point
-        """
-
-        df = self.model.f
+        if KaaSettings.Parallelize:
+            df = self.model.f
+        else:
+            df = self.model.lambdified_f
 
         'Propagate the points according to the dynamics for designated number of time steps.'
         prev_point = self.end_point
 
         for _ in range(time_steps):
             var_sub = [(var, prev_point[var_idx]) for var_idx, var in enumerate(self.vars)]
-            next_point = [f.subs(var_sub) for f in df]
+
+            if KaaSettings.Parallelize:
+                next_point = [f.subs(var_sub) for f in df]
+            else:
+                next_point = df(*prev_point)
             self.add_point(next_point)
 
             prev_point = next_point

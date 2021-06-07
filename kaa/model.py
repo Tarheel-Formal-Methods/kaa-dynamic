@@ -8,7 +8,7 @@ if KaaSettings.OptProd is KodiakProd:
 
 class Model:
 
-    def __init__(self, f, vars, T, L, init_box, offl, offu, name="Model", compose=0):
+    def __init__(self, f, vars, step_size, T, L, init_box, offl, offu, name="Model", compose=0):
 
         for _ in range(compose):
             var_sub = [(var, f[var_idx]) for var_idx, var in enumerate(vars)]
@@ -19,6 +19,9 @@ class Model:
 
         'List of system variables.'
         self.vars = vars
+
+        'Step size'
+        self.step_size = step_size
 
         'Dimension of system'
         self.dim = len(vars)
@@ -33,7 +36,7 @@ class Model:
         'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
 
-        #self.lambdified_f = [lambdify(vars, f) for f in self.f]
+        #self.lambdified_f = lambdify(vars, self.f)
 
     def __str__(self):
         return self.name
