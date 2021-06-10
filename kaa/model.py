@@ -36,13 +36,14 @@ class Model:
         'Initial bundle.'
         self.bund = Bundle(self, T, L, offu, offl)
 
-        #self.lambdified_f = lambdify(vars, self.f)
+        if not KaaSettings.Parallelize:
+            self.lambdified_f = lambdify(vars, self.f)
 
     def __str__(self):
         return self.name
 
     def __set_init_box(self, init_box, offl, offu):
-        assert len(init_box) == self.dim, "dimensions of init box have to same as that of system's"
+        assert len(init_box) == self.dim, f"dimensions of init box have to same as that of system's, Init Box Dim: {len(init_box)}, Sys Dim: {self.dim}"
 
         for idx in range(self.dim):
             offl[idx] = -init_box[idx][0]

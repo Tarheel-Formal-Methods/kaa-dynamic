@@ -93,7 +93,12 @@ class TempStrategy(ABC):
     """
     def add_ptope_to_bund(self, bund,  dir_row_mat, dir_labels):
         ptope_name = self.__hash_ptope(dir_labels)
-        bund.add_dirs(self, dir_row_mat, dir_labels)
+
+        'Normalize directions before adding to bundle.'
+        dir_row_norms = np.linalg.norm(dir_row_mat, axis=1)
+        normalized_dir_row_mat = dir_row_mat / dir_row_norms[:, None]
+
+        bund.add_dirs(self, normalized_dir_row_mat, dir_labels)
         bund.add_temp(self, dir_labels, ptope_name)
 
         return ptope_name

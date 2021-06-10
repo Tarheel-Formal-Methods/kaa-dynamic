@@ -28,13 +28,13 @@ def test_proj_Covid():
     lin_strat = SlidingLinStrat(unit_model, lifespan=lin_window_size)
 
     experi_input = dict(model=unit_model,
-                            strat=MultiStrategy(pca_strat, lin_strat),
-                            label=f"Covid PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
-                            supp_mode = use_supp,
-                            pregen_mode = use_pregen,
-                            num_trajs=num_trajs,
-                            num_steps=num_steps,
-                            trans_mode = BundleTransMode.AFO)
+                        strat=MultiStrategy(pca_strat, lin_strat),
+                        label=f"Covid PCA WinSize {pca_window_size} and Lin WinSize {lin_window_size}",
+                        supp_mode = use_supp,
+                        pregen_mode = use_pregen,
+                        num_trajs=num_trajs,
+                        num_steps=num_steps,
+                        trans_mode = BundleTransMode.AFO)
 
     experi = ProjectionPlotExperiment(experi_input)
     experi.execute(0,1,2)
@@ -177,7 +177,7 @@ def test_init_reach_vol_Covid():
     experi.execute()
 
 def test_covid_data_plot():
-    experi = CovidDataPlotExperiment(earliest_date='06/21/20', latest_date='06/26/20')
+    experi = CovidDataPlotExperiment(earliest_date='06/21/20', latest_date='08/22/20')
     experi.execute()
 
 

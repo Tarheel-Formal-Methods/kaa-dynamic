@@ -103,7 +103,7 @@ class DirSaveLoader:
     @returns List of GeneratedPCADirs objects ordered by trial number.
     """
 
-    def wrap_pca_dirs(model, pca_dir_mat_list, sampled_pts_list):
+    def wrap_pca_dirs(self, model, pca_dir_mat_list, sampled_pts_list):
         gen_pca_dirs_list = []
 
         # print(f"Sample Points Matrix List dim: sampled_pts_list.shape}")
@@ -129,7 +129,7 @@ class DirSaveLoader:
     @returns List of GeneratedLinDirs objects ordered by trial number.
     """
 
-    def wrap_lin_dirs(model, lin_dir_mat_list, sampled_pts_list):
+    def wrap_lin_dirs(self, model, lin_dir_mat_list, sampled_pts_list):
         gen_lin_dirs_list = []
 
         for mat_idx, lin_mat in enumerate(lin_dir_mat_list):
@@ -269,7 +269,7 @@ class Experiment(ABC):
 
             mod_reach = ReachSet(model, strat=strat, label=flow_label)
             mod_flow = mod_reach.computeReachSet(num_steps)
-            
+
             self.plot.add(mod_flow)
             self.output_flowpipes.append(mod_flow)
             self.max_num_steps = max(self.max_num_steps, num_steps)

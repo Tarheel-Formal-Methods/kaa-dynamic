@@ -104,7 +104,6 @@ class ProjectionSubplot(Subplot):
                                 alpha=0.8 - (flow_idx / 10),
                                 zorder=num_flowpipes - flow_idx)
 
-
             ax.set_xlabel("t: time steps", fontsize=PlotSettings.PlotFont)
             ax.set_ylabel(f"Reachable Set for {var}", fontsize=PlotSettings.PlotFont)
             ax.set_title(f"Projection of Reachable Set for {name} Variable: {var}")
@@ -125,9 +124,6 @@ class ProjectionSubplot(Subplot):
                 flow_min, flow_max = flowpipe.get_total_width_reachable_set()
                 flowpipe_label = flowpipe.label
 
-                #print(flow_min)
-                #print(flow_max)
-
                 t = np.arange(0, len(flowpipe), 1)
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
@@ -146,67 +142,81 @@ class ProjectionSubplot(Subplot):
             if self.y_lims:
                 ax.set_ylim(self.y_lims)
 
+
 """
 Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-Model.pdf
 """
+
+
 class CovidProjectionDateSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, total_pop):
+    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop):
         self.data_dict = data_dict
-        #self.steps_in_day = steps_in_day
+        self.steps_in_day = steps_in_day
         self.total_pop = total_pop
-        super().__init__(model, "CovidProj", flowpipes, 4, num_steps)
-
+        super().__init__(model, "CovidProj", flowpipes, 1, num_steps)
 
     def plot(self, axs):
         num_flowpipes = len(self.flowpipes)
         name = self.model.name
         step_size = self.model.step_size
 
-        ax_labels = ('Susceptible', 'Confirmed', 'Recovered', 'Deceased')
+        ax = axs[0]
+        category = "Confirmed"
+        pos_dict = {'Confirmed': 1,
+                    'Recovered': 2,
+                    'Deceased': 3
+                    }
 
-        for ax_idx, (ax_label, ax) in enumerate(zip(ax_labels, axs)):
-            shift_ax_idx = 2 * ax_idx
-            #plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps) need arithmetic for trajs
+        ax_idx = pos_dict[category]
+        # plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps) need arithmetic for trajs
 
-            if ax_idx > 0:
-                ax_data = [list(date_data.values())[ax_idx-1] for date_data in self.data_dict.values()]
-                #num_of_days = self.num_steps * step_size
-                #assert len(ax_data) == num_of_days, f"Number of steps have to be exactly step_size * num_dates. Sizes:{len(ax_data)},{num_of_days}"
-                print(ax_data)
-                ax.scatter(t, ax_data, color='r')
+        ax_data = [date_data[category] for date_data in self.data_dict.values()]
+        num_of_days = self.num_steps * step_size
 
-            for flow_idx, flowpipe in enumerate(self.flowpipes):
-                if ax_label != "Deceased":
-                    first_flow_min, first_flow_max = flowpipe.get_proj(shift_ax_idx)
-                    second_flow_min, second_flow_max = flowpipe.get_proj(shift_ax_idx+1)
+        for flow_idx, flowpipe in enumerate(self.flowpipes):
+            flowpipe_label = flowpipe.label
 
-                    flow_min = first_flow_min + second_flow_min
-                    flow_max = first_flow_max + second_flow_max
-                else:
-                    flow_min, flow_max = flowpipe.get_proj(shift_ax_idx)
+            if category != 'Deceased':
+                first_flow_min, first_flow_max = flowpipe.get_proj(2*pos_dict[category])
+                second_flow_min, second_flow_max = flowpipe.get_proj(2*pos_dict[category] + 1)
 
-                flowpipe_label = flowpipe.label
+                flow_min = first_flow_min + second_flow_min
+                flow_max = first_flow_max + second_flow_max
 
-                print(flow_min[-1] * self.total_pop, flow_max[-1] * self.total_pop)
+            else:
+                flow_min, flow_max = flowpipe.get_proj(2*pos_dict[category])
 
-                t = np.arange(0, len(flowpipe), 1)
-                ax.fill_between(t, flow_min * self.total_pop, flow_max * self.total_pop,
-                                label=flowpipe_label,
-                                color=f"C{flow_idx}",
-                                alpha= 0.8 - (flow_idx / 10)
-                )
+            scaled_flow_min = flow_min * self.total_pop
+            scaled_flow_max = flow_max * self.total_pop
 
+            t = np.arange(0, len(flowpipe), 1)
+            ax.fill_between(t, scaled_flow_min, scaled_flow_max,
+                            label=flowpipe_label,
+                            color=f"C{flow_idx}",
+                            alpha=0.8 - (flow_idx / 10),
+                            zorder=1
+                            )
 
-            ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
-            ax.set_ylabel(f"Reachable Set for {ax_label}", fontsize=PlotSettings.PlotFont)
-            ax.set_title(f"Projection for {ax_label} Against Indian Data")
-            ax.legend(loc=2)
+        ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day), ax_data, color='r')
 
-            #ax.set_yscale('log')
+        dates = list(self.data_dict.keys())
+        date_labels = []
+        for idx in range(self.num_steps + 1):
+            wrapped_idx, remainder = divmod(idx, self.steps_in_day)
+            date_labels.append(dates[wrapped_idx]
+                               if not remainder
+                               else ""
+                               )
 
-            #ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
+        ax.set_xticks(range(self.num_steps + 1))
+        ax.set_xticklabels(date_labels)
 
+        ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
+        ax.set_ylabel(f"Population for {category}", fontsize=PlotSettings.PlotFont)
+        ax.set_title(f"Projection for {category} Against Indian Data")
+        ax.legend(loc=2)
+        ax.tick_params(axis='both', labelsize=14)
 
 
 class PhaseSubplot(Subplot):
@@ -521,7 +531,7 @@ class Plot:
                                             subplot_dict['plot_width_flag'],
                                             subplot_dict['xlims'],
                                             subplot_dict['ylims']
-                )
+                                            )
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,
@@ -532,7 +542,7 @@ class Plot:
                                        self.trajs,
                                        subplot_dict['xlims'],
                                        subplot_dict['ylims']
-                )
+                                       )
 
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,
@@ -540,7 +550,7 @@ class Plot:
                                         self.num_steps,
                                         subplot_dict['accum_flag'],
                                         subplot_dict['plot_all_vol_flag']
-                )
+                                        )
 
             elif subplot_type == "InitVolReachVol":
                 subplot = InitVolReachVolPlot(self.model,
@@ -548,16 +558,17 @@ class Plot:
                                               self.num_steps,
                                               subplot_dict['flowpipe_indepen_data'],
                                               subplot_dict['log_scale_flag']
-                )
+                                              )
 
             elif subplot_type == "CovidProj":
                 subplot = CovidProjectionDateSubplot(self.model,
-                                                    self.flowpipes,
-                                                    self.num_steps,
-                                                    self.trajs,
-                                                    subplot_dict['data_dict'],
-                                                    subplot_dict['total_pop']
-                )
+                                                     self.flowpipes,
+                                                     self.num_steps,
+                                                     self.trajs,
+                                                     subplot_dict['data_dict'],
+                                                     subplot_dict['steps_in_day'],
+                                                     subplot_dict['total_pop']
+                                                     )
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

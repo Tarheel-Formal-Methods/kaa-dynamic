@@ -1,5 +1,5 @@
 import copy
-from termcolor import colored
+from tqdm import tqdm
 
 from kaa.timer import Timer
 from kaa.bundle import Bundle, BundleTransformer, BundleTransMode
@@ -19,6 +19,8 @@ class ReachError:
 """
 Object handling all reachable flowpipe computations.
 """
+
+
 class ReachSet:
 
     def __init__(self, model, strat=None, label="", trans_mode=BundleTransMode.AFO):
@@ -27,68 +29,51 @@ class ReachSet:
         self.strat = StaticStrat(self.model) if strat is None else strat
         self.flowpipe = FlowPipe(self.model, strat, label)
 
-
     """
     Compute reachable set for the alloted number of time steps.
     @params time_steps: number of time steps to carry out the reachable set computation.
             TempStrat: template n  loading strategy to use during this reachable set computation.
     @returns FlowPipe object containing computed flowpipe
     """
+
     def computeReachSet(self, time_steps):
         transformer = BundleTransformer(self.model, self.trans_mode)
         init_box_vol_thres = ((10 * self.model.dim) * self.model.bund.getIntersect().volume
-                                if KaaSettings.UseThreshold
-                                else -1)
+                              if KaaSettings.UseThreshold
+                              else -1)
 
-        for step in range(time_steps):
-            #Output.write("=========================================")
-            #Output.write(f"DUMP OF STEP {step}")
+        with tqdm(range(time_steps)) as step_iter:
+            for step in step_iter:
+                Timer.start('Reachable Set Computation')
+                starting_bund = copy.deepcopy(self.flowpipe[step])  # probably a better way of copying objects.
 
-            Timer.start('Reachable Set Computation')
-            starting_bund = copy.deepcopy(self.flowpipe[step]) #probably a better way of copying objects.
+                try:
+                    Timer.start("Open Strategy")
+                    self.strat.open_strat(starting_bund, step)
+                    Timer.stop("Open Strategy")
 
-            #print("Open: L: {} \n T: {}".format(starting_bund.L, starting_bund.T))
-            #print("Open: Offu: {} \n Offl{}".format(starting_bund.offu, starting_bund.offl))
+                    Timer.start("Bundle Transformation")
+                    trans_bund = transformer.transform(starting_bund)
+                    Timer.stop("Bundle Transformation")
 
-            try:
-                Timer.start("Open Strategy")
-                self.strat.open_strat(starting_bund, step)
-                Timer.stop("Open Strategy")
+                    Timer.start("Close Strategy")
+                    self.strat.close_strat(trans_bund, step)
+                    Timer.stop("Close Strategy")
 
-                Timer.start("Bundle Transformation")
-                trans_bund = transformer.transform(starting_bund)
-                Timer.stop("Bundle Transformation")
+                except:
+                    raise
 
-                Timer.start("Close Strategy")
-                self.strat.close_strat(trans_bund, step)
-                Timer.stop("Close Strategy")
+                reach_time = Timer.stop('Reachable Set Computation')
+                self.flowpipe.append(trans_bund)
+                step_iter.set_description(f"Step Time: {reach_time}")
 
-            except:
-                #if KaaSettings.SaveStateonError:
-                #    save_flowpipe_to_disk(self.flowpipe) #Implement this
-                #else:
-                raise
+                'Check volume of enveloping box and stop loop if the volume becomes too large.'
+                if KaaSettings.UseThreshold and self.check_reach_size(trans_bund, init_box_vol_thres):
+                    print("Bundle volume grown to too large of volume. Ending reachable set computation.")
 
-            #print("Close: L: {} \n T: {}".format(trans_bund.L, trans_bund.T))
-            #print("Close: Offu: {} Offl{}".format(trans_bund.offu, trans_bund.offl))
-
-            reach_time = Timer.stop('Reachable Set Computation')
-
-            'TODO: Revamp Kaa.log to be output sink handling all output formatting.'
-            if not KaaSettings.SuppressOutput:
-                Output.prominent(f"Computed Step {step} -- Time Elapsed: {reach_time} sec")
-
-            self.flowpipe.append(trans_bund)
-
-            'Check volume of enveloping box and stop loop if the volume becomes too large.'
-            if  KaaSettings.UseThreshold and self.check_reach_size(trans_bund, init_box_vol_thres):
-                print("Bundle volume grown to too large of volume. Ending reachable set computation.")
-
-                error = ReachError("Volume too large.", step)
-                self.flowpipe.error = error
-                break
-
-            #Output.write("=========================================")
+                    error = ReachError("Volume too large.", step)
+                    self.flowpipe.error = error
+                    break
 
         if KaaSettings.DelFlowpipe:
             self.flowpipe.calc_data_del_flowpipe()
@@ -101,6 +86,7 @@ class ReachSet:
     def check_reach_size(self, bund, threshold):
         envelop_box_vol = bund.getIntersect().calc_vol_envelop_box()
         return envelop_box_vol > threshold
+
 
 """
 class FlowpipeSaveLoader:

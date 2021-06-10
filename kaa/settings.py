@@ -31,7 +31,7 @@ class KaaSettings:
     ThreadCount = 16
 
     'Run Normalization method if condition number becomes too large.'
-    NormalizeLinDir = False
+    NormalizeLinDir = True
 
     DelFlowpipe = False
 

@@ -12,7 +12,7 @@ from kaa.templates import MultiStrategy
 from kaa.spreadsheet import *
 from kaa.timer import Timer
 from kaa.dataload import CovidDataLoader
-from models.covid import Covid_UnitBox
+from models.covid import Covid_UnitBox, Covid
 from kaa.linearsystem import calc_box_volume
 
 """
@@ -319,16 +319,16 @@ class CovidDataPlotExperiment(Experiment):
 
         self.plot.plot({'type': 'CovidProj',
                         'data_dict': self.data_dict,
-                        #'steps_in_day': self.num_steps_in_day,
+                        'steps_in_day': self.num_steps_in_day,
                         'total_pop': self.total_pop})
 
     def __init_inputs(self, total_pop, epsilon):
         init_params = self.__estimate_init_params(total_pop)
-        num_days = len(self.data_dict)
+        num_days = len(self.data_dict) - 1
 
-        confirmed = init_params['confirmed']
-        recovered = init_params['recovered']
-        deceased = init_params['deceased']
+        confirmed = init_params['Confirmed']
+        recovered = init_params['Recovered']
+        deceased = init_params['Deceased']
 
         'According to Sutra paper (https://arxiv.org/abs/2101.09158), asymptomatic patients tend to be 80% of all tested positive.'
         confirmed_asymp = 0.8 * confirmed
@@ -348,16 +348,17 @@ class CovidDataPlotExperiment(Experiment):
                     (confirmed_symp - epsilon, confirmed_symp + epsilon),
                     (recovered_asymp - epsilon, recovered_asymp + epsilon),
                     (recovered_symp - epsilon, recovered_symp + epsilon),
-                    (deceased - epsilon, deceased + epsilon)
+                    (deceased - epsilon, deceased + epsilon),
+                    (0.105, 0.115)
         )
 
-        model = Covid_UnitBox(delta=0.01, init_box=init_box)
+        model = Covid_UnitBox(delta=0.5, init_box=init_box)
 
-        #self.num_steps_in_day = 1 / model.step_size
-        #total_num_steps = int(self.num_steps_in_day * num_days) - 1
+        self.num_steps_in_day = int(1 / model.step_size)
+        total_num_steps = self.num_steps_in_day * num_days - 1
 
-        pca_window_size = 5
-        lin_window_size = 5
+        pca_window_size = 8
+        lin_window_size = 0
 
         pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
         lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
@@ -368,7 +369,7 @@ class CovidDataPlotExperiment(Experiment):
                      supp_mode=True,
                      pregen_mode=False,
                      num_trajs=0,
-                     num_steps=num_days - 1,
+                     num_steps=total_num_steps,
                      trans_mode=BundleTransMode.AFO)
 
         return input
@@ -376,13 +377,13 @@ class CovidDataPlotExperiment(Experiment):
     def __estimate_init_params(self, total_pop):
         initial_figures = self.data_dict[self.earliest_date]
 
-        total_confirmed = int(initial_figures['confirmed'])
-        total_recovered = int(initial_figures['recovered'])
-        total_death = int(initial_figures['deceased'])
+        total_confirmed = int(initial_figures['Confirmed'])
+        total_recovered = int(initial_figures['Recovered'])
+        total_death = int(initial_figures['Deceased'])
 
-        init_params_dict = {'confirmed': total_confirmed / total_pop,
-                            'recovered': total_recovered / total_pop,
-                            'deceased': total_death / total_pop}
+        init_params_dict = {'Confirmed': total_confirmed / total_pop,
+                            'Recovered': total_recovered / total_pop,
+                            'Deceased': total_death / total_pop}
 
         return init_params_dict
 

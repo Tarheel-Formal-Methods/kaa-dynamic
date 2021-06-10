@@ -61,7 +61,7 @@ class BernsteinProd(OptimizationProd):
 
         assert len(i) == len(self.degree)
 
-        iterators = [ range(idx+1) for idx in i ]
+        iterators = [range(idx+1) for idx in i]
         return list(product(*iterators))
 
     """
@@ -73,7 +73,7 @@ class BernsteinProd(OptimizationProd):
         degree = []
 
         for var_index, _ in enumerate(self.vars):
-             var_deg = max([ monom[var_index] for monom in monom_tups])
+             var_deg = max([monom[var_index] for monom in monom_tups])
              degree.append(var_deg)
 
         return degree

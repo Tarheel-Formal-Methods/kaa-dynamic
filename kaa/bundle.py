@@ -21,16 +21,21 @@ elif KaaSettings.OptProd == "Bernstein":
 
 warnings.filterwarnings('ignore')
 
+
 class Bundle:
 
     def __init__(self, model, T, L, offu, offl):
 
-        assert np.size(L,0) == np.size(offu,0), "Directions matrix L and upper offsets must have matching dimensions: {} {}".format(np.size(L,0), np.size(offu,0))
-        assert np.size(L,0) == np.size(offl,0), "Directions matrix L and lower offsets must have matching dimensions {} {}".format(np.size(L,0), np.size(offl,0))
-        assert np.size(T,1) == np.size(L,1), "Template matrix T must have the same dimensions as Directions matrix L"
+        assert np.size(L, 0) == np.size(offu,
+                                        0), "Directions matrix L and upper offsets must have matching dimensions: {} {}".format(
+            np.size(L, 0), np.size(offu, 0))
+        assert np.size(L, 0) == np.size(offl,
+                                        0), "Directions matrix L and lower offsets must have matching dimensions {} {}".format(
+            np.size(L, 0), np.size(offl, 0))
+        assert np.size(T, 1) == np.size(L, 1), "Template matrix T must have the same dimensions as Directions matrix L"
 
         'Label the initial directions and templates with Default moniker.'
-        self.labeled_L = [ (dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L) ]
+        self.labeled_L = [(dir_row, "Default" + str(row_idx)) for row_idx, dir_row in enumerate(L)]
         self.labeled_T = np.asarray([(row, "DefaultTemp", 1) for row in self.__convert_to_labeled_T(T)])
 
         self.offu = offu
@@ -59,6 +64,7 @@ class Bundle:
         return np.asarray(self.__get_row(self.labeled_L))
 
     "Returns list of Parallelotope objects defining this bundle. WARNING: superfluous calls to getParallelotope for now"
+
     @property
     def all_ptopes(self):
         return [self.getParallelotope(i) for i in range(self.num_temps)]
@@ -74,11 +80,12 @@ class Bundle:
     """
     Get parallelotope described by ith row of self.T matrix and the intersection of the other ptopes.
     """
+
     def ptope(self, idx):
         if idx > self.num_temps - 1: return None
 
         ptopes = self.all_ptopes
-        complement_ptopes = ptopes[:idx] + ptopes[idx+1:]
+        complement_ptopes = ptopes[:idx] + ptopes[idx + 1:]
 
         comp_ptope_intersect = intersect(self.model, *complement_ptopes) if complement_ptopes else None
         return self.getParallelotope(idx), comp_ptope_intersect
@@ -87,9 +94,10 @@ class Bundle:
     Returns linear constraints representing the polytope defined by bundle.
     @returns linear constraints and their offsets.
     """
+
     def getIntersect(self):
         L = self.L
-        constr_mat = np.empty([2*self.num_dirs, self.dim+1])
+        constr_mat = np.empty([2 * self.num_dirs, self.dim + 1])
 
         for ind in range(self.num_dirs):
             constr_mat[ind, :self.dim] = L[ind]
@@ -102,12 +110,12 @@ class Bundle:
         b = constr_mat[:, self.dim]
         return LinearSystem(self.model, A, b, constr_mat=constr_mat)
 
-
     """
     Returns the bundle with tightest offsets for each direction vector in self.L
     i.e each hyperplane defined by the direction vector is re-fitted to be tangent to the polytope.
     @returns canonized Bundle object
     """
+
     def canonize(self):
         bund_sys = self.getIntersect()
         L = self.L
@@ -119,6 +127,7 @@ class Bundle:
     """
     Returns list of Parallelotopes by the strategy they are associated with.
     """
+
     def get_ptopes_by_strat(self, strat):
         assert isinstance(strat, TempStrategy), "input must be TempStrategy"
 
@@ -128,7 +137,7 @@ class Bundle:
         temp_id = self.strat_temp_id[str(strat)]
 
         asso_temps = []
-        for temp_idx, (_,_, tid) in enumerate(self.labeled_T):
+        for temp_idx, (_, _, tid) in enumerate(self.labeled_T):
             if tid == temp_id:
                 asso_temps.append(temp_idx)
 
@@ -139,10 +148,11 @@ class Bundle:
     @params temp_ind: index of row corresponding to desired parallelotope.i
     @returns Parallelotope object described by T[temp_ind]
     """
+
     def getParallelotope(self, temp_ind):
         L = self.L
         T = self.T
-        constr_mat = np.empty((2*self.dim,self.dim+1))
+        constr_mat = np.empty((2 * self.dim, self.dim + 1))
 
         'Fetch linear constraints defining the parallelotope.'
         for fac_ind, facet in enumerate(T[temp_ind].astype(int)):
@@ -159,8 +169,10 @@ class Bundle:
     Add a matrix of templates to the end of templates matrix.
     @params temp_row_mat: Matrix of new template entries.
     """
+
     def add_temp(self, asso_strat, row_labels, temp_label):
-        assert len(row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
+        assert len(
+            row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
 
         new_temp_ent = (self.__get_global_labels(asso_strat, row_labels),
                         self.__get_global_labels(asso_strat, temp_label),
@@ -172,6 +184,7 @@ class Bundle:
     Remove specified template entries from templates matrix.
     @params temp_idx: list of indices specifying row indices in template matrix
     """
+
     def remove_temp(self, asso_strat, temp_label):
         label_indices = self.__get_label_indices(self.labeled_T,
                                                  self.__get_global_labels(asso_strat, temp_label))
@@ -184,6 +197,7 @@ class Bundle:
     @params dir_row_mat: Matrix of new direction entries
 
     """
+
     def add_dirs(self, asso_strat, dir_row_mat, dir_labels):
         assert len(dir_row_mat) == len(dir_labels), "Number of input direction rows must be one-to-one with the labels"
         assert len(dir_row_mat) == self.dim, f"New directions matrix need {self.dim}"
@@ -195,8 +209,8 @@ class Bundle:
         labeled_L_ents = zip(dir_row_mat, self.__get_global_labels(asso_strat, dir_labels))
         self.labeled_L = np.append(self.labeled_L, list(labeled_L_ents), axis=0)
 
-        new_uoffsets = [[ bund_sys.max_obj(row).fun for row in dir_row_mat ]]
-        new_loffsets = [[ bund_sys.max_obj(np.negative(row)).fun for row in dir_row_mat ]]
+        new_uoffsets = [[bund_sys.max_obj(row).fun for row in dir_row_mat]]
+        new_loffsets = [[bund_sys.max_obj(np.negative(row)).fun for row in dir_row_mat]]
 
         self.offu = np.append(self.offu, new_uoffsets)
         self.offl = np.append(self.offl, new_loffsets)
@@ -205,20 +219,20 @@ class Bundle:
     Remove specified direction entries from directions matrix from their labels.
     @params temp_idx: list of indices specifying row indices in directions matrix
     """
+
     def remove_dirs(self, asso_strat, labels):
 
         label_indices = self.__get_label_indices(self.labeled_L,
                                                  self.__get_global_labels(asso_strat, labels))
 
-        #print(f"RemoveDir: Labels: {global_labels}")
-        #print(f"labeled_L: {self.labeled_L}")
-        #print(f"Mask: {label_indices}")
+        # print(f"RemoveDir: Labels: {global_labels}")
+        # print(f"labeled_L: {self.labeled_L}")
+        # print(f"Mask: {label_indices}")
 
         self.labeled_L = np.delete(self.labeled_L, label_indices, axis=0)
 
         self.offu = np.delete(self.offu, label_indices, axis=0)
         self.offl = np.delete(self.offl, label_indices, axis=0)
-
 
     def __get_temp_id(self, asso_strat):
         if str(asso_strat) not in self.strat_temp_id:
@@ -234,6 +248,7 @@ class Bundle:
              labels: set of labels or label which must be converted into the global format understood by Bundle
     @returns list of converted labels or label.
     """
+
     def __get_global_labels(self, asso_strat, labels):
         return [str(asso_strat) + label for label in labels] if isinstance(labels, list) else str(asso_strat) + labels
 
@@ -243,9 +258,9 @@ class Bundle:
             labels: list of labels or a single label relevant to search
     @returns list of indices which a label in the input points towards
     """
+
     def __get_label_indices(self, tup_mat, labels):
         label_set = set(labels) if isinstance(labels, list) else set([labels])
-        #print(self.__get_label(tup_mat))
         return [idx for idx, label in enumerate(self.__get_label(tup_mat)) if label in label_set]
 
     """
@@ -255,6 +270,7 @@ class Bundle:
     @params tup_mat: input tuple matrix i.e self.labeled_L or self.labeled_T
     @returns list of rows (data) in order which they appear in the input tuple matrix.
     """
+
     def __get_row(self, tup_mat):
         return list(map(lambda row_label_tup: row_label_tup[0], tup_mat))
 
@@ -265,6 +281,7 @@ class Bundle:
     @params tup_mat: input tuple matrix i.e self.labeled_L or self.labeled_T
     @returns list of labels in order which they appear in the input tuple matrix.
     """
+
     def __get_label(self, tup_mat):
         return list(map(lambda row_label_tup: row_label_tup[1], tup_mat))
 
@@ -273,9 +290,11 @@ class Bundle:
     @params dir_label: label to search for
     @returns index which label points to.
     """
+
     def __get_dir_row_from_label(self, dir_label):
         label_indices = self.__get_label_indices(self.labeled_L, dir_label)
-        assert len(label_indices) == 1, f"Every index should have a unique label. \n Label: {dir_label} \n Offending list: {label_indices}  \n Bundle label dump: \n {self.labeled_L}"
+        assert len(
+            label_indices) == 1, f"Every index should have a unique label. \n Label: {dir_label} \n Offending list: {label_indices}  \n Bundle label dump: \n {self.labeled_L}"
         return label_indices[0]
 
     """
@@ -285,6 +304,7 @@ class Bundle:
     @params T: numpy template matrix with integer entries
     @returns list of lists containing labels pointing to direction matrix rows.
     """
+
     def __convert_to_labeled_T(self, T):
         labeled_T = []
         for temp_row in T:
@@ -305,24 +325,30 @@ class Bundle:
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
     """
 
+
 """
 Wrapper over bundle transformation modes.
 """
+
+
 class BundleTransMode(Enum):
     AFO = False
     OFO = True
 
+
 """
 Object responsible for transforming Bundle objects according to input model's dynamics.
 """
-class BundleTransformer:
 
+
+class BundleTransformer:
     """
     Constuctor for BundleTransformer
     @params mode: mode for performing bundle transformations.
     A value of BundleMode.OFO (1) indicates using the One-for-One transformation method.
     Otherwise, a value of BundleMode.AFO (0) indicates using the All-for-One transformation method.
     """
+
     def __init__(self, model, mode):
         self.f = model.f
         self.vars = model.vars
@@ -336,6 +362,7 @@ class BundleTransformer:
              L: directions matrix
              output_queue: shared Manager.Queue object between processes
     """
+
     def bound_worker(self, row_ind, row, bund, L, output_queue):
         'Find the generator of the parallelotope.'
         ptope = bund.getParallelotope(row_ind)
@@ -348,7 +375,12 @@ class BundleTransformer:
             curr_L = L[l_row]
 
             Timer.start("Find Bounds Function Call")
+            #print(f"Direction Vector: {curr_L}")
+            #print(f"L {L}")
+            #print(f"T Mat: {bund.T}")
+            #print(f"Row Ind: {row_ind}")
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
+            #print(f"UB: {ub}, LB: {lb}")
             Timer.stop("Find Bounds Function Call")
 
             if output_queue:
@@ -365,6 +397,7 @@ class BundleTransformer:
     @params bund: Bundle object to be transformed under dynamics.
     @returns canonized transformed bundle.
     """
+
     def transform(self, bund):
         L = bund.L
         T = bund.T
@@ -403,6 +436,7 @@ class BundleTransformer:
              dir_vec: direction vector
     @returns: upper bound, lower bound
     """
+
     def __find_bounds(self, dir_vec, ptope, bund):
         'Find the generator of the parallelotope.'
         genFun = ptope.getGeneratorRep()
@@ -413,6 +447,8 @@ class BundleTransformer:
         Timer.start('Functional Composition')
         fog = [func.xreplace(var_sub) for func in self.f]
         Timer.stop('Functional Composition')
+
+        #print(f"Replaced Exp: {fog}")
 
         'Perform functional composition with exact transformation from unitbox to parallelotope.'
         Timer.start("Polynomial Generation")
@@ -431,7 +467,7 @@ class BundleTransformer:
 
     def queue_to_list(self, mp_queue):
         output_list = []
-        while(mp_queue.qsize() != 0):
+        while (mp_queue.qsize() != 0):
             output_list.append(mp_queue.get())
 
         return output_list

@@ -24,9 +24,9 @@ class CovidDataLoader:
                         converted_date = row_time_obj.strftime("%D")
                         data_dict[converted_date] = OrderedDict()
 
-                        data_dict[converted_date]['confirmed'] = row[3]
-                        data_dict[converted_date]['recovered'] = row[5]
-                        data_dict[converted_date]['deceased'] = row[7]
+                        data_dict[converted_date]['Confirmed'] = int(row[3])
+                        data_dict[converted_date]['Recovered'] = int(row[5])
+                        data_dict[converted_date]['Deceased'] = int(row[7])
 
         return data_dict
 
