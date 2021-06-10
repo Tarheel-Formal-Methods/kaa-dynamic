@@ -14,12 +14,11 @@ from kaa.settings import PlotSettings
 from kaa.trajectory import TrajCollection, Traj
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
-from kaa.parallelotope import LinearSystem
 
 plt.rcParams.update({'font.size': PlotSettings.PlotFont})
 
 
-def plot_traj_proj(model, ax, trajs, x, num_steps):
+def plot_traj_proj(model, ax, trajs, x, num_steps, linewidth=1):
     if not trajs: return
 
     t = np.arange(0, num_steps, 1)
@@ -28,7 +27,10 @@ def plot_traj_proj(model, ax, trajs, x, num_steps):
         y_coord = traj.get_proj(x)
         y_coord = y_coord[:num_steps]
 
-        ax.plot(t, y_coord, color="k", linewidth=0.3)
+        if traj.label:
+            ax.plot(t, y_coord, color=f"C{traj_idx + model.dim}", linewidth=linewidth,  label=traj.label)
+        else:
+            ax.plot(t, y_coord, color=f"C{traj_idx + model.dim}", linewidth=linewidth)
 
 
 def plot_trajs(model, ax, trajs, x, y, num_steps=0):
@@ -154,6 +156,7 @@ class CovidProjectionDateSubplot(Subplot):
         self.data_dict = data_dict
         self.steps_in_day = steps_in_day
         self.total_pop = total_pop
+        self.trajs = trajs
         super().__init__(model, "CovidProj", flowpipes, 1, num_steps)
 
     def plot(self, axs):
@@ -169,7 +172,14 @@ class CovidProjectionDateSubplot(Subplot):
                     }
 
         ax_idx = pos_dict[category]
-        # plot_traj_proj(self.model, ax, self.trajs, var_idx, self.num_steps) need arithmetic for trajs
+
+        param_var_trajs = self.trajs.merge_dims(2,3).scale(self.total_pop) #Merge asymp and symp confirmed dimensions for trajectories
+        plot_traj_proj(self.model,
+                       ax,
+                       param_var_trajs,
+                       2,
+                       self.num_steps,
+                       linewidth=1.5)
 
         ax_data = [date_data[category] for date_data in self.data_dict.values()]
         num_of_days = self.num_steps * step_size
@@ -194,20 +204,23 @@ class CovidProjectionDateSubplot(Subplot):
             ax.fill_between(t, scaled_flow_min, scaled_flow_max,
                             label=flowpipe_label,
                             color=f"C{flow_idx}",
-                            alpha=0.8 - (flow_idx / 10),
-                            zorder=1
-                            )
+                            alpha=0.35 - (flow_idx / 10),
+                            zorder=1)
 
-        ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day), ax_data, color='r')
+        ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day),
+                ax_data,
+                'o-r',
+                label="Real Data",
+                linewidth=2)
 
         dates = list(self.data_dict.keys())
+        day_tick_gap = 5
         date_labels = []
         for idx in range(self.num_steps + 1):
             wrapped_idx, remainder = divmod(idx, self.steps_in_day)
             date_labels.append(dates[wrapped_idx]
-                               if not remainder
-                               else ""
-                               )
+                               if not remainder and (wrapped_idx % day_tick_gap == 0)
+                               else "")
 
         ax.set_xticks(range(self.num_steps + 1))
         ax.set_xticklabels(date_labels)
@@ -508,7 +521,7 @@ class Plot:
     @params plottable: Traj or Flowpipe object to plot.
     """
 
-    def add(self, plottable, label=None):
+    def add(self, plottable):
         if isinstance(plottable, TrajCollection):
             self.__add_traj(plottable)
         elif isinstance(plottable, FlowPipe):
