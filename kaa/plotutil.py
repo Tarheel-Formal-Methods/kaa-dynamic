@@ -152,11 +152,12 @@ Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-M
 
 class CovidProjectionDateSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop):
+    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop, time_interval_str):
         self.data_dict = data_dict
         self.steps_in_day = steps_in_day
         self.total_pop = total_pop
         self.trajs = trajs
+        self.time_interval_str = time_interval_str
         super().__init__(model, "CovidProj", flowpipes, 1, num_steps)
 
     def plot(self, axs):
@@ -227,9 +228,9 @@ class CovidProjectionDateSubplot(Subplot):
 
         ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
         ax.set_ylabel(f"Population for {category}", fontsize=PlotSettings.PlotFont)
-        ax.set_title(f"Projection for {category} Against Indian Data")
+        ax.set_title(f"Projection for {category} Against Real-World Indian Data for {self.time_interval_str}")
         ax.legend(loc=2)
-        ax.tick_params(axis='both', labelsize=14)
+        ax.tick_params(axis='both', labelsize=20)
 
 
 class PhaseSubplot(Subplot):
@@ -543,8 +544,7 @@ class Plot:
                                             self.trajs,
                                             subplot_dict['plot_width_flag'],
                                             subplot_dict['xlims'],
-                                            subplot_dict['ylims']
-                                            )
+                                            subplot_dict['ylims'])
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,
@@ -554,24 +554,21 @@ class Plot:
                                        subplot_dict['separate_flag'],
                                        self.trajs,
                                        subplot_dict['xlims'],
-                                       subplot_dict['ylims']
-                                       )
+                                       subplot_dict['ylims'])
 
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,
                                         self.flowpipes,
                                         self.num_steps,
                                         subplot_dict['accum_flag'],
-                                        subplot_dict['plot_all_vol_flag']
-                                        )
+                                        subplot_dict['plot_all_vol_flag'])
 
             elif subplot_type == "InitVolReachVol":
                 subplot = InitVolReachVolPlot(self.model,
                                               self.flowpipes,
                                               self.num_steps,
                                               subplot_dict['flowpipe_indepen_data'],
-                                              subplot_dict['log_scale_flag']
-                                              )
+                                              subplot_dict['log_scale_flag'])
 
             elif subplot_type == "CovidProj":
                 subplot = CovidProjectionDateSubplot(self.model,
@@ -580,8 +577,8 @@ class Plot:
                                                      self.trajs,
                                                      subplot_dict['data_dict'],
                                                      subplot_dict['steps_in_day'],
-                                                     subplot_dict['total_pop']
-                                                     )
+                                                     subplot_dict['total_pop'],
+                                                     subplot_dict['time_interval'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
