@@ -190,8 +190,8 @@ class LinearSystem:
             time_steps: number of time steps to generate trajs.
     @returns list of Traj objects representing num random trajectories.
     """
-    def generate_ran_trajs(self, num_trajs, steps, resample=False):
-        #sample = lambda: self.randgen.randint(1,time_steps) if sample else time_steps
+    def generate_ran_trajs(self, num_trajs, steps):
+        output_trajs = TrajCollection(self.model)
         initial_points = self.sample_ran_pts_envelop_box(num_trajs)
 
         if KaaSettings.Parallelize:
@@ -205,13 +205,12 @@ class LinearSystem:
             p.close()
             p.join()
 
-            output_list = self.queue_to_list(output_queue)
+            output_trajs.add(*self.queue_to_list(output_queue))
         else:
-            output_list = []
             for point in initial_points:
-                output_list.append(self.create_traj(point, steps))
+                output_trajs.add(self.create_traj(point, steps))
 
-        return TrajCollection(self.model, output_list)
+        return output_trajs
 
     """
     Worker for trajectory generation using support points.
@@ -220,7 +219,6 @@ class LinearSystem:
         supp_point = self.max_obj(dir_vec).x
         neg_supp_point = self.min_obj(dir_vec).x
 
-        #Output.write("Support Points Generated.")
         return [self.create_traj(supp_point, steps, output_queue),
                 self.create_traj(neg_supp_point, steps, output_queue)]
 
@@ -230,9 +228,7 @@ class LinearSystem:
             time_steps: number of steps to
     """
     def generate_supp_trajs(self, dir_vecs, steps):
-        Output.bold_write("Generating Support Points Traj")
-        #Output.write(f"DIR VEC MAT: {dir_vecs}")
-        #print(f"Number of Directions: {len(input_params)}")
+        output_trajs = TrajCollection(self.model)
         if KaaSettings.Parallelize:
             output_queue = mp.Manager().Queue()
 
@@ -245,10 +241,9 @@ class LinearSystem:
             p.close()
             p.join()
 
-            output_list = self.queue_to_list(output_queue)
+            output_trajs.add(*self.queue_to_list(output_queue))
         else:
             'Exploiting Warm-start LP'
-            output_list = []
             with LPUtil(self.model, None, self.A, self.b, None, 'Simplex') as lp_inst:
                 lp_inst.populate_consts()
                 for dir_vec in dir_vecs:
@@ -258,10 +253,10 @@ class LinearSystem:
                     supp_point = lp_inst.solve("Max").x
                     neg_supp_point = lp_inst.solve("Min").x
 
-                    output_list += [self.create_traj(supp_point, steps),
-                                    self.create_traj(neg_supp_point, steps)]
+                    output_trajs.add(self.create_traj(supp_point, steps),
+                                     self.create_traj(neg_supp_point, steps))
 
-        return TrajCollection(self.model, output_list)
+        return output_trajs
 
     def sample_ran_pts_envelop_box(self, num_trajs):
         box_intervals = self.__calc_envelop_box()

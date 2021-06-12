@@ -28,7 +28,7 @@ def plot_traj_proj(model, ax, trajs, x, num_steps, linewidth=1):
         y_coord = y_coord[:num_steps]
 
         if traj.label:
-            ax.plot(t, y_coord, color=f"C{traj_idx + model.dim}", linewidth=linewidth,  label=traj.label)
+            ax.plot(t, y_coord, color=f"C{traj_idx + model.dim}", linewidth=linewidth, label=traj.label)
         else:
             ax.plot(t, y_coord, color=f"C{traj_idx + model.dim}", linewidth=linewidth)
 
@@ -152,85 +152,95 @@ Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-M
 
 class CovidProjectionDateSubplot(Subplot):
 
-    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop, time_interval_str):
+    def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop, time_interval_str,
+                 category=None):
         self.data_dict = data_dict
         self.steps_in_day = steps_in_day
         self.total_pop = total_pop
         self.trajs = trajs
         self.time_interval_str = time_interval_str
-        super().__init__(model, "CovidProj", flowpipes, 1, num_steps)
+        self.category = category
+        super().__init__(model,
+                         "CovidProj",
+                         flowpipes,
+                         1 if category else 2,
+                         num_steps)
 
     def plot(self, axs):
         num_flowpipes = len(self.flowpipes)
         name = self.model.name
         step_size = self.model.step_size
 
-        ax = axs[0]
-        category = "Confirmed"
         pos_dict = {'Confirmed': 1,
                     'Recovered': 2,
                     'Deceased': 3
                     }
 
-        ax_idx = pos_dict[category]
+        category_iter = [self.category] if self.category else ('Confirmed', 'Recovered')
 
-        param_var_trajs = self.trajs.merge_dims(2,3).scale(self.total_pop) #Merge asymp and symp confirmed dimensions for trajectories
-        plot_traj_proj(self.model,
-                       ax,
-                       param_var_trajs,
-                       2,
-                       self.num_steps,
-                       linewidth=1.5)
+        for ax, category in zip(axs, category_iter):
+            assert category in set(pos_dict.keys()), f"{category} not a valid category in COVID dynamics"
 
-        ax_data = [date_data[category] for date_data in self.data_dict.values()]
-        num_of_days = self.num_steps * step_size
+            ax_idx = pos_dict[category]
 
-        for flow_idx, flowpipe in enumerate(self.flowpipes):
-            flowpipe_label = flowpipe.label
+            param_var_trajs = self.trajs.merge_dims(2, 3).scale(
+                self.total_pop)  # Merge asymp and symp confirmed dimensions for trajectories
+            plot_traj_proj(self.model,
+                           ax,
+                           param_var_trajs,
+                           2,
+                           self.num_steps,
+                           linewidth=1.5)
 
-            if category != 'Deceased':
-                first_flow_min, first_flow_max = flowpipe.get_proj(2*pos_dict[category])
-                second_flow_min, second_flow_max = flowpipe.get_proj(2*pos_dict[category] + 1)
+            ax_data = [date_data[category] for date_data in self.data_dict.values()]
+            num_of_days = self.num_steps * step_size
 
-                flow_min = first_flow_min + second_flow_min
-                flow_max = first_flow_max + second_flow_max
+            for flow_idx, flowpipe in enumerate(self.flowpipes):
+                flowpipe_label = flowpipe.label
 
-            else:
-                flow_min, flow_max = flowpipe.get_proj(2*pos_dict[category])
+                if self.category != 'Deceased':
+                    first_flow_min, first_flow_max = flowpipe.get_proj(2 * pos_dict[category])
+                    second_flow_min, second_flow_max = flowpipe.get_proj(2 * pos_dict[category] + 1)
 
-            scaled_flow_min = flow_min * self.total_pop
-            scaled_flow_max = flow_max * self.total_pop
+                    flow_min = first_flow_min + second_flow_min
+                    flow_max = first_flow_max + second_flow_max
 
-            t = np.arange(0, len(flowpipe), 1)
-            ax.fill_between(t, scaled_flow_min, scaled_flow_max,
-                            label=flowpipe_label,
-                            color=f"C{flow_idx}",
-                            alpha=0.35 - (flow_idx / 10),
-                            zorder=1)
+                else:
+                    flow_min, flow_max = flowpipe.get_proj(2 * pos_dict[category])
 
-        ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day),
-                ax_data,
-                'o-r',
-                label="Real Data",
-                linewidth=2)
+                scaled_flow_min = flow_min * self.total_pop
+                scaled_flow_max = flow_max * self.total_pop
 
-        dates = list(self.data_dict.keys())
-        day_tick_gap = 5
-        date_labels = []
-        for idx in range(self.num_steps + 1):
-            wrapped_idx, remainder = divmod(idx, self.steps_in_day)
-            date_labels.append(dates[wrapped_idx]
-                               if not remainder and (wrapped_idx % day_tick_gap == 0)
-                               else "")
+                t = np.arange(0, len(flowpipe), 1)
+                ax.fill_between(t, scaled_flow_min, scaled_flow_max,
+                                label=flowpipe_label,
+                                color=f"C{flow_idx}",
+                                alpha=0.35 - (flow_idx / 10),
+                                zorder=1)
 
-        ax.set_xticks(range(self.num_steps + 1))
-        ax.set_xticklabels(date_labels)
+            ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day),
+                    ax_data,
+                    'o-r',
+                    label="Real Data",
+                    linewidth=2)
 
-        ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
-        ax.set_ylabel(f"Population for {category}", fontsize=PlotSettings.PlotFont)
-        ax.set_title(f"Projection for {category} Against Real-World Indian Data for {self.time_interval_str}")
-        ax.legend(loc=2)
-        ax.tick_params(axis='both', labelsize=20)
+            dates = list(self.data_dict.keys())
+            day_tick_gap = 5
+            date_labels = []
+            for idx in range(self.num_steps + 1):
+                wrapped_idx, remainder = divmod(idx, self.steps_in_day)
+                date_labels.append(dates[wrapped_idx]
+                                   if not remainder and (wrapped_idx % day_tick_gap == 0)
+                                   else "")
+
+            ax.set_xticks(range(self.num_steps + 1))
+            ax.set_xticklabels(date_labels)
+
+            ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
+            ax.set_ylabel(f"Population for {category}", fontsize=PlotSettings.PlotFont)
+            ax.set_title(f"Projection for {category} Against Real-World Indian Data for {self.time_interval_str}")
+            ax.legend(loc=2)
+            ax.tick_params(axis='both', labelsize=20)
 
 
 class PhaseSubplot(Subplot):
@@ -270,10 +280,7 @@ class PhaseSubplot(Subplot):
         if self.y_lims:
             ax.set_ylim(self.y_lims)
 
-        # cir = plt.Circle((1,1), 0.161, color='b', fill=False)
-        # ax.add_artist(cir)
-
-        ax.set_aspect('equal')
+        #ax.set_aspect('equal')
 
         phase_time = Timer.stop('Phase')
         x_var, y_var = self.model.vars[self.x], self.model.vars[self.y]
@@ -578,7 +585,8 @@ class Plot:
                                                      subplot_dict['data_dict'],
                                                      subplot_dict['steps_in_day'],
                                                      subplot_dict['total_pop'],
-                                                     subplot_dict['time_interval'])
+                                                     subplot_dict['time_interval'],
+                                                     subplot_dict['category'])
             else:
                 raise RuntimeError("Subplot type string not valid.")
 

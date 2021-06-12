@@ -2,7 +2,8 @@ import numpy as np
 from itertools import product
 
 from kaa.templates import TempStrategy
-from kaa.timer import Timer
+from kaa.log import Output
+
 
 class RandomDiagStaticStrat(TempStrategy):
 
@@ -47,10 +48,13 @@ class RandomDiagStaticStrat(TempStrategy):
         temp_dirs = np.empty((self.num_diag_temps, self.dim, self.dim))
 
         for trial_num in range(self.num_diag_temps):
-            ran_idxs = np.random.choice(len(diag_mat), self.dim, replace=False)
-            temp_dirs[trial_num] = diag_mat[ran_idxs]
+            cond_num = np.inf
+            while cond_num > 50:
+                ran_idxs = np.random.choice(len(diag_mat), self.dim, replace=False)
+                temp_mat = diag_mat[ran_idxs]
+                cond_num = np.linalg.cond(temp_mat)
+            Output.prominent(f"Cond num calculated for Ptope {trial_num}: {cond_num}")
 
-        #print(temp_dirs)
-        #exit()
+            temp_dirs[trial_num] = temp_mat
 
         return temp_dirs

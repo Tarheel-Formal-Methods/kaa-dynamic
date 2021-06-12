@@ -37,27 +37,20 @@ class AbstractLinStrat(TempStrategy):
 
     def generate_lin_dir(self, bund, step_num):
         if self.dirs is None:
-            # print(f"Ran points gen. {self.num_trajs}")
-            # print(f"STORED MAT: {self.unit_dir_mat}")
-
             Timer.start("Linear Direction Generation")
             inv_A = self.__approx_inv_A(bund)  # Approx inverse linear transform.
 
-            #print(f"Inv A: {inv_A}")
-
             lin_dir_mat = np.matmul(self.accum_lin_trans, inv_A)
-
             if KaaSettings.NormalizeLinDir:
                 cond_num = np.linalg.cond(lin_dir_mat)
 
                 if cond_num > self.cond_threshold:
-                    print("Using Normalization method.")
+                    Output.prominent("Using Normalization method.")
                     norm_lin_dir = normalize_mat(lin_dir_mat)
                     closest_dirs = find_closest_dirs(norm_lin_dir)
                     lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
 
             Timer.stop("Linear Direction Generation")
-            # print(f"Cal Lin Directions Matrix: {lin_dir_mat}")
             self.accum_lin_trans = lin_dir_mat  # This makes senese for now as we assume we generate directions once per step.
         else:
             lin_dir_mat = self.dirs.get_dirs_at_step(step_num)

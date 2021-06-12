@@ -177,11 +177,11 @@ def test_init_reach_vol_Covid():
     experi.execute()
 
 def test_covid_data_plot():
-    experi = CovidDataPlotExperiment(earliest_date='08/22/20',
-                                     latest_date='10/22/20',
+    experi = CovidDataPlotExperiment(earliest_date='10/01/20',
+                                     latest_date='11/01/20',
                                      beta_interval=(0.10, 0.12),
-                                     gamma_interval=(0.086, 0.088),
-                                     eta=0.0012)
+                                     gamma_interval=(0.089, 0.091),
+                                     eta=0.001)
     experi.execute()
 
 

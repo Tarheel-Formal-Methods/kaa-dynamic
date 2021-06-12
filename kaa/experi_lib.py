@@ -304,7 +304,8 @@ class CovidDataPlotExperiment(Experiment):
                  epsilon=1E-6,
                  eta = 0.0015,
                  beta_interval=(0.108, 0.112),
-                 gamma_interval=(0.078, 0.082)):
+                 gamma_interval=(0.078, 0.082),
+                 category='Confirmed'):
         self.filename = filename
 
         data_loader = CovidDataLoader(self.filename)
@@ -317,6 +318,7 @@ class CovidDataPlotExperiment(Experiment):
         self.beta_interval = beta_interval
         self.gamma_interval = gamma_interval
         self.eta_constant = eta
+        self.category = category
 
         input = self.__init_inputs()
         super().__init__(input)
@@ -333,7 +335,8 @@ class CovidDataPlotExperiment(Experiment):
                         'data_dict': self.data_dict,
                         'steps_in_day': self.num_steps_in_day,
                         'total_pop': self.total_pop,
-                        'time_interval': f'{self.earliest_date}-{self.latest_date}'})
+                        'time_interval': f'{self.earliest_date}-{self.latest_date}',
+                        'category': 'Confirmed'})
 
     def __init_inputs(self):
         init_params = self.__estimate_init_params(self.total_pop)
@@ -396,9 +399,12 @@ class CovidDataPlotExperiment(Experiment):
 
     def __calc_trajs(self):
         beta_step_size = 0.005
-        traj_list = []
+        traj_coll = TrajCollection(self.model)
         constant_gamma = (self.gamma_interval[0] + self.gamma_interval[1]) / 2
-        for beta in np.arange(self.beta_interval[0], self.beta_interval[1], beta_step_size):
+
+        for beta in np.round(
+                np.arange(self.beta_interval[0], self.beta_interval[1], beta_step_size),
+                decimals=3):
             beta_traj = Traj(self.model,
                              (self.init_suspectible_asymp,
                               self.init_suspectible_symp,
@@ -412,9 +418,9 @@ class CovidDataPlotExperiment(Experiment):
                               ),
                              self.total_num_steps,
                              label=f"β = {beta}, γ = {constant_gamma}")
-            traj_list.append(beta_traj)
+            traj_coll.add(beta_traj)
 
-        self.plot.add(TrajCollection(self.model, traj_list))
+        self.plot.add(traj_coll)
 
     def __estimate_init_params(self, total_pop):
         initial_figures = self.data_dict[self.earliest_date]

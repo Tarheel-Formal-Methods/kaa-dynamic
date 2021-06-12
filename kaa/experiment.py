@@ -322,9 +322,11 @@ class Experiment(ABC):
         init_box_inter = self.model.init_box
         border_points = self.__get_init_box_borders(init_box_inter)
 
-        trajs = [Traj(self.model, point, num_steps) for point in border_points]
+        border_trajs = TrajCollection(self.model)
+        for point in border_points:
+            border_trajs.add(Traj(self.model, point, num_steps))
 
-        return TrajCollection(self.model, trajs)
+        return border_trajs
 
     """
     Find corner vertices for an initial box along with midpoints between the corners.

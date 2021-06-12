@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 
 from kaa.templates import TempStrategy
 from kaa.timer import Timer
@@ -44,6 +45,6 @@ class RandomStaticStrat(TempStrategy):
         rand_vec_norm = 2
         while rand_vec_norm > 1:
             rand_vec = [random.uniform(-1, 1) for _ in range(self.dim)]
-            rand_vec_norm = sqrt(sum(map(lambda x: x**2, rand_vec)))
+            rand_vec_norm = math.sqrt(sum(map(lambda x: x**2, rand_vec)))
 
         return rand_vec

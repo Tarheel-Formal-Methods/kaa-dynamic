@@ -51,7 +51,7 @@ class CoupledVDP(Model):
         offu[7] = 3; offl[7] = 3;
         offu[8] = 3; offl[8] = 3;
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="CoupledVDP")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="CoupledVDP")
 
 
 class CoupledVDP_UnitBox(Model):
@@ -87,4 +87,4 @@ class CoupledVDP_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="CoupledVDP")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="CoupledVDP")

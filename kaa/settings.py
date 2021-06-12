@@ -40,7 +40,7 @@ class DebugSettings:
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
-    PlotFont = 14
+    PlotFont = 22
 
     'Toggle to save the figures to disk'
     save_fig = False

@@ -3,10 +3,11 @@ from scipy.spatial import ConvexHull
 
 from kaa.settings import KaaSettings
 
-from kaa.log import Output
 """
 Wrapper around list for representing arbitrary trajectories of a system.
 """
+
+
 class Traj:
 
     def __init__(self, model, initial_point, steps=0, label=None, traj_mat=None):
@@ -109,13 +110,10 @@ class Traj:
 
 class TrajCollection:
 
-    def __init__(self, model, traj_list):
-        assert isinstance(traj_list, list), "input must be list of Traj objects"
-        self.traj_list = traj_list
-        self.num_trajs = len(self.traj_list)
+    def __init__(self, model, traj_list=None):
+        self.traj_list = [] if not traj_list else traj_list
         self.model = model
         self.dim = model.dim
-        self.traj_len = min(traj.num_points for traj in self.traj_list)
 
     @property
     def start_points(self):
@@ -134,6 +132,18 @@ class TrajCollection:
             end_points[traj_idx] = traj.end_point
 
         return end_points
+
+    @property
+    def num_trajs(self):
+        return len(self.traj_list)
+
+    @property
+    def traj_len(self):
+        return min(traj.num_points for traj in self.traj_list)
+
+    def add(self, *trajs):
+        assert all(isinstance(traj, Traj) for traj in trajs), "TrajCollection can only contain Traj objects."
+        self.traj_list.extend(trajs)
 
     def merge_dims(self, first_dim, second_dim):
         return TrajCollection(self.model,
