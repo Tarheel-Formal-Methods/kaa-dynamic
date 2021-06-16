@@ -49,12 +49,17 @@ class RandomDiagStaticStrat(TempStrategy):
 
         for trial_num in range(self.num_diag_temps):
             cond_num = np.inf
-            while cond_num > 50:
+            used_dir_indices = np.empty((self.num_diag_temps, self.dim))
+            while cond_num > 10 or (ran_idxs.tolist() in used_dir_indices.tolist()):
                 ran_idxs = np.random.choice(len(diag_mat), self.dim, replace=False)
                 temp_mat = diag_mat[ran_idxs]
                 cond_num = np.linalg.cond(temp_mat)
-            Output.prominent(f"Cond num calculated for Ptope {trial_num}: {cond_num}")
+            #Output.prominent(f"Cond num calculated for Ptope {trial_num}: {cond_num}")
+            used_dir_indices[trial_num] = ran_idxs
 
             temp_dirs[trial_num] = temp_mat
 
         return temp_dirs
+
+
+

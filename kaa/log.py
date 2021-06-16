@@ -56,10 +56,10 @@ class Output:
 
     @staticmethod
     def write(output):
-        with open('log3.txt','a') as f:
+        with open('log.txt','a') as f:
             f.write(output + '\n')
 
     @staticmethod
     def bold_write(output):
-            with open('log2.txt','a') as f:
+            with open('log.txt','a') as f:
                 f.write(colored(output, 'white', attrs=['bold']) + '\n')

@@ -35,6 +35,8 @@ class KaaSettings:
 
     DelFlowpipe = False
 
+    EvalFinalPoly = False
+
 class DebugSettings:
     TimerProfileLabels = set()
 

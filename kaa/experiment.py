@@ -323,6 +323,7 @@ class Experiment(ABC):
         border_points = self.__get_init_box_borders(init_box_inter)
 
         border_trajs = TrajCollection(self.model)
+        Output.prominent("Generating Trajectories from Border Points")
         for point in border_points:
             border_trajs.add(Traj(self.model, point, num_steps))
 

@@ -66,7 +66,7 @@ def test_arch_CVDP():
                         trans_mode=BundleTransMode.AFO)
 
 
-    experi = PhasePlotExperiment(experi_input_one, experi_input_two)
+    experi = PhasePlotExperiment(experi_input_one)
     experi.execute(0, 1)
 
 def test_sliding_phase_plot_CVDP():

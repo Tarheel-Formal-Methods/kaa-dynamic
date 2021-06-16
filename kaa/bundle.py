@@ -375,12 +375,12 @@ class BundleTransformer:
             curr_L = L[l_row]
 
             Timer.start("Find Bounds Function Call")
-            #print(f"Direction Vector: {curr_L}")
-            #print(f"L {L}")
-            #print(f"T Mat: {bund.T}")
-            #print(f"Row Ind: {row_ind}")
+            # print(f"Direction Vector: {curr_L}")
+            # print(f"L {L}")
+            # print(f"T Mat: {bund.T}")
+            # print(f"Row Ind: {row_ind}")
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
-            #print(f"UB: {ub}, LB: {lb}")
+            # print(f"UB: {ub}, LB: {lb}")
             Timer.stop("Find Bounds Function Call")
 
             if output_queue:
@@ -448,7 +448,7 @@ class BundleTransformer:
         fog = [func.xreplace(var_sub) for func in self.f]
         Timer.stop('Functional Composition')
 
-        #print(f"Replaced Exp: {fog}")
+        # print(f"Replaced Exp: {fog}")
 
         'Perform functional composition with exact transformation from unitbox to parallelotope.'
         Timer.start("Polynomial Generation")
@@ -459,7 +459,9 @@ class BundleTransformer:
         Timer.stop("Polynomial Generation")
 
         Timer.start('Bound Computation')
-        with OptProd(bound_polyu, bund) as opt_prod:
+        with OptProd(bound_polyu.doit() if KaaSettings.EvalFinalPoly else
+                     bound_polyu, bund) \
+                as opt_prod:
             ub, lb = opt_prod.getBounds()
         Timer.stop('Bound Computation')
 

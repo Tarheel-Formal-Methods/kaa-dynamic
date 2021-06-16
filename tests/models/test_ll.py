@@ -34,11 +34,13 @@ def test_arch_LL():
     pca_window_size = 10
     lin_window_size = 5
 
-    pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size)
-    lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
+    #pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size)
+    #lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
+
+    ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
 
     experi_input_one = dict(model=model_one,
-                            strat=MultiStrategy(pca_strat_one, lin_strat_one),
+                            strat=ran_static_strat_one,
                             label=f"LALO21 W=0.01",
                             num_steps=num_steps,
                             supp_mode = use_supp,
@@ -47,11 +49,13 @@ def test_arch_LL():
                             trans_mode=BundleTransMode.AFO)
 
 
-    pca_strat_two = SlidingPCAStrat(model_two, lifespan=pca_window_size)
-    lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size)
+    #pca_strat_two = SlidingPCAStrat(model_two, lifespan=pca_window_size)
+    #lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size)
+
+    ran_static_strat_two = RandomDiagStaticStrat(model_two, 70)
 
     experi_input_two = dict(model=model_two,
-                            strat=MultiStrategy(pca_strat_two, lin_strat_two),
+                            strat=ran_static_strat_two,
                             label=f"LALO21 W=0.05",
                             num_steps=num_steps,
                             supp_mode = use_supp,

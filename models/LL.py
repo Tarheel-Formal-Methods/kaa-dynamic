@@ -42,7 +42,7 @@ class LL(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LL")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="LL")
 
 
 class LL_UnitBox(Model):
@@ -77,4 +77,4 @@ class LL_UnitBox(Model):
         offu = np.zeros(num_dirs)
         offl = np.zeros(num_dirs)
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LL")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="LL")

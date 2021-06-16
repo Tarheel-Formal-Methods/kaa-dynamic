@@ -22,10 +22,10 @@ class KodiakProd(OptimizationProd):
         bounds = [(0,1) for _ in range(self.bund.dim)]
         jac_mat = np.zeros((self.bund.dim, self.bund.dim))
 
-        #Output.prominent("Calling Kodiak")
-        #Output.prominent(f"INPUT POLY: {self.poly}")
+        Output.write("Calling Kodiak")
+        Output.write(f"INPUT POLY: {self.poly}")
         lb, ub, _, _ = self.kodiak.minmax_diff(self.kodiak_poly, jac_mat, 0, bounds)
-        #Output.prominent("Out of Kodiak")
+        Output.write("Out of Kodiak")
 
         return ub, lb
 
