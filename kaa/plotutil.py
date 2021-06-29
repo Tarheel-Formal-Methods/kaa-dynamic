@@ -108,7 +108,7 @@ class ProjectionSubplot(Subplot):
                 t = np.arange(0, len(flowpipe), 1)
 
                 if self.scale_factor:
-                    t *= int(self.scale_factor / len(flowpipe))
+                    t = t * (self.scale_factor / (len(flowpipe) - 1)) #For some reaosn, t*= gives type casting error.
 
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
