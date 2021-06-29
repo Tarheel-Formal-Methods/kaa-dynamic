@@ -8,8 +8,8 @@ from kaa.log import Output
 class RandomDiagStaticStrat(TempStrategy):
 
     def __init__(self, model, num_diag_temps):
-        super().__init__(model)
         self.num_diag_temps = num_diag_temps
+        super().__init__(model)
 
     def open_strat(self, bund, step_num):
         if not step_num:

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 import matplotlib.animation as animate
+from matplotlib.ticker import MultipleLocator
 from matplotlib.legend import Legend
 from pathlib import Path
 from datetime import date
@@ -213,16 +214,16 @@ class CovidProjectionDateSubplot(Subplot):
 
                 t = np.arange(0, len(flowpipe), 1)
                 ax.fill_between(t, scaled_flow_min, scaled_flow_max,
-                                label=flowpipe_label,
+                                label="Predicted Region",
                                 color=f"C{flow_idx}",
                                 alpha=0.35 - (flow_idx / 10),
                                 zorder=1)
 
-            ax.plot(range(0, self.num_steps + self.steps_in_day, self.steps_in_day),
+            ax.plot(range(0, (self.num_steps - 1) + self.steps_in_day, self.steps_in_day),
                     ax_data,
                     'o-r',
                     label="Real Data",
-                    linewidth=2)
+                    linewidth=3.5)
 
             dates = list(self.data_dict.keys())
             day_tick_gap = 5
@@ -235,12 +236,15 @@ class CovidProjectionDateSubplot(Subplot):
 
             ax.set_xticks(range(self.num_steps + 1))
             ax.set_xticklabels(date_labels)
+            ax.xaxis.set_major_locator(MultipleLocator(day_tick_gap))
+            ax.xaxis.set_minor_locator(MultipleLocator(self.steps_in_day))
+            ax.tick_params(which="major", width=6)
 
             ax.set_xlabel("Dates", fontsize=PlotSettings.PlotFont)
             ax.set_ylabel(f"Population for {category}", fontsize=PlotSettings.PlotFont)
-            ax.set_title(f"Projection for {category} Against Real-World Indian Data for {self.time_interval_str}")
+            ax.set_title(f"Projection for {category} Against Real-World India Data for {self.time_interval_str}")
             ax.legend(loc=2)
-            ax.tick_params(axis='both', labelsize=20)
+            ax.tick_params(axis='both', labelsize=PlotSettings.PlotFont)
 
 
 class PhaseSubplot(Subplot):
@@ -279,8 +283,6 @@ class PhaseSubplot(Subplot):
             ax.set_xlim(self.x_lims)
         if self.y_lims:
             ax.set_ylim(self.y_lims)
-
-        #ax.set_aspect('equal')
 
         phase_time = Timer.stop('Phase')
         x_var, y_var = self.model.vars[self.x], self.model.vars[self.y]

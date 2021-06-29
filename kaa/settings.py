@@ -6,7 +6,10 @@ class KaaSettings:
     'Should we try to parallelize the generator calculations?'
     Parallelize = True
 
-    'The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts'
+    '''
+    The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts
+    Takes the strings "Kodiak" or "Bernstein"
+    '''
     OptProd = "Kodiak"
 
     'Suppress Output?'
@@ -15,7 +18,7 @@ class KaaSettings:
     'Number of samples to be used for volume estimation'
     VolumeSamples = 10000
 
-    'seed for random.seed'
+    'Seed for random.seed'
     RandSeed = 897987178
 
     'Save the flowpipe when error appears during transformation'
@@ -33,8 +36,7 @@ class KaaSettings:
     'Run Normalization method if condition number becomes too large.'
     NormalizeLinDir = True
 
-    DelFlowpipe = False
-
+    'Evaluate and simplify the polynomial after performing functional composition.'
     EvalFinalPoly = False
 
 class DebugSettings:
@@ -42,7 +44,7 @@ class DebugSettings:
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
-    PlotFont = 22
+    PlotFont = 27
 
     'Toggle to save the figures to disk'
     save_fig = False

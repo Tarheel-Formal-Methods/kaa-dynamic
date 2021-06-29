@@ -75,9 +75,6 @@ class ReachSet:
                     self.flowpipe.error = error
                     break
 
-        if KaaSettings.DelFlowpipe:
-            self.flowpipe.calc_data_del_flowpipe()
-
         if not isinstance(self.strat, MultiStrategy):
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
 

@@ -378,7 +378,7 @@ class CovidDataPlotExperiment(Experiment):
         self.model = Covid_UnitBox(delta=0.5, eta=self.eta_constant, init_box=init_box)
 
         self.num_steps_in_day = int(1 / self.model.step_size)
-        self.total_num_steps = self.num_steps_in_day * num_days - 1
+        self.total_num_steps = self.num_steps_in_day * num_days
 
         pca_window_size = 8
         lin_window_size = 0
