@@ -10,13 +10,13 @@ def test_arch_Chem():
 
     num_trajs = 5000
 
-    delta_one = 0.1
-    delta_two = 0.0075
-    delta_three = 0.00005
+    delta_one = 0.5
+    delta_two = 0.5
+    delta_three = 0.5
 
-    num_steps_one = int(40 / delta_one)
-    num_steps_two = int(40 / delta_two)
-    num_steps_three = int(40 / delta_three)
+    num_steps_one = int(20 / delta_one)
+    num_steps_two = int(20 / delta_two)
+    num_steps_three = int(20 / delta_three)
 
     model_one = Chem_UnitBox(100, 1000, delta=delta_one)
     model_two = Chem_UnitBox(1000, 100000, delta=delta_two)
@@ -25,55 +25,58 @@ def test_arch_Chem():
     pca_window_size_one = 10
     lin_window_size_one = 0
 
-    #pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size_one)
-    #lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size_one)
+    pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size_one)
+    lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size_one)
 
-    ran_static_strat_one = RandomDiagStaticStrat(model_one, 70)
+    ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
 
     experi_input_one = dict(model=model_one,
-                            strat=ran_static_strat_one,
+                            strat=pca_strat_one,
                             label=f"ROBE21 Case 1",
-                            num_steps=9,
+                            num_steps=num_steps_one,
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
-                            trans_mode=BundleTransMode.AFO)
+                            trans_mode=BundleTransMode.AFO,
+                            restrict_inter=(-5,5))
 
     pca_window_size_two = 5
     lin_window_size_two = 5
 
-    #pca_strat_two = SlidingPCAStrat(model_two, lifespan=pca_window_size_two)
-    #lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size_two)
+    pca_strat_two = SlidingPCAStrat(model_two, lifespan=pca_window_size_two)
+    lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size_two)
 
-    ran_static_strat_two = RandomDiagStaticStrat(model_two, 60)
+    ran_static_strat_two = RandomDiagStaticStrat(model_two, 30)
 
     experi_input_two = dict(model=model_two,
-                            strat=ran_static_strat_two,
+                            strat=MultiStrategy(pca_strat_two, lin_strat_two),
                             label=f"ROBE21 Case 2",
                             num_steps=num_steps_two,
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
-                            trans_mode=BundleTransMode.AFO)
+                            trans_mode=BundleTransMode.AFO,
+                            restrict_inter=(-5,5))
 
-    pca_window_size_three = 0
+    pca_window_size_three = 10
     lin_window_size_three = 0
 
-    #pca_strat_three = SlidingPCAStrat(model_three, lifespan=pca_window_size_three)
-    #lin_strat_three = SlidingLinStrat(model_three, lifespan=lin_window_size_three)
+    pca_strat_three = SlidingPCAStrat(model_three, lifespan=pca_window_size_three)
+    lin_strat_three = SlidingLinStrat(model_three, lifespan=lin_window_size_three)
 
     ran_static_strat_three = RandomDiagStaticStrat(model_three, 30)
 
     experi_input_three = dict(model=model_three,
-                              strat=ran_static_strat_three,
+                              strat=pca_strat_three,
                               label=f"ROBE21 Case 3",
                               num_steps=num_steps_three,
                               supp_mode = use_supp,
                               pregen_mode = use_pregen,
                               num_trajs=num_trajs,
-                              trans_mode=BundleTransMode.AFO)
+                              trans_mode=BundleTransMode.AFO,
+                            restrict_inter=(-5,5))
 
-    experi = ProjectionPlotExperiment(experi_input_one, plot_total_width=True)
+    experi = ProjectionPlotExperiment(experi_input_one, experi_input_two, experi_input_three, plot_total_width=True)
     experi.execute(ylims=(0.999,1.001))
 
     Timer.generate_stats()
