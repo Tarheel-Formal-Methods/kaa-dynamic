@@ -1,5 +1,5 @@
 from models.lovo import LOVO_UnitBox
-from kaa.experiment import *
+from kaa.log import Output
 from kaa.experi_init import *
 from kaa.timer import Timer
 from kaa.bundle import BundleTransMode
@@ -31,5 +31,6 @@ def test_arch_LOVO21():
                             trans_mode=BundleTransMode.AFO)
 
     experi = PhasePlotExperiment(experi_input_one)
-    experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4))
+    box_hull_vols = experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4), output_final_box_hull=True)
+    Output.prominent(f"Box hull for LOVO21: {box_hull_vols[0]}")
     Timer.generate_stats()

@@ -58,7 +58,7 @@ class LinearSystem:
     @property
     def volume(self):
         envelop_box_vol = self.calc_vol_envelop_box()
-        conv_hull_vol = self.calc_vol_conv_hull()
+        conv_hull_vol = self.calc_vol_conv_hull() if self.dim < 4 else None
 
         return VolDataTuple(conv_hull_vol, envelop_box_vol)
 
@@ -75,7 +75,6 @@ class LinearSystem:
             hs = HalfspaceIntersection(phase_intersect, center_pt)
         except QhullError:
             feasible_pt = self.feasible_point()
-            #print(feasible_pt)
             hs = HalfspaceIntersection(phase_intersect, feasible_pt)
 
         vertices = np.asarray(hs.intersections)
@@ -97,8 +96,14 @@ class LinearSystem:
     Calculate the volume of the smallest enveloping box of linear system.
     """
     def calc_vol_envelop_box(self):
-        envelop_box = self.__calc_envelop_box()
+        envelop_box = self.calc_envelop_box()
         return calc_box_volume(envelop_box)
+
+    """
+    Calculate the volume of the convex hull of linear system.
+    """
+    def calc_vol_conv_hull(self):
+        return ConvexHull(self.vertices).volume
 
     """
     Maxmize optimization function y over Ax \leq b
@@ -135,7 +140,7 @@ class LinearSystem:
     @params model: input model
     @returns list of intervals representing edges of box.
     """
-    def __calc_envelop_box(self):
+    def calc_envelop_box(self):
         box_interval = np.empty((self.dim,2))
 
         for i in range(self.dim):
@@ -277,6 +282,8 @@ class LinearSystem:
         box_intervals = [[c - (radius*shrinkfactor), c + (radius*shrinkfactor)] for c in center]
 
         return self.__sample_box_points(box_intervals, num_trajs)
+
+
 
 
 """

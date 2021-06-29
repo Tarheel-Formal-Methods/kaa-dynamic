@@ -1,4 +1,6 @@
 import copy
+
+import numpy as np
 from tqdm import tqdm
 
 from kaa.timer import Timer
@@ -23,11 +25,13 @@ Object handling all reachable flowpipe computations.
 
 class ReachSet:
 
-    def __init__(self, model, strat=None, label="", trans_mode=BundleTransMode.AFO):
+    def __init__(self, model, strat=None, label="", trans_mode=BundleTransMode.AFO, restrict_inter=None):
         self.model = model
         self.trans_mode = trans_mode
         self.strat = StaticStrat(self.model) if strat is None else strat
         self.flowpipe = FlowPipe(self.model, strat, label)
+        self.restrict_inter = restrict_inter if restrict_inter else [-np.Inf, np.Inf]
+
 
     """
     Compute reachable set for the alloted number of time steps.
@@ -37,7 +41,7 @@ class ReachSet:
     """
 
     def computeReachSet(self, time_steps):
-        transformer = BundleTransformer(self.model, self.trans_mode)
+        transformer = BundleTransformer(self.model, self.trans_mode, self.restrict_inter)
         init_box_vol_thres = ((10 * self.model.dim) * self.model.bund.getIntersect().volume
                               if KaaSettings.UseThreshold
                               else -1)

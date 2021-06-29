@@ -32,4 +32,4 @@ class LOVO_UnitBox(Model):
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="LOVO21")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="LOVO21")

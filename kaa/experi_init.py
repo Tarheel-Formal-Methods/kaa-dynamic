@@ -1,17 +1,6 @@
-import math
-import random as rand
-import sympy as sp
-import numpy as np
-from itertools import product, chain
-
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
-from kaa.temp.random_static_strat import *
-from kaa.temp.diag_static_strat import *
-from kaa.templates import MultiStrategy
 from kaa.experi_lib import *
-from kaa.settings import KaaSettings
-from kaa.log import Output
 
 """
 Generates random points through the generators of the initial box and checking membership. Could be extremely time-consuming if the intersection is thin.
@@ -247,7 +236,7 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"1-1 Strat Base PCA Trials {model.name} {file_identifier}")
+    experi = VolumeDataExperiment(*inputs, label=f"1-1 Strat Base PCA Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=False, use_pregen=True):
@@ -277,7 +266,7 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
+    experi = VolumeDataExperiment(*inputs, label=f"1-1 Strat Base LinApp Trials {model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10 , use_supp=False, use_pregen=True):
@@ -322,7 +311,7 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingPCA{model.name} {file_identifier}")
+    experi = VolumeDataExperiment(*inputs, label=f"SlidingPCA{model.name} {file_identifier}")
     experi.execute(num_trials)
 
 def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_trials=10, use_supp=False, use_pregen=True):
@@ -368,17 +357,15 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumeExperiment(*inputs, label=f"SlidingLin{model.name} {file_identifier}")
+    experi = VolumeDataExperiment(*inputs, label=f"SlidingLin{model.name} {file_identifier}")
     experi.execute(num_trials)
 
-def test_comb_stdev_reduction(model, num_steps, num_trials=10):
+def test_comb_stdev_reduction(model, num_steps, num_trials=10, use_supp=True, use_pregen=False):
     if use_supp:
         num_trials = 1
 
-    NUM_STEPS = num_steps
-
     inputs = []
-    for num_trajs in range(1000,4000,1000): #model tossed around too many times.
+    for num_trajs in range(1000,4000,1000):
         pca_strat = PCAStrat(model, iter_steps=1)
         lin_strat = LinStrat(model, iter_steps=1)
         experi_input = dict(model=model,
@@ -386,48 +373,31 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10):
                             label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
                             pregen_mode = True,
                             num_trajs=num_trajs,
-                            num_steps=NUM_STEPS,
-                            max_steps=NUM_STEPS)
+                            num_steps=num_steps)
 
         inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label="Combination with PCA and Lin Strats")
-    experi.execute(num_trials)
+    experi = VolumeDataExperiment(*inputs, label="Combination with PCA and Lin Strats")
+    experi.execute()
 
 
-def test_ran_strat(model, num_steps, num_trajs, use_supp = True, use_pregen = False):
+def test_ran_strat(model, num_steps, num_trajs, use_supp=True, use_pregen=False):
     inputs = []
     for num_templates in iter([20,15,10,5,4,3,2,1]):
         experi_input = dict(model=model,
                             strat=RandomStaticStrat(model, num_templates),
                             label=f"Random Static Strategy with {num_templates} Templates",
                             num_steps=num_steps,
-                            supp_mode = use_supp,
-                            pregen_mode = use_pregen,
-                            num_trajs = num_trajs)
+                            supp_mode=use_supp,
+                            pregen_mode=use_pregen,
+                            num_trajs=num_trajs,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
-    experi = VolumeExperiment(*inputs, label="VDP Random Static Strat")
-    experi.execute(10)
+    experi = VolumeDataExperiment(*inputs, label="VDP Random Static Strat")
+    experi.execute()
     Timer.generate_stats()
-
-
-def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
-    for num_trajs in range(1000, max_num_trajs+1000, 1000):
-        generated_dirs = []
-        for trial_num in range(num_trials):
-            Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
-            gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
-            gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
-
-            gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
-            generated_dirs.append(gen_dirs_tuple)
-
-            update_seed()
-
-        reset_seed()
-        DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
 
 def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, label=""):
     inputs = []
@@ -459,3 +429,21 @@ def find_lin_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label
 
     experi = DeviationExperiment(*inputs, "LinDev", label=label)
     experi.execute(num_trials)
+
+"""
+def gen_save_dirs(model, num_steps, max_num_trajs=8000, num_trials=10):
+    for num_trajs in range(1000, max_num_trajs+1000, 1000):
+        generated_dirs = []
+        for trial_num in range(num_trials):
+            Output.prominent(f"GENERATED DIRECTIONS FOR TRIAL {trial_num} WITH {num_trajs} TRAJS FOR {num_steps} STEPS")
+            gen_pca_dirs = GeneratedPCADirs(model, num_steps, num_trajs)
+            gen_lin_dirs = GeneratedLinDirs(model, num_steps, num_trajs)
+
+            gen_dirs_tuple = GenDirsTuple(gen_pca_dirs, gen_lin_dirs)
+            generated_dirs.append(gen_dirs_tuple)
+
+            update_seed()
+
+        reset_seed()
+        DirSaveLoader.save_dirs(model, num_steps, num_trajs, KaaSettings.RandSeed, generated_dirs)
+"""

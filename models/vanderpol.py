@@ -40,7 +40,7 @@ class VanDerPol(Model):
         offu[2] = 10; offl[2] = 10;
         offu[3] = 10; offl[3] = 10;
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, "VDP")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, "VDP")
 
 class VanDerPol_UnitBox(Model):
 
@@ -68,4 +68,4 @@ class VanDerPol_UnitBox(Model):
         offu = np.zeros(num_dirs);
         offl = np.zeros(num_dirs);
 
-        super().__init__(dyns, vars, T, L, init_box, offl, offu, name="VDP")
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="VDP")

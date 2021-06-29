@@ -282,12 +282,20 @@ class Experiment(ABC):
             num_steps = experi_input['num_steps']
             trans_mode = experi_input['trans_mode']
 
-            mod_reach = ReachSet(model, strat=strat, label=flow_label, trans_mode=trans_mode)
+            restrict_inter = None if 'restrict_inter' not in experi_input else experi_input['restrict_inter']
+
+            mod_reach = ReachSet(model,
+                                 strat=strat,
+                                 label=flow_label,
+                                 trans_mode=trans_mode,
+                                 restrict_inter=restrict_inter)
+
             mod_flow = mod_reach.computeReachSet(num_steps)
 
             if strat is not None:
                 strat.reset()
 
+            Timer.generate_stats()
             return mod_flow
 
         except Exception as excep:

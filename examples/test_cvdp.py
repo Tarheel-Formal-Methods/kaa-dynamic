@@ -3,6 +3,7 @@ from kaa.experi_init import *
 from kaa.timer import Timer
 from kaa.bundle import BundleTransMode
 from kaa.temp.diag_static_strat import RandomDiagStaticStrat
+from kaa.templates import MultiStrategy
 
 def test_sapo_CVDP():
     num_steps = 40
@@ -23,11 +24,11 @@ def test_arch_CVDP():
 
     num_trajs = 0
 
-    delta_one = 0.05
-    delta_two = 0.05
+    delta_one = 0.1
+    delta_two = 0.1
 
-    num_steps_one = int(7 / delta_one) - 1
-    num_steps_two = int(7 / delta_two) - 1
+    num_steps_one = int(6 / delta_one) - 1
+    num_steps_two = int(6 / delta_two) - 1
     init_box_one = ((1.25, 1.55), (2.35, 2.45), (1.25, 1.55), (2.35, 2.45))
     init_box_two = ((1.55, 1.85), (2.35, 2.45), (1.55, 1.85), (2.35, 2.45))
 
@@ -41,6 +42,7 @@ def test_arch_CVDP():
     #lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
 
     ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
+    pca_strat_one = SlidingPCAStrat(model_one, 5)
 
     experi_input_one = dict(model=model_one,
                         strat=ran_static_strat_one,
@@ -55,9 +57,11 @@ def test_arch_CVDP():
     #lin_strat_two = SlidingLinStrat(model_two, lifespan=lin_window_size)
 
     ran_static_strat_two = RandomDiagStaticStrat(model_two, 30)
+    pca_strat_two = SlidingPCAStrat(model_two, 5)
+
 
     experi_input_two = dict(model=model_two,
-                        strat=ran_static_strat_two,
+                        strat=MultiStrategy(ran_static_strat_two, pca_strat_two),
                         label=f"CVDP mu=2",
                         num_steps=num_steps_two,
                         supp_mode = use_supp,
@@ -66,7 +70,7 @@ def test_arch_CVDP():
                         trans_mode=BundleTransMode.AFO)
 
 
-    experi = PhasePlotExperiment(experi_input_one)
+    experi = PhasePlotExperiment(experi_input_one, experi_input_two)
     experi.execute(0, 1)
 
 def test_sliding_phase_plot_CVDP():

@@ -62,16 +62,21 @@ class Subplot:
     def plot(self):
         pass
 
+    def print_final_vol_stats(self):
+        for flowpipe in self.flowpipes:
+            print(f"VOLUME OF FINAL SYSTEM FOR FLOWPIPE {flowpipe.label}: {flowpipe[-1].volume[1]}")
+
 
 # Some sort of organization through inheritance is warranted.
 class ProjectionSubplot(Subplot):
 
-    def __init__(self, model, vars, flowpipes, num_steps, trajs, plot_width_flag, x_lims, y_lims, ):
+    def __init__(self, model, vars, flowpipes, num_steps, trajs, plot_width_flag, x_lims, y_lims, scale_factor):
         self.vars = vars
         self.trajs = trajs
         self.plot_width_flag = plot_width_flag
         self.x_lims = x_lims
         self.y_lims = y_lims
+        self.scale_factor = scale_factor
         super().__init__(model,
                          "Projection",
                          flowpipes,
@@ -101,6 +106,10 @@ class ProjectionSubplot(Subplot):
                 flowpipe_label = flowpipe.label
 
                 t = np.arange(0, len(flowpipe), 1)
+
+                if self.scale_factor:
+                    t *= int(self.scale_factor / len(flowpipe))
+
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
                                 color=f"C{flow_idx}",
@@ -128,6 +137,10 @@ class ProjectionSubplot(Subplot):
                 flowpipe_label = flowpipe.label
 
                 t = np.arange(0, len(flowpipe), 1)
+
+                if self.scale_factor:
+                    t *= self.scale_factor
+
                 ax.fill_between(t, flow_min, flow_max,
                                 label=flowpipe_label,
                                 color=f"C{flow_idx}", alpha=0.4 + (flow_idx / 10),
@@ -144,7 +157,6 @@ class ProjectionSubplot(Subplot):
                 ax.set_xlim(self.x_lims)
             if self.y_lims:
                 ax.set_ylim(self.y_lims)
-
 
 """
 Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-Model.pdf
@@ -553,7 +565,8 @@ class Plot:
                                             self.trajs,
                                             subplot_dict['plot_width_flag'],
                                             subplot_dict['xlims'],
-                                            subplot_dict['ylims'])
+                                            subplot_dict['ylims'],
+                                            None if 'scale_factor' not in subplot_dict else subplot_dict['scale_factor'])
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,

@@ -73,26 +73,6 @@ class FlowPipe:
         self.flowpipe.append(bund)
         self.num_bunds += 1
 
-    """
-    Crunch requested flowpipe data and delete the bundle list. Memory-conserving procedure.
-    """
-    def calc_data_del_flowpipe(self):
-        if self.reach_comp_mode == ReachCompMode.VolMode:
-            self.volume_data = self.get_volume_data()
-            del self.flowpipe
-            Output.prominent("Deleting Flowpipe")
-
-        elif self.reach_comp_mode == ReachCompMode.ProjPlotMode:
-            self.proj_data = np.empty((2*self.dim, len(self)))
-
-            for var_idx in range(0, 2*self.dim, 2):
-                var_min_arr, var_max_arr = self.__calc_bounds_along_var(var_idx)
-                self.proj_data[var_idx] = var_min_arr
-                self.proj_data[var_idx+1] = var_max_arr
-
-            del self.flowpipe
-            Output.prominent("Deleting Flowpipe")
-
     def get_strat_flowpipe(self, strat):
         strat_flowpipe = []
         for bund_idx, bund in enumerate(self.flowpipe):
@@ -107,9 +87,6 @@ class FlowPipe:
     @returns array of volume data.
     """
     def get_volume_data(self, accum=True):
-        if self.volume_data:
-            return self.volume_data
-
         conv_hull_vol_data = np.empty(len(self.flowpipe))
         envelop_box_vol_data = np.empty(len(self.flowpipe))
         conv_hull_failed = False
@@ -141,7 +118,6 @@ class FlowPipe:
                 envelop_box_vol = vol_data.EnvelopBoxVol
 
             envelop_box_vol_data[idx] = envelop_box_vol
-
 
         return FlowpipeVolDataTup(conv_hull_vol_data, envelop_box_vol_data)
 
@@ -188,6 +164,25 @@ class FlowPipe:
             max_width[var_idx] = var_max
 
         return np.sum(min_width, axis=0), np.sum(max_width, axis=0)
+
+    """
+    Returns volume of the box hull of the entire flowpipe.
+    """
+    def calc_envelop_box_flowpipe_vol(self):
+        return calc_box_volume(self.__calc_envelop_box_flowpipe())
+
+    """
+    Calculates the box hull of the entire flowpipe.
+    """
+    def __calc_envelop_box_flowpipe(self):
+        flowpipe_envelop_box = [[np.Inf, -np.Inf]] * self.dim
+        for bund in self.flowpipe:
+            envelop_box = bund.getIntersect().calc_envelop_box()
+            for idx, (env_inter, flow_inter) in enumerate(zip(envelop_box, flowpipe_envelop_box)):
+                flowpipe_envelop_box[idx][0] = min(env_inter[0], flow_inter[0])
+                flowpipe_envelop_box[idx][1] = max(env_inter[1], flow_inter[1])
+
+        return flowpipe_envelop_box
 
     def __len__(self):
         return self.num_bunds

@@ -344,15 +344,23 @@ Object responsible for transforming Bundle objects according to input model's dy
 class BundleTransformer:
     """
     Constuctor for BundleTransformer
-    @params mode: mode for performing bundle transformations.
-    A value of BundleMode.OFO (1) indicates using the One-for-One transformation method.
-    Otherwise, a value of BundleMode.AFO (0) indicates using the All-for-One transformation method.
+    @params model: System model
+
+            mode: mode for performing bundle transformations.
+            A value of BundleMode.OFO (1) indicates using the One-for-One transformation method.
+            Otherwise, a value of BundleMode.AFO (0) indicates using the All-for-One transformation method.
+
+            offset_restrict_inter: interval to clip direction offsets. Default would be no clipping ([-Infinity, Infinity])
     """
 
-    def __init__(self, model, mode):
+    def __init__(self, model, mode, offset_restrict_inter):
         self.f = model.f
         self.vars = model.vars
         self.ofo_mode = mode
+
+        assert offset_restrict_inter[0] < offset_restrict_inter[1], \
+            "Lower interval value must be strictly smaller than the upper interval value."
+        self.offset_restrict_inter = offset_restrict_inter
 
     """
     Worker for parallelized bundle transformation. Each template's transformation is mapped to one process.
@@ -424,14 +432,15 @@ class BundleTransformer:
             new_offu[l_row] = min(ub, new_offu[l_row])
             new_offl[l_row] = min(lb, new_offl[l_row])
 
-        bund.offu = new_offu
-        bund.offl = new_offl
+        'Clip the values if self.offset_restrict_inter is set.'
+        bund.offu = np.clip(new_offu, None, self.offset_restrict_inter[1])
+        bund.offl = np.clip(new_offl, self.offset_restrict_inter[0], None)
 
         bund.canonize()
         return bund
 
     """
-    Find bounds for max c^Tf(x) over paralleltope
+    Find bounds for max c^Tf(x) over parallelotope
     @params: ptope: Parallelotope object to optimize over.
              dir_vec: direction vector
     @returns: upper bound, lower bound

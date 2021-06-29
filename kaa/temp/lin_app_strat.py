@@ -72,7 +72,6 @@ class AbstractLinStrat(TempStrategy):
         start_end_tup = [(t.start_point, t.end_point) for t in trajs]
 
         try:
-            raise np.linalg.LinAlgError
             approx_A = approx_lin_trans(start_end_tup, self.dim)
             # print(f"LEAST SQ Matrix Output: {approx_A}")
 

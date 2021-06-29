@@ -94,15 +94,23 @@ class PhasePlotExperiment(Experiment):
         self.separate = separate
         self.plot_border_traj = plot_border_traj
 
-    def populate_plot(self):
+    def populate_plot(self, output_flowpipe_box_hull):
         num_steps = self.max_num_steps
+
+        output_flowpipe_box_hull = [] if output_flowpipe_box_hull else None
 
         if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
 
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
-            self.plot.add(self.calc_flowpipe(experi_input))
+            flowpipe = self.calc_flowpipe(experi_input)
+            self.plot.add(flowpipe)
+
+            if output_flowpipe_box_hull:
+                output_flowpipe_box_hull.append(flowpipe.calc_envelop_box_flowpipe_vol())
+
+        return output_flowpipe_box_hull
 
     def plot_flowpipes(self, *var_tup, xlims, ylims):
         self.plot.plot({'type': 'Phase',
@@ -111,9 +119,10 @@ class PhasePlotExperiment(Experiment):
                         'xlims': xlims,
                         'ylims': ylims})
 
-    def execute(self, *var_tup, xlims=None, ylims=None):
-        self.populate_plot()
+    def execute(self, *var_tup, xlims=None, ylims=None, output_final_box_hull=False):
+        box_hull_vol = self.populate_plot(output_final_box_hull)
         self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
+        return box_hull_vol
 
 
 class InitReachPlotExperiment(Experiment):
@@ -265,8 +274,10 @@ class ProjectionPlotExperiment(Experiment):
         self.plot_border_traj = plot_border_traj
         self.plot_total_width_flag = plot_total_width
 
-    def populate_plot(self):
+    def populate_plot(self, output_final_proj_widths):
         num_steps = self.max_num_steps
+
+        final_proj_widths = [] if output_final_proj_widths else None
 
         if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
@@ -275,18 +286,40 @@ class ProjectionPlotExperiment(Experiment):
             self.print_input_params(experi_input)
 
             self.initialize_strat(experi_input, 10)
-            self.plot.add(self.calc_flowpipe(experi_input))
+            flowpipe = self.calc_flowpipe(experi_input)
+            self.plot.add(flowpipe)
 
-    def plot_flowpipes(self, *var_tup, xlims, ylims):
-        self.plot.plot({'type': 'Projection',
-                        'vars': var_tup,
-                        'plot_width_flag': self.plot_total_width_flag,
-                        'xlims': xlims,
-                        'ylims': ylims})
+            if output_final_proj_widths:
+                final_proj_widths.append(
+                    self.calc_final_flowpipe_width(flowpipe))
 
-    def execute(self, *var_tup, xlims=None, ylims=None):
-        self.populate_plot()
-        self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
+        return final_proj_widths
+
+    def calc_final_flowpipe_width(self, flowpipe):
+        final_widths = []
+        for var_idx in range(flowpipe.dim):
+            var_proj_min, var_proj_max = flowpipe.get_proj(var_idx)
+            final_widths.append(var_proj_max[-1] - var_proj_min[-1])
+
+        return final_widths
+
+    def plot_flowpipes(self, *var_tup, xlims, ylims, absolute_time):
+
+        plot_dict = {'type': 'Projection',
+                     'vars': var_tup,
+                     'plot_width_flag': self.plot_total_width_flag,
+                     'xlims': xlims,
+                     'ylims': ylims}
+
+        if absolute_time:
+            plot_dict['scale_factor'] = absolute_time
+
+        self.plot.plot(plot_dict)
+
+    def execute(self, *var_tup, xlims=None, ylims=None, abs_time=None, output_final_proj_widths=False):
+        final_widths = self.populate_plot(output_final_proj_widths)
+        self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims, absolute_time=abs_time)
+        return final_widths
 
 
 """
