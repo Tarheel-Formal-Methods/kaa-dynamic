@@ -27,8 +27,8 @@ def test_arch_CVDP():
     delta_one = 0.1
     delta_two = 0.1
 
-    num_steps_one = int(7 / delta_one) - 1
-    num_steps_two = int(8 / delta_two) - 1
+    num_steps_one = int(6 / delta_one) - 1
+    num_steps_two = int(6 / delta_two) - 1
     init_box_one = ((1.25, 1.55), (2.35, 2.45), (1.25, 1.55), (2.35, 2.45))
     init_box_two = ((1.55, 1.85), (2.35, 2.45), (1.55, 1.85), (2.35, 2.45))
 
@@ -49,7 +49,7 @@ def test_arch_CVDP():
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO,
-                            restrict_inter=(-5,5))
+                            restrict_inter=(-10,10))
 
     ran_static_strat_two = RandomDiagStaticStrat(model_two, 30)
     #pca_strat_two = SlidingPCAStrat(model_two, 10)
@@ -63,7 +63,7 @@ def test_arch_CVDP():
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO,
-                            restrict_inter=(-5,5))
+                            restrict_inter=(-10,10))
 
     experi = PhasePlotExperiment(experi_input_one, experi_input_two, label="CVDP20")
     experi_data = experi.execute(0, 1)
