@@ -38,32 +38,32 @@ def test_arch_CVDP():
     #pca_window_size = 10
     #lin_window_size = 0
 
-    ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
-    #pca_strat_one = SlidingPCAStrat(model_one, 10)
+    #ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
+    pca_strat_one = SlidingPCAStrat(model_one, 10)
 
     experi_input_one = dict(model=model_one,
-                            strat=ran_static_strat_one,
+                            strat= pca_strat_one ,
                             label=f"CVDP mu=1",
                             num_steps=num_steps_one,
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO,
-                            restrict_inter=(-10,10))
+                            restrict_inter=(-7,7))
 
-    ran_static_strat_two = RandomDiagStaticStrat(model_two, 30)
-    #pca_strat_two = SlidingPCAStrat(model_two, 10)
+    #ran_static_strat_two = RandomDiagStaticStrat(model_two, 30)
+    pca_strat_two = SlidingPCAStrat(model_two, 10)
 
 
     experi_input_two = dict(model=model_two,
-                            strat=ran_static_strat_two,
+                            strat=pca_strat_two,
                             label=f"CVDP mu=2",
                             num_steps=num_steps_two,
                             supp_mode = use_supp,
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO,
-                            restrict_inter=(-10,10))
+                            restrict_inter=(-7,7))
 
     experi = PhasePlotExperiment(experi_input_one, experi_input_two, label="CVDP20")
     experi_data = experi.execute(0, 1)
