@@ -87,8 +87,10 @@ def test_arch_LL():
                             trans_mode=BundleTransMode.AFO,
                             restrict_inter = (-10, 10))
 
-    experi = ProjectionPlotExperiment(experi_input_one, experi_input_two, experi_input_three)
-    box_hull_vols = experi.execute(3, ylims=(1.5,5), abs_time=20, output_final_proj_widths=True)
-    Output.prominent(f"Final Width for LALO21 W=0.01: {box_hull_vols[0][3]}")
-    Output.prominent(f"Final Width for LALO21 W=0.05: {box_hull_vols[1][3]}")
-    Output.prominent(f"Final Width for LALO21 W=0.1: {box_hull_vols[2][3]}")
+    experi = ProjectionPlotExperiment(experi_input_one, experi_input_two, experi_input_three, label="LALO20")
+    experi_data = experi.execute(3, ylims=(1.5,5), abs_time=20)
+    Output.prominent(f"Final Width for LALO21 W=0.01: {experi_data[0][1][3]}")
+    Output.prominent(f"Final Width for LALO21 W=0.05: {experi_data[1][1][3]}")
+    Output.prominent(f"Final Width for LALO21 W=0.1: {experi_data[2][1][3]}")
+
+    return experi_data

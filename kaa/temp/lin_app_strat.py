@@ -3,7 +3,7 @@ from itertools import product
 import random as rand
 
 from kaa.templates import TempStrategy, GeneratedDirs
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.log import Output
 from kaa.timer import Timer
 

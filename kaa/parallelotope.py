@@ -1,11 +1,7 @@
 import numpy as np
-import multiprocessing as mp
-import random
 
 from kaa.linearsystem import LinearSystem
-from kaa.lputil import minLinProg, maxLinProg
 from kaa.timer import Timer
-from kaa.settings import KaaSettings
 
 """
 Object encapsulating routines calculating properties of parallelotopes.

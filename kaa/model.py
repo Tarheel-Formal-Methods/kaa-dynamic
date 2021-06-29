@@ -1,10 +1,10 @@
 from sympy.utilities.lambdify import lambdify
 from kaa.opts.kodiak import KodiakProd
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.bundle import Bundle
 
 if KaaSettings.OptProd is KodiakProd:
-    from kaa.pykodiak.pykodiak_interface import Kodiak
+    pass
 
 class Model:
 

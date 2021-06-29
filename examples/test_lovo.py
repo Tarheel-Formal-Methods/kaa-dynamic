@@ -30,7 +30,7 @@ def test_arch_LOVO21():
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO)
 
-    experi = PhasePlotExperiment(experi_input_one)
-    box_hull_vols = experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4), output_final_box_hull=True)
-    Output.prominent(f"Box hull for LOVO21: {box_hull_vols[0]}")
-    Timer.generate_stats()
+    experi = PhasePlotExperiment(experi_input_one, label="LOVO21")
+    experi_data = experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4))
+    Output.prominent(f"Box hull for LOVO21: {experi_data[0][1]}")
+    return experi_data

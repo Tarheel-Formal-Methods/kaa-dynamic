@@ -3,7 +3,7 @@ from datetime import datetime
 from collections import OrderedDict
 import csv
 
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 
 
 class CovidDataLoader:

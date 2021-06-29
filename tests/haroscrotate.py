@@ -4,10 +4,8 @@ import numpy as np
 from kaa.model import Model
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
-from kaa.settings import KaaSettings, PlotSettings
+from settings import KaaSettings, PlotSettings
 
-from kaa.temp.pca_strat import PCAStrat
-from kaa.bundle import BundleMode
 from kaa.timer import Timer
 
 KaaSettings.SupressOutput = False

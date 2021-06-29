@@ -4,11 +4,10 @@ import numpy as np
 from tqdm import tqdm
 
 from kaa.timer import Timer
-from kaa.bundle import Bundle, BundleTransformer, BundleTransMode
+from kaa.bundle import BundleTransformer, BundleTransMode
 from kaa.flowpipe import FlowPipe
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.templates import StaticStrat, MultiStrategy
-from kaa.log import Output
 
 
 class ReachError:
@@ -82,6 +81,7 @@ class ReachSet:
         if not isinstance(self.strat, MultiStrategy):
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
 
+        self.flowpipe.total_comp_time = Timer.generate_stats()
         return self.flowpipe
 
     def check_reach_size(self, bund, threshold):

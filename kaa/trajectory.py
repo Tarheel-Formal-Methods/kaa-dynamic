@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import ConvexHull
 
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 
 """
 Wrapper around list for representing arbitrary trajectories of a system.

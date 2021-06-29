@@ -8,9 +8,9 @@ from functools import reduce
 from collections import namedtuple
 
 from kaa.lputil import minLinProg, maxLinProg, LPUtil
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.trajectory import Traj, TrajCollection
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.log import Output
 
 VolDataTuple = namedtuple('VolDataTuple', ['ConvHullVol', 'EnvelopBoxVol'])
@@ -205,7 +205,7 @@ class LinearSystem:
             output_queue = mp.Manager().Queue()
             input_params = [(point, steps, output_queue) for point in initial_points]
 
-            p = mp.Pool(processes=KaaSettings.ThreadCount)
+            p = mp.Pool()
             p.starmap(self.create_traj, input_params)
             p.close()
             p.join()
@@ -241,7 +241,7 @@ class LinearSystem:
             for dir_vec in dir_vecs:
                 input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
 
-            p = mp.Pool(processes=KaaSettings.ThreadCount)
+            p = mp.Pool()
             p.starmap(self.generate_supp_worker, input_params)
             p.close()
             p.join()

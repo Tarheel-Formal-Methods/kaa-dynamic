@@ -6,7 +6,7 @@ from kaa.templates import MultiStrategy
 from kaa.experiment import *
 from kaa.experi_init import *
 
-from kaa.settings import PlotSettings, KaaSettings
+from settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
 
 def test_sapo_Neuron():

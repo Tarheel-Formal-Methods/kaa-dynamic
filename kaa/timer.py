@@ -3,7 +3,7 @@ from functools import reduce
 from operator import add
 from pptree import print_tree, Node
 from kaa.log import Output
-from kaa.settings import DebugSettings
+from settings import DebugSettings
 
 """
 Timer object containing duration data.

@@ -1,3 +1,5 @@
+import os
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 """
 Simple settings file for the in-and-outs of Kaa.
@@ -25,13 +27,10 @@ class KaaSettings:
     SaveStateonError = True
 
     'Path for data directory to save all xlsx files from experiments.'
-    DataDir = "/home/edward/work/kaa-dynamic/data"
+    DataDir = os.path.join(ROOT_DIR, "data")
 
     'Flag to trigger enveloping box threshold checking'
     UseThreshold = False
-
-    "Number of threads to instantiate when running parallel routines."
-    ThreadCount = 16
 
     'Run Normalization method if condition number becomes too large.'
     NormalizeLinDir = True
@@ -47,10 +46,10 @@ class PlotSettings:
     PlotFont = 27
 
     'Toggle to save the figures to disk'
-    save_fig = False
+    save_fig = True
 
     'Path to save figures'
-    default_fig_path = "/home/edward/work/kaa-dynamic/figures"
+    default_fig_path = os.path.join(ROOT_DIR, "figures")
 
     'Figure dimensions'
     fig_size = (60, 60)

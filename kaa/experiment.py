@@ -8,7 +8,7 @@ import os
 from kaa.reach import ReachSet
 from kaa.plotutil import *
 from kaa.trajectory import Traj, TrajCollection
-from kaa.settings import PlotSettings, KaaSettings
+from settings import PlotSettings, KaaSettings
 from kaa.templates import MultiStrategy, GeneratedDirs
 from kaa.temp.pca_strat import AbstractPCAStrat, GeneratedPCADirs
 from kaa.temp.lin_app_strat import AbstractLinStrat, GeneratedLinDirs
@@ -153,11 +153,12 @@ class Experiment(ABC):
 
     def __init__(self, *inputs, label=""):
         self.inputs = inputs
-        self.plot = Plot()
 
         'Assuming that all models use the same dynamics and same initial set for now'
         self.model = inputs[0]['model']
         self.label = label
+        self.plot = Plot(label=self.label)
+
 
     """
     Execute experiment and dump results into spreadsheet.
@@ -295,7 +296,6 @@ class Experiment(ABC):
             if strat is not None:
                 strat.reset()
 
-            Timer.generate_stats()
             return mod_flow
 
         except Exception as excep:

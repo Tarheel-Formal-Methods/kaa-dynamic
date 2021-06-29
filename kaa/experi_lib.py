@@ -84,33 +84,33 @@ class DeviationExperiment(Experiment):
 
 """
 Experiment to calculate and plot the phase plot.
+Invest in thinking about dictionaries to encap all outputted data.
 """
 
 
 class PhasePlotExperiment(Experiment):
 
-    def __init__(self, *inputs, separate=False, plot_border_traj=False):
-        super().__init__(*inputs)
+    def __init__(self, *inputs, separate=False, plot_border_traj=False, label=""):
+        super().__init__(*inputs, label=label)
         self.separate = separate
         self.plot_border_traj = plot_border_traj
 
-    def populate_plot(self, output_flowpipe_box_hull):
+    def populate_plot(self):
         num_steps = self.max_num_steps
-
-        output_flowpipe_box_hull = [] if output_flowpipe_box_hull else None
 
         if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
 
+        flowpipe_data = []
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)
             flowpipe = self.calc_flowpipe(experi_input)
             self.plot.add(flowpipe)
 
-            if output_flowpipe_box_hull:
-                output_flowpipe_box_hull.append(flowpipe.calc_envelop_box_flowpipe_vol())
+            flowpipe_data.append((flowpipe.total_comp_time,
+                                  flowpipe.calc_envelop_box_flowpipe_vol()))
 
-        return output_flowpipe_box_hull
+        return flowpipe_data
 
     def plot_flowpipes(self, *var_tup, xlims, ylims):
         self.plot.plot({'type': 'Phase',
@@ -119,10 +119,10 @@ class PhasePlotExperiment(Experiment):
                         'xlims': xlims,
                         'ylims': ylims})
 
-    def execute(self, *var_tup, xlims=None, ylims=None, output_final_box_hull=False):
-        box_hull_vol = self.populate_plot(output_final_box_hull)
+    def execute(self, *var_tup, xlims=None, ylims=None):
+        flowpipe_data = self.populate_plot()
         self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
-        return box_hull_vol
+        return flowpipe_data
 
 
 class InitReachPlotExperiment(Experiment):
@@ -268,20 +268,19 @@ Experiment to calculate and plot the projection reachable sets.
 
 class ProjectionPlotExperiment(Experiment):
 
-    def __init__(self, *inputs, separate=False, plot_border_traj=False, plot_total_width=False):
-        super().__init__(*inputs)
+    def __init__(self, *inputs, separate=False, plot_border_traj=False, plot_total_width=False, label=""):
+        super().__init__(*inputs, label=label)
         self.separate_flag = separate
         self.plot_border_traj = plot_border_traj
         self.plot_total_width_flag = plot_total_width
 
-    def populate_plot(self, output_final_proj_widths):
+    def populate_plot(self):
         num_steps = self.max_num_steps
-
-        final_proj_widths = [] if output_final_proj_widths else None
 
         if self.plot_border_traj:
             self.plot.add(self.simulate_border_points(num_steps))
 
+        flowpipe_data = []
         for experi_input in self.inputs:
             self.print_input_params(experi_input)
 
@@ -289,11 +288,10 @@ class ProjectionPlotExperiment(Experiment):
             flowpipe = self.calc_flowpipe(experi_input)
             self.plot.add(flowpipe)
 
-            if output_final_proj_widths:
-                final_proj_widths.append(
-                    self.calc_final_flowpipe_width(flowpipe))
+            flowpipe_data.append((flowpipe.total_comp_time,
+                                  self.calc_final_flowpipe_width(flowpipe)))
 
-        return final_proj_widths
+        return flowpipe_data
 
     def calc_final_flowpipe_width(self, flowpipe):
         final_widths = []
@@ -316,10 +314,10 @@ class ProjectionPlotExperiment(Experiment):
 
         self.plot.plot(plot_dict)
 
-    def execute(self, *var_tup, xlims=None, ylims=None, abs_time=None, output_final_proj_widths=False):
-        final_widths = self.populate_plot(output_final_proj_widths)
+    def execute(self, *var_tup, xlims=None, ylims=None, abs_time=None):
+        flowpipe_data = self.populate_plot()
         self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims, absolute_time=abs_time)
-        return final_widths
+        return flowpipe_data
 
 
 """

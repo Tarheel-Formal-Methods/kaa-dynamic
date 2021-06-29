@@ -74,7 +74,7 @@ def test_arch_Chem():
                               pregen_mode = use_pregen,
                               num_trajs=num_trajs,
                               trans_mode=BundleTransMode.AFO,
-                            restrict_inter=(-5,5))
+                              restrict_inter=(-5,5))
 
     experi = ProjectionPlotExperiment(experi_input_one, experi_input_two, experi_input_three, plot_total_width=True)
     experi.execute(ylims=(0.999,1.001))

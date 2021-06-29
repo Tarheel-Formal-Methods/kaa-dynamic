@@ -7,9 +7,8 @@ from enum import Enum
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
 from kaa.linearsystem import LinearSystem, intersect
-from kaa.settings import KaaSettings
+from settings import KaaSettings
 from kaa.timer import Timer
-from kaa.log import Output
 
 from kaa.opts.kodiak import KodiakProd
 from kaa.opts.bernstein import BernsteinProd
@@ -416,7 +415,7 @@ class BundleTransformer:
         input_params = [(row_ind, row, bund, L, output_queue) for row_ind, row in enumerate(T)]
 
         if KaaSettings.Parallelize:
-            p = mp.Pool(processes=KaaSettings.ThreadCount)
+            p = mp.Pool()
             p.starmap(self.bound_worker, input_params)
             p.close()
             p.join()

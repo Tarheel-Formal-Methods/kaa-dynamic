@@ -4,7 +4,7 @@ from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
 from kaa.experi_lib import *
 
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 from itertools import product
 
 PlotSettings.save_fig = False

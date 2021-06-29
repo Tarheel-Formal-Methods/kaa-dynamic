@@ -11,7 +11,7 @@ from kaa.timer import Timer
 from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.pca_strat import PCAStrat
 from kaa.bundle import BundleMode
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 
 PlotSettings.save_fig = False
 

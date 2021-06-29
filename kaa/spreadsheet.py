@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import date
 import os
 
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 
 class SpreadSheetTable:
 

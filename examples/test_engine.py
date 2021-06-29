@@ -1,12 +1,6 @@
 from models.jetengine import JetEngine_UnitBox, JetEngine
-from kaa.temp.pca_strat import *
-from kaa.temp.lin_app_strat import *
-from kaa.temp.random_static_strat import *
-from kaa.templates import MultiStrategy
-from kaa.experiment import *
 from kaa.experi_init import *
 
-from kaa.settings import PlotSettings, KaaSettings
 from kaa.timer import Timer
 
 def test_box_JetEngine():

@@ -1,11 +1,7 @@
 import numpy as np
 from collections import namedtuple
-from enum import Enum, auto
 
 from kaa.timer import Timer
-from kaa.settings import PlotSettings
-from kaa.templates import MultiStrategy
-from kaa.log import Output
 from kaa.linearsystem import calc_box_volume
 
 FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
@@ -25,6 +21,7 @@ class FlowPipe:
         self.dim = model.dim
         self.label = label
         self.error = None
+        self.total_comp_time = 0
 
     """
     Returns a list of strategies which were acting during the reachable set

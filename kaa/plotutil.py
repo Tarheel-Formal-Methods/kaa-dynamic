@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as pat
 import matplotlib.animation as animate
 from matplotlib.ticker import MultipleLocator
-from matplotlib.legend import Legend
 from pathlib import Path
 from datetime import date
 from itertools import groupby
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from kaa.settings import PlotSettings
-from kaa.trajectory import TrajCollection, Traj
+from settings import PlotSettings
+from kaa.trajectory import TrajCollection
 from kaa.flowpipe import FlowPipe
 from kaa.timer import Timer
 
@@ -532,11 +531,12 @@ Object containing matplotlib figure and relevant settings and data along one axi
 
 class Plot:
 
-    def __init__(self):
+    def __init__(self, label="Figure"):
         self.flowpipes = []
         self.trajs = []
         self.model = None
         self.num_steps = -1
+        self.label = label
 
     """
     Add plottable object.
@@ -621,7 +621,7 @@ class Plot:
 
         # figure_name = "Kaa{}Phase{}--{}.png".format(self.model.name, self.__create_strat_str())
 
-        self.__plot_figure(figure, "Fig")
+        self.__plot_figure(figure)
 
     """
     Adds trajectory to be plotted.
@@ -672,10 +672,10 @@ class Plot:
             filename: filename string to save to disk
     """
 
-    def __plot_figure(self, figure, filename):
+    def __plot_figure(self, figure):
         fig_path = self.__gen_plot_directory()
         if PlotSettings.save_fig:
-            figure.savefig(os.path.join(fig_path, filename), format='png')
+            figure.savefig(os.path.join(fig_path, self.label), format='png')
         else:
             plt.show()
 

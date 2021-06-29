@@ -8,7 +8,7 @@ from models.basic.basic2 import Basic2
 
 from kaa.reach import ReachSet
 from kaa.timer import Timer
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 from kaa.plotutil import Plot
 from kaa.temp.pca_strat import PCAStrat
 

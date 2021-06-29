@@ -5,12 +5,10 @@ from kaa.plotutil import Plot
 from models.sir import SIR_UnitBox, SIR
 from models.rossler import Rossler, Rossler_UnitBox
 from models.lotkavolterra import LotkaVolterra, LotkaVolterra_UnitBox
-from models.quadcopter import Quadcopter, Quadcopter_UnitBox
 
 from kaa.timer import Timer
-from kaa.experiutil import generate_traj, sup_error_bounds
 from kaa.temp.lin_app_strat import LinStrat
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 
 NUM_STEPS = 3
 ITER_SPREAD = 2

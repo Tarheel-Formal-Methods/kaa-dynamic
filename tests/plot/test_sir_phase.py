@@ -1,6 +1,6 @@
 from kaa.reach import ReachSet
 from kaa.plotutil import Plot
-from kaa.settings import PlotSettings
+from settings import PlotSettings
 
 from models.sir import SIR, SIR_UnitBox
 
