@@ -13,8 +13,8 @@ def run_all_benchmarks():
 
         print("Running CVDP20")
         cvdp_data = test_arch_CVDP()
-        writer.writerow(['Kaa', 'CVDP20', 'mu1', 0, cvdp_data[0][0], cvdp_data[0][1]])
-        writer.writerow(['Kaa', 'CVDP20', 'mu2', 0, cvdp_data[1][0], cvdp_data[1][1]])
+        writer.writerow(['Kaa', 'CVDP20', 'mu1', 0, cvdp_data[0][0]])
+        writer.writerow(['Kaa', 'CVDP20', 'mu2', 0, cvdp_data[1][0]])
 
         print("Running LAL020")
         ll_data = test_arch_LL()
