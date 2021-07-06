@@ -2,7 +2,8 @@ from models.lovo import LOVO_UnitBox
 from kaa.log import Output
 from kaa.experi_init import *
 from kaa.timer import Timer
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
+
 
 def test_arch_LOVO21():
     use_supp = True

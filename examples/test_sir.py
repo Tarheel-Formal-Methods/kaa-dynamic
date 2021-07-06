@@ -9,7 +9,8 @@ from kaa.timer import Timer
 from kaa.trajectory import Traj
 from kaa.experi_init import *
 
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
+
 
 def test_sapo_SIR():
     num_steps = 150

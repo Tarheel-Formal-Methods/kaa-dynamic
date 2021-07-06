@@ -41,4 +41,4 @@ class HarOsc(Model):
             offl[i] = - init_box[i][0]
 
 
-        super().__init__(dyns, vars, T, L, offu, offl, name="HarOsc")
+        super().__init__(dyns, vars, 0.1, T, L, init_box, offl, offu, name="HarOsc")

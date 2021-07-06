@@ -3,7 +3,7 @@ import numpy as np
 from kaa.trajectory import Traj, TrajCollection
 from kaa.log import Output
 from kaa.experiment import Experiment
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
 from kaa.temp.random_static_strat import RandomStaticStrat
 from kaa.temp.diag_static_strat import RandomDiagStaticStrat
 from kaa.temp.lin_app_strat import SlidingLinStrat
@@ -177,7 +177,10 @@ class InitReachVSRandomPlotExperiment(Experiment):
         if self.precalc_vals:
             assert len(self.precalc_vals) == len(
                 self.inputs), "Averaged precalculated flowpipe values must correspond to each input."
-            return (ran_label, calc_box_volume(input_model.init_box), self.precalc_vals[input_idx])
+
+            return (ran_label,
+                    calc_box_volume(input_model.init_box),
+                    self.precalc_vals[input_idx])
 
         trial_vol_arr = np.empty(self.num_trials)
 
@@ -195,8 +198,6 @@ class InitReachVSRandomPlotExperiment(Experiment):
 
             self.print_input_params(ran_experi_input, trial_num=trial)
             trial_vol_arr[trial] = self.calc_flowpipe(ran_experi_input).total_volume
-            # spreadsheet.save_data_into_sheet(ran_label, trial_num, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
-
             Output.write(f"INPUT: {input_model.init_box} Trial {trial}: {trial_vol_arr[trial]}")
 
         return ran_label, calc_box_volume(input_model.init_box), np.average(trial_vol_arr)
@@ -289,20 +290,12 @@ class ProjectionPlotExperiment(Experiment):
             self.plot.add(flowpipe)
 
             flowpipe_data.append((flowpipe.total_comp_time,
-                                  self.calc_final_flowpipe_width(flowpipe)))
+                                  flowpipe.calc_final_flowpipe_width(flowpipe)))
 
         return flowpipe_data
 
-    def calc_final_flowpipe_width(self, flowpipe):
-        final_widths = []
-        for var_idx in range(flowpipe.dim):
-            var_proj_min, var_proj_max = flowpipe.get_proj(var_idx)
-            final_widths.append(var_proj_max[-1] - var_proj_min[-1])
-
-        return final_widths
 
     def plot_flowpipes(self, *var_tup, xlims, ylims, absolute_time):
-
         plot_dict = {'type': 'Projection',
                      'vars': var_tup,
                      'plot_width_flag': self.plot_total_width_flag,

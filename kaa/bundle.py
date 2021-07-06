@@ -2,7 +2,6 @@ import numpy as np
 import sympy as sp
 import multiprocessing as mp
 import warnings
-from enum import Enum
 
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
@@ -323,17 +322,6 @@ class Bundle:
 
         return Bundle(self.model, new_T, new_L, new_offu, new_offl)
     """
-
-
-"""
-Wrapper over bundle transformation modes.
-"""
-
-
-class BundleTransMode(Enum):
-    AFO = False
-    OFO = True
-
 
 """
 Object responsible for transforming Bundle objects according to input model's dynamics.

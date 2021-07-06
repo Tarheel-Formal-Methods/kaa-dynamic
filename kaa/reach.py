@@ -4,7 +4,8 @@ import numpy as np
 from tqdm import tqdm
 
 from kaa.timer import Timer
-from kaa.bundle import BundleTransformer, BundleTransMode
+from kaa.bundle import BundleTransformer
+from kaa.modes import BundleTransMode
 from kaa.flowpipe import FlowPipe
 from settings import KaaSettings
 from kaa.templates import StaticStrat, MultiStrategy

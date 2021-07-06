@@ -2,7 +2,8 @@ from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.experiment import *
 from kaa.experi_init import *
 from kaa.timer import Timer
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
+
 
 def test_sapo_VDP():
     num_steps = 70

@@ -4,7 +4,8 @@ from kaa.templates import MultiStrategy
 
 from models.LL import LL, LL_UnitBox
 from kaa.log import Output
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
+
 
 def test_LL():
     num_steps = 200

@@ -8,10 +8,10 @@
 #
 # after that, you can use cmake to generate the makefiles as normal, then do 'make KodiakStatic' to create the .a file
 # If you don't do this, the pykodiak.so file won't link (it will complain that -fPIC was missing in Kodiak code)
-KODIAK_LIB= /home/edward/work/Kodiak/build/libkodiak.a
+KODIAK_LIB= /Users/edwardkim/Work/Kodiak/build/libkodiak.a
 
 # set this to the path to the kodiak header files
-KODIAK_INCLUDE= /home/edward/work/Kodiak/src
+KODIAK_INCLUDE= /Users/edwardkim/Work/Kodiak/src
 
 OUTPUT=pykodiak.so
 

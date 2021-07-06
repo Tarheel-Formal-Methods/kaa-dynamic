@@ -181,6 +181,19 @@ class FlowPipe:
 
         return flowpipe_envelop_box
 
+    """
+    Calculates the widths of the final bundle in the flowpipe. That is, the width along
+    an axis is the maximum value of projection of the bundle along that axis minus its 
+    corresponding minimum.
+    """
+    def calc_final_flowpipe_widths(self):
+        final_widths = []
+        for var_idx in range(self.dim):
+            var_proj_min, var_proj_max = self.get_proj(var_idx)
+            final_widths.append(var_proj_max[-1] - var_proj_min[-1])
+
+        return final_widths
+
     def __len__(self):
         return self.num_bunds
 

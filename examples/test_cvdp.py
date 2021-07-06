@@ -1,7 +1,7 @@
 from models.cvdp import CoupledVDP_UnitBox, CoupledVDP
 from kaa.experi_init import *
 from kaa.timer import Timer
-from kaa.bundle import BundleTransMode
+from kaa.modes import BundleTransMode
 from kaa.temp.diag_static_strat import RandomDiagStaticStrat
 from kaa.templates import MultiStrategy
 

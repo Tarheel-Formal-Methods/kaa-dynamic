@@ -99,8 +99,6 @@ def test_sliding_pca_HarOsc():
 
     experi = PhasePlotExperiment(experi_input1, experi_input2)
     experi.execute()
-    #print(pca_dirs.dir_mat)
-    #print(len(pca_dirs.dir_mat))
     experi.plot_results(0,1, separate=False)
 
     Timer.generate_stats()
