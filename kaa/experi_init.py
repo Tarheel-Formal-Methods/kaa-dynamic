@@ -1,6 +1,7 @@
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.experi_lib import *
+from kaa.modes import BundleTransMode
 
 """
 Generates random points through the generators of the initial box and checking membership. Could be extremely time-consuming if the intersection is thin.
@@ -86,7 +87,8 @@ def test_equal_sliding_strat(model, num_steps, vars=(0,1)):
                         pregen_mode = use_pregen,
                         num_trajs=num_trajs,
                         num_steps=num_steps-1,
-                        max_steps=num_steps)
+                        max_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
 
     if use_supp:
         file_identifier = "(SUPP)"
@@ -113,11 +115,12 @@ def test_vol_comp(model, num_steps, num_trajs, num_trials=10, use_supp=True, use
         experi_input = dict(model=model,
                             strat=MultiStrategy(pca_strat, lin_strat),
                             label=f"SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                            supp_mode = use_supp,
-                            pregen_mode = use_pregen,
+                            supp_mode=use_supp,
+                            pregen_mode=use_pregen,
                             num_trajs=num_trajs,
                             num_steps=num_steps-1,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -129,7 +132,8 @@ def test_vol_comp(model, num_steps, num_trajs, num_trials=10, use_supp=True, use
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             num_steps=num_steps-1,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -144,7 +148,7 @@ def test_vol_comp(model, num_steps, num_trajs, num_trials=10, use_supp=True, use
     experi.execute(accum=True, plot_all_vol=True)
 
 
-def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, incre=2, num_trials=10, use_supp=True, use_pregen=False, use_sapo=None):
+def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, incre=2, num_trials=10, use_supp=True, use_pregen=False, use_sapo=None, mode="Plot"):
     if use_supp:
         num_trials = 1
 
@@ -162,7 +166,8 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, in
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             num_steps=num_steps-1,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -174,7 +179,8 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, in
                             pregen_mode = use_pregen,
                             num_trajs=num_trajs,
                             num_steps=num_steps-1,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -185,7 +191,13 @@ def test_skewed_sliding_strat_comb(model, num_steps, num_trajs, num_temps=20, in
     else:
         file_identifier = "(RAND)"
 
-    experi = VolumePlotExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    if mode == "Data":
+        experi = VolumeDataExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    elif mode == "Plot":
+        experi = VolumePlotExperiment(*inputs, label=f"SlidingCombination {model.name} {file_identifier}")
+    else:
+        Output.prominent("Experiment mode should be set to either \"Data\" or \"Plot\"")
+        exit()
     experi.execute()
 
 def test_ran_diag_static(model, num_steps, num_temps, num_trials=10, use_supp=True, use_pregen=False):
@@ -193,11 +205,12 @@ def test_ran_diag_static(model, num_steps, num_temps, num_trials=10, use_supp=Tr
     experi_input = dict(model=model,
                         strat=RandomDiagStaticStrat(model, num_temps),
                         label=f"Random Diag Static Strat Num Trials: {num_trials}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
+                        supp_mode=use_supp,
+                        pregen_mode=use_pregen,
                         num_trajs=5000,
                         num_steps=num_steps,
-                        max_steps=num_steps)
+                        max_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
 
     if use_supp:
         file_identifier = "(SUPP)"
@@ -221,11 +234,12 @@ def test_one_one_strat_pca(model, num_steps, num_trajs, num_trials=10, use_supp=
         experi_input1 = dict(model=model,
                              strat=MultiStrategy(pca_strat1, lin_strat1, experi_strat1),
                              label=f"PCA with Box and 1-1 Temp for {pca_step} steps",
-                             supp_mode = use_supp,
-                             pregen_mode = use_pregen,
+                             supp_mode=use_supp,
+                             pregen_mode=use_pregen,
                              num_trajs=num_trajs,
                              num_steps=num_steps-1,
-                             max_steps=num_steps)
+                             max_steps=num_steps,
+                             trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input1)
 
@@ -255,7 +269,8 @@ def test_one_one_strat_lin(model, num_steps, num_trajs, num_trials=10, use_supp=
                              pregen_mode = use_pregen,
                              num_trajs=num_trajs,
                              num_steps=num_steps-1,
-                             max_steps=num_steps)
+                             max_steps=num_steps,
+                             trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input1)
 
@@ -288,7 +303,8 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS-1,
-                            max_steps=NUM_STEPS)
+                            max_steps=NUM_STEPS,
+                            trans_mode=BundleTransMode.AFO)
         inputs.append(experi_input)
 
     for lifespan in range(LIFE_INCREMENT-1, 0, -1): #model tossed around too many times.
@@ -300,7 +316,8 @@ def test_sliding_pca(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJ,
                             num_steps=NUM_STEPS-1,
-                            max_steps=NUM_STEPS)
+                            max_steps=NUM_STEPS,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -333,7 +350,8 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
-                            max_steps=NUM_STEPS)
+                            max_steps=NUM_STEPS,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -346,7 +364,8 @@ def test_sliding_lin(model, max_life, num_steps, num_trajs, life_incre=5, num_tr
                             pregen_mode = use_pregen,
                             num_trajs=NUM_TRAJS,
                             num_steps=NUM_STEPS-1,
-                            max_steps=NUM_STEPS)
+                            max_steps=NUM_STEPS,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -373,7 +392,8 @@ def test_comb_stdev_reduction(model, num_steps, num_trials=10, use_supp=True, us
                             label=f"PCA Step 1 and Lin Step 1 with NUM_TRAJ:{num_trajs}",
                             pregen_mode = True,
                             num_trajs=num_trajs,
-                            num_steps=num_steps)
+                            num_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -408,7 +428,8 @@ def find_pca_variation(model, num_steps, num_trials=10, max_num_trajs=8000, labe
                             num_trajs=num_trajs,
                             pregen_mode = True,
                             num_steps=num_steps,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
 
         inputs.append(experi_input)
 
@@ -424,7 +445,8 @@ def find_lin_variation(model, num_steps, num_trials=1, max_num_trajs=8000, label
                             pregen_mode = True,
                             num_trajs=num_trajs,
                             num_steps=num_steps,
-                            max_steps=num_steps)
+                            max_steps=num_steps,
+                            trans_mode=BundleTransMode.AFO)
         inputs.append(experi_input)
 
     experi = DeviationExperiment(*inputs, "LinDev", label=label)

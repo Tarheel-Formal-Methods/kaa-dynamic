@@ -5,7 +5,7 @@ from kaa.model import Model
 
 class InvertPend(Model):
 
-    def __init__(self, delta = 0.1, init_box=[[0,1],[0,1]]):
+    def __init__(self, delta = 0.1, init_box=((0.25,0.3),(0.25, 0.3))):
 
         x,y = sp.Symbol('x'), sp.Symbol('y')
 
@@ -15,22 +15,59 @@ class InvertPend(Model):
         dyns  = [dx, dy]
         vars = [x, y]
 
-        L = np.empty((2,2))
-        T = np.empty((1,2))
+        dim_sys = 2
+        num_dirs = 4
+        num_temps = 6
+
+        L = np.zeros((num_dirs, dim_sys))
+
+        L[0][0] = 1
+        L[1][1] = 1
+        L[2][0] = -1; L[2][1] = 1;
+        L[3][0] = 1; L[3][1] = 1;
+
+        T = np.zeros((num_temps, dim_sys))
+        T[0][0] = 0; T[0][1] = 1;
+        T[1][0] = 0; T[1][1] = 2;
+        T[2][0] = 0; T[2][1] = 3;
+        T[3][0] = 1; T[3][1] = 2;
+        T[4][0] = 1; T[4][1] = 3;
+        T[5][0] = 2; T[5][1] = 3;
+
+        offu = np.zeros(num_dirs);
+        offl = np.zeros(num_dirs);
+
+        offu[2] = 10; offl[2] = 10;
+        offu[3] = 10; offl[3] = 10;
+
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="InvertPend")
 
 
-        L[0] = [1, 0]
-        L[1] = [0, 1]
+class InvertPend_UnitBox(Model):
 
-        T[0][0] = 0
-        T[0][1] = 1
+    def __init__(self, delta = 0.1, init_box=((0.25,0.3),(0.25, 0.3))):
 
-        offu = np.empty(2)
-        offl = np.empty(2)
+        x,y = sp.Symbol('x'), sp.Symbol('y')
 
-        for i in range(2):
-            offu[i] = init_box[i][1]
-            offl[i] = - init_box[i][0]
+        dx = x + y * delta
+        dy = y + (-0.2*y - sp.sin(x)) * delta
+        ((0.25, 0.3), (0.25, 0.3))
+        vars = (x,y)
+        dyns = (dx, dy)
 
+        dim_sys = 2
+        num_dirs = 2
+        num_temps = 1
 
-        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="HarOsc")
+        L = np.zeros((num_dirs, dim_sys))
+
+        L[0][0] = 1
+        L[1][1] = 1
+
+        T = np.zeros((num_temps, dim_sys))
+        T[0][0] = 0; T[0][1] = 1;
+
+        offu = np.zeros(num_dirs);
+        offl = np.zeros(num_dirs);
+
+        super().__init__(dyns, vars, delta, T, L, init_box, offl, offu, name="InvertPend")

@@ -1,5 +1,4 @@
 from models.vanderpol import VanDerPol, VanDerPol_UnitBox
-from kaa.experiment import *
 from kaa.experi_init import *
 from kaa.timer import Timer
 from kaa.modes import BundleTransMode
@@ -9,7 +8,6 @@ def test_sapo_VDP():
     num_steps = 70
 
     model = VanDerPol(delta=0.08,init_box=((0, 0.05),(1.95, 2)))
-
     experi_input = dict(model=model,
                         strat=None,
                         label=f"Sapo's Reachable Set",
@@ -31,11 +29,10 @@ def test_sapo_vol_VDP():
     experi_input = dict(model=model, #Encompass strat initilizations?
                         strat=None,
                         label="SapoVDP",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
+                        supp_mode=use_supp,
+                        pregen_mode=use_pregen,
                         num_trajs=num_trajs,
                         num_steps=num_steps-1,
-                        max_steps=num_steps,
                         trans_mode=BundleTransMode.AFO)
 
     harosc = VolumePlotExperiment(experi_input)
@@ -59,8 +56,8 @@ def test_sliding_phase_plot_VDP():
     experi_input = dict(model=model,
                         strat=MultiStrategy(pca_strat, lin_strat),
                         label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
-                        supp_mode = use_supp,
-                        pregen_mode = use_pregen,
+                        supp_mode=use_supp,
+                        pregen_mode=use_pregen,
                         num_trajs=num_trajs,
                         num_steps=num_steps)
 
@@ -107,8 +104,6 @@ def test_OFO_vs_AFO_phase_plot_VDP():
                         num_trajs=num_trajs,
                         num_steps=num_steps,
                         trans_mode=BundleTransMode.OFO)
-
-
 
     if use_supp:
         file_identifier = "(SUPP)"

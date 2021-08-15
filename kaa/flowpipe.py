@@ -1,11 +1,19 @@
 import numpy as np
 from collections import namedtuple
+from dataclasses import dataclass
 
 from kaa.timer import Timer
 from kaa.linearsystem import calc_box_volume
 
-FlowpipeVolDataTup = namedtuple('FlowpipeVolDataTup', ['FlowpipeConvHullVol', 'FlowpipeEnvelopBoxVol'])
-TotalFlowpipeVolTup = namedtuple('FlowpipeVolDataTup', ['TotalFlowpipeConvHullVol', 'TotalFlowpipeEnvelopBoxVol'])
+@dataclass
+class FlowpipeVolData:
+    flowpipe_conv_hull_vol_array: np.ndarray
+    flowpipe_envelop_box_vol_array: np.ndarray
+
+@dataclass
+class FlowpipeVolSumData:
+    flowpipe_conv_hull_vol_tot_sum: float
+    flowpipe_envelop_box_vol_tot_sum: float
 
 """
 Object encapsulating flowpipe data. A flowpipe in this case will be a sequence of Bundle objects.
@@ -21,7 +29,7 @@ class FlowPipe:
         self.dim = model.dim
         self.label = label
         self.error = None
-        self.total_comp_time = 0
+        self.timing_data = None
 
     """
     Returns a list of strategies which were acting during the reachable set
@@ -38,22 +46,22 @@ class FlowPipe:
     @property
     def all_total_volume(self):
         vol_data = self.get_volume_data()
-        return TotalFlowpipeVolTup(np.sum(vol_data.FlowpipeConvHullVol),
-                                   np.sum(vol_data.FlowpipeEnvelopBoxVol))
+        return FlowpipeVolSumData(np.sum(vol_data.flowpipe_conv_hull_vol_array),
+                                  np.sum(vol_data.flowpipe_envelop_box_vol_array))
 
     """
     Return total volume based on most accurate available estimation method.
-    Convex hull gets priority for low-dimensioanl systems.
+    Convex hull gets priority for low-dimensional systems.
     """
     @property
     def total_volume(self):
         vol_data = self.get_volume_data()
-        tot_conv_vol = np.sum(vol_data.FlowpipeConvHullVol)
+        tot_conv_vol = np.sum(vol_data.flowpipe_conv_hull_vol_array)
 
         if tot_conv_vol > 0:
             return tot_conv_vol
 
-        return np.sum(vol_data.FlowpipeEnvelopBoxVol)
+        return np.sum(vol_data.flowpipe_envelop_box_vol_array)
 
     """
     Returns volume of the initial box defined at the beginning of this flowpipe.
@@ -62,6 +70,13 @@ class FlowPipe:
     def init_box_volume(self):
         init_box = self.model.init_box
         return calc_box_volume(init_box)
+
+    """
+    Returns unformatted total time elapsed for entire reachable set computation.
+    """
+    @property
+    def total_comp_time(self):
+        return self.timing_data['Reachable Set Computation']
 
     """
     Wrapper method around self.flowpipe.append function.
@@ -81,6 +96,8 @@ class FlowPipe:
 
     """
     Returns array of volume data for each bundle in the flowpipe.
+    @params accum: optional flag which specifies if we want to store the accumulation of the flowpipe volume
+            up to that step or just the volume at that particular step. 
     @returns array of volume data.
     """
     def get_volume_data(self, accum=True):
@@ -116,8 +133,7 @@ class FlowPipe:
 
             envelop_box_vol_data[idx] = envelop_box_vol
 
-        return FlowpipeVolDataTup(conv_hull_vol_data, envelop_box_vol_data)
-
+        return FlowpipeVolData(conv_hull_vol_data, envelop_box_vol_data)
 
     def __calc_bounds_along_var(self, var_ind):
         Timer.start('Proj')

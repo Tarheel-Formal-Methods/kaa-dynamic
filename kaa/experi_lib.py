@@ -1,4 +1,5 @@
 import numpy as np
+from dataclasses import dataclass
 
 from kaa.trajectory import Traj, TrajCollection
 from kaa.log import Output
@@ -124,25 +125,49 @@ class PhasePlotExperiment(Experiment):
         self.plot_flowpipes(*var_tup, xlims=xlims, ylims=ylims)
         return flowpipe_data
 
+"""
+Experiments to graph the growth of total flowpipe volumes against initial sets of increasing dimension.
+The experiment is designed for comparing dynamic strategies against static strategies (provided by Sapo most the time).
+Check out the plots shown in Figure Two of the paper: 
+Automatic Dynamic Parallelotopes Bundles for Reachability Analysis of Non-linear Systems. (https://arxiv.org/abs/2105.11796)
+"""
 
 class InitReachPlotExperiment(Experiment):
 
     def __init__(self, *inputs, log_scale=False):
+        #self.num_of_increments = num_of_increments
+        #self.increment_size = increment_size
+        #inputs = self.__generate_inputs()
+
         super().__init__(*inputs)
         self.log_scale_flag = log_scale
+
+    """
+    def __generate_inputs(self):
+        for incre_idx in range(self.num_of_increments):
+            increment = incre_idx * self.increment_size
+
+            init_box = [(box_side[0] - increment, box_side[1])
+                                for box_side in self.model.init_box]
+    """
 
     def execute(self):
         for experi_input in self.inputs:
             self.initialize_strat(experi_input, 10)  # fix this
-            # self.print_input_params(experi_input, trial_num=None)
+            self.print_input_params(experi_input, trial_num=None)
             self.plot.add(self.calc_flowpipe(experi_input))
 
         self.plot.plot({'type': 'InitVolReachVol',
                         'flowpipe_indepen_data': None,
                         'log_scale_flag': self.log_scale_flag})
 
+"""
+Experiments to graph the growth of total flowpipe volumes against initial sets of increasing dimension.
+This experiment differs from InitReachPlotExperiment  
+"""
 
 class InitReachVSRandomPlotExperiment(Experiment):
+
     def __init__(self, *inputs, num_ran_temps=20, num_trials=10, ran_diag=False, log_scale=False, precalc_vals=None):
         super().__init__(*inputs)
         self.num_trials = num_trials
@@ -204,6 +229,7 @@ class InitReachVSRandomPlotExperiment(Experiment):
 
 
 class VolumeDataExperiment(Experiment):
+
     def __init__(self, *inputs, label="VolumeDataExperiment", num_trials=1):
         super().__init__(*inputs, label=label)
         self.num_trials = num_trials
@@ -224,11 +250,13 @@ class VolumeDataExperiment(Experiment):
 
                 flow_label = experi_input['label']
                 flow_vol = flowpipe.total_volume
-                reach_time = divmod(Timer.generate_stats(), 60)
+                reach_time = flowpipe.total_comp_time.formatted_tot_time
 
                 spreadsheet.save_data_into_sheet(flow_label, trial_num,
                                                  (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
-                experi_strat.reset()
+
+                if experi_strat:
+                    experi_strat.reset()
 
 
 class VolumePlotExperiment(Experiment):
@@ -252,7 +280,7 @@ class VolumePlotExperiment(Experiment):
 
             flow_label = experi_input['label']
             flow_vol = flowpipe.total_volume
-            reach_time = divmod(Timer.generate_stats(), 60)
+            reach_time = divmod(flowpipe.total_comp_time, 60)
 
             spreadsheet.save_data_into_sheet(flow_label, 0, (flow_vol, f"{reach_time[0]} min {reach_time[1]} sec)"))
             self.plot.add(flowpipe)

@@ -37,7 +37,7 @@ class ReachSet:
     Compute reachable set for the alloted number of time steps.
     @params time_steps: number of time steps to carry out the reachable set computation.
             TempStrat: template n  loading strategy to use during this reachable set computation.
-    @returns FlowPipe object containing computed flowpipe
+    @returns FlowPipe object containing computed flowpipe.
     """
 
     def computeReachSet(self, time_steps):
@@ -80,21 +80,15 @@ class ReachSet:
                     break
 
         if not isinstance(self.strat, MultiStrategy):
+            'Fetches all trajectories used in strategies during the reachable set computation'
             self.flowpipe.traj_data = self.strat.fetch_traj_data()
 
-        self.flowpipe.total_comp_time = Timer.generate_stats()
+        'Store timing data recorded over entire reachable set computation into generated Flowpipe object.'
+        self.flowpipe.timing_data = Timer.generate_stats()
+        Timer.flush_timer_stack()
+
         return self.flowpipe
 
     def check_reach_size(self, bund, threshold):
         envelop_box_vol = bund.getIntersect().calc_vol_envelop_box()
         return envelop_box_vol > threshold
-
-
-"""
-class FlowpipeSaveLoader:
-
-    @staticmethod
-    def save_flowpipe(flowpipe):
-        model = flowpipe.model
-        with open("")
-"""

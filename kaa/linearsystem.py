@@ -3,6 +3,7 @@ import numpy as np
 import multiprocessing as mp
 from scipy.spatial import HalfspaceIntersection, ConvexHull
 from scipy.spatial.qhull import QhullError
+from dataclasses import dataclass
 from operator import mul, add
 from functools import reduce
 from collections import namedtuple
@@ -13,7 +14,10 @@ from kaa.trajectory import Traj, TrajCollection
 from settings import KaaSettings
 from kaa.log import Output
 
-VolDataTuple = namedtuple('VolDataTuple', ['ConvHullVol', 'EnvelopBoxVol'])
+@dataclass
+class VolumeData:
+    ConvHullVol: float
+    EnvelopBoxVol: float
 
 
 class ChebyCenter:
@@ -60,7 +64,7 @@ class LinearSystem:
         envelop_box_vol = self.calc_vol_envelop_box()
         conv_hull_vol = self.calc_vol_conv_hull() if self.dim < 4 else None
 
-        return VolDataTuple(conv_hull_vol, envelop_box_vol)
+        return VolumeData(conv_hull_vol, envelop_box_vol)
 
     """
     Find vertices of this linear system.

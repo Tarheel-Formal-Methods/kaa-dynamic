@@ -1,7 +1,8 @@
-from models.invertpend import InvertPend
+from models.invertpend import InvertPend, InvertPend_UnitBox
 from kaa.temp.pca_strat import *
 from kaa.temp.lin_app_strat import *
 from kaa.templates import MultiStrategy
+from kaa.experi_init import *
 from kaa.experi_lib import *
 from kaa.modes import BundleTransMode
 
@@ -30,3 +31,23 @@ def test_InvertPend():
 
     harosc = PhasePlotExperiment(experi_input)
     harosc.execute(0,1)
+
+def test_skewed_sliding_strat_comb_InvertPend():
+    unit_model = InvertPend_UnitBox()
+    model = InvertPend()
+    test_skewed_sliding_strat_comb(unit_model, 9, 4000,
+                                  num_temps=5,
+                                  incre=1,
+                                  use_supp=True,
+                                  use_pregen=False,
+                                  use_sapo=model,
+                                  mode="Data")
+
+def test_ran_strat_InvertPend():
+    model = InvertPend_UnitBox()
+    test_ran_strat(model, 80, 5000, use_supp=True, use_pregen=False)
+
+def test_vol_comp_InvertPend():
+    unit_model = InvertPend_UnitBox()
+    model = InvertPend()
+    test_vol_comp(unit_model, 80, 4000, use_supp=True, use_pregen=False, use_sapo=model)

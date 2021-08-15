@@ -435,12 +435,12 @@ class VolumeSubplot(Subplot):
         vol_data = flowpipe.get_volume_data(accum=self.accum_flag)
 
         tot_vol_tup = flowpipe.all_total_volume
-        tot_conv_hull_vol = tot_vol_tup.TotalFlowpipeConvHullVol
-        tot_envelop_box_vol = tot_vol_tup.TotalFlowpipeEnvelopBoxVol
+        tot_conv_hull_vol = tot_vol_tup.flowpipe_conv_hull_vol_tot_sum
+        tot_envelop_box_vol = tot_vol_tup.flowpipe_envelop_box_vol_tot_sum
 
         if self.plot_all_vol:
-            ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
-            ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx + self.num_flowpipes}")
+            ax.plot(t, vol_data.flowpipe_conv_hull_vol_array, color=f"C{flow_idx}")
+            ax.plot(t, vol_data.flowpipe_envelop_box_vol_array, color=f"C{flow_idx + self.num_flowpipes}")
 
             return [pat.Patch(color=f"C{flow_idx}",
                               label=f"{flowpipe.label} (Convex)"),
@@ -449,11 +449,11 @@ class VolumeSubplot(Subplot):
 
         else:
             if tot_conv_hull_vol > 0:
-                ax.plot(t, vol_data.FlowpipeConvHullVol, color=f"C{flow_idx}")
+                ax.plot(t, vol_data.flowpipe_conv_hull_vol_array, color=f"C{flow_idx}")
                 return [pat.Patch(color=f"C{flow_idx}",
                                   label=f"{flowpipe.label} (Convex)")]
 
-            ax.plot(t, vol_data.FlowpipeEnvelopBoxVol, color=f"C{flow_idx}")
+            ax.plot(t, vol_data.flowpipe_envelop_box_vol_array, color=f"C{flow_idx}")
 
             return [pat.Patch(color=f"C{flow_idx}",
                               label=f"{flowpipe.label} (EnvelopBox)")]

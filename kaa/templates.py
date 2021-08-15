@@ -1,6 +1,7 @@
 import numpy as np
 from abc import ABC, abstractmethod
 from collections import namedtuple
+from dataclasses import dataclass
 from settings import KaaSettings
 
 class SampledTrajData:

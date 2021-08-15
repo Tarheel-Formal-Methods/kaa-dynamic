@@ -1,7 +1,10 @@
 import time
 from functools import reduce
+from dataclasses import dataclass
+from typing import Tuple
 from operator import add
 from pptree import print_tree, Node
+
 from kaa.log import Output
 from settings import DebugSettings
 
@@ -28,10 +31,21 @@ class TimerData:
         m, s = divmod(self.duration, 60)
         return f"{m} min {s} sec"
 
+
+@dataclass
+class TimerStatistics:
+    label: str
+    avg_time: float
+    formatted_avg_time: Tuple[int, int]
+    tot_time: float
+    formatted_tot_time: Tuple[int, int]
+
+
 """
 Static class containing all timing utility functions and statistics generating routines.
 """
 class Timer:
+    "Stack containing all live timer categories at a current point in time."
     timer_stack = []
     timer_table = {}
     timer_child_map = {}
@@ -79,12 +93,21 @@ class Timer:
         else:
             raise RuntimeError("Previous timer has not been stopped yet or timer has not been instantiated for Timer: {}.".format(label))
 
+
+    """
+    Reset the timer data.     
+    """
+
     @staticmethod
     def flush_timer_stack():
         Timer.timer_stack = []
         Timer.timer_table = {}
         Timer.timer_child_map = {}
         Timer.timer_parent_map = {}
+
+    """
+    Generate the timer data statistics. Print the stats to screen, and return the relevant timer data.
+    """
 
     @staticmethod
     def generate_stats():
@@ -93,7 +116,6 @@ class Timer:
 
         'Average time and total duration for all categories.'
         for label, times in Timer.timer_table.items():
-
             avg_time = Timer.avg_time(times)
             at = divmod(avg_time, 60)
             print(f"Average {label} Duration: {at[0]} min {at[1]} sec")
@@ -102,7 +124,11 @@ class Timer:
             dt = divmod(tot_time, 60)
             print(f"Total {label} Duration: {dt[0]} min {dt[1]} sec \n")
 
-            time_data_dict[label] = (at, dt, tot_time)
+            time_data_dict[label] = TimerStatistics(label,
+                                                    avg_time,
+                                                    at,
+                                                    tot_time,
+                                                    dt)
 
             if label not in Timer.timer_parent_map:
                 total_time += tot_time
@@ -111,7 +137,7 @@ class Timer:
         root = Node("Kaa Runtime")
 
         def construct_tree(label, parent_node):
-            child_node = Node(f"{label}: {round((time_data_dict[label][2] / total_time) * 100, 2)}% \n", parent_node)
+            child_node = Node(f"{label}: {round((time_data_dict[label].tot_time / total_time) * 100, 2)}% \n", parent_node)
             if label not in Timer.timer_child_map:
                 return
 
@@ -123,9 +149,7 @@ class Timer:
                 construct_tree(label, root)
 
         print_tree(root)
-
-        Timer.flush_timer_stack()
-        return time_data_dict['Reachable Set Computation'][2]
+        return time_data_dict
 
     def avg_time(times):
         return reduce(add, [t.duration for t in times]) / len(times)
