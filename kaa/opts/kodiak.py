@@ -29,6 +29,9 @@ class KodiakProd(OptimizationProd):
 
         return ub, lb
 
+    def getStats(selfs):
+        pass
+
     def __enter__(self):
         return self
 

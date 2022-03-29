@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 import multiprocessing as mp
 import warnings
+from collections import Counter
 
 from kaa.parallelotope import Parallelotope
 from kaa.templates import TempStrategy
@@ -18,7 +19,6 @@ elif KaaSettings.OptProd == "Bernstein":
     OptProd = BernsteinProd
 
 warnings.filterwarnings('ignore')
-
 
 class Bundle:
 
@@ -45,6 +45,12 @@ class Bundle:
 
         self.num_strat = 1
         self.strat_temp_id = {}
+
+        self.bund_stats = {}
+        if KaaSettings.OptProd == "Bernstein":
+            self.bund_stats["BernsteinMaxCoeff"] = Counter()
+            self.bund_stats["BernsteinMinCoeff"] = Counter()
+
 
     @property
     def T(self):
@@ -169,8 +175,8 @@ class Bundle:
     """
 
     def add_temp(self, asso_strat, row_labels, temp_label):
-        assert len(
-            row_labels) == self.dim, "Number of directions to use in template must match the dimension of the system."
+        assert len( row_labels) == self.dim, \
+            "Number of directions to use in template must match the dimension of the system."
 
         new_temp_ent = (self.__get_global_labels(asso_strat, row_labels),
                         self.__get_global_labels(asso_strat, temp_label),
@@ -459,6 +465,13 @@ class BundleTransformer:
                      bound_polyu, bund) \
                 as opt_prod:
             ub, lb = opt_prod.getBounds()
+            opt_stats = opt_prod.getStats()
+
+            if opt_stats: #Generalize this beyond switch statements.
+                if KaaSettings.OptProd == "Bernstein":
+                    max_monom_deg, min_monom_deg = opt_stats
+                    bund.bund_stats["BernsteinMaxCoeff"].update(max_monom_deg)
+                    bund.bund_stats["BernsteinMinCoeff"].update(min_monom_deg)
         Timer.stop('Bound Computation')
 
         return ub, -1 * lb

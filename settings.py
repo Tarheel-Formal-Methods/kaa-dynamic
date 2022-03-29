@@ -6,13 +6,13 @@ Simple settings file for the in-and-outs of Kaa.
 """
 class KaaSettings:
     'Should we try to parallelize the generator calculations?'
-    Parallelize = True
+    Parallelize = False
 
     '''
     The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts
     Takes the strings "Kodiak" or "Bernstein"
     '''
-    OptProd = "Kodiak"
+    OptProd = "Bernstein"
 
     'Suppress Output?'
     SuppressOutput = False
@@ -43,15 +43,13 @@ class DebugSettings:
 
 class PlotSettings:
     'Fonts for the indices on matplotlib plots'
-    PlotFont = 27
+    PlotFont = 13
 
     'Toggle to save the figures to disk'
-    save_fig = True
+    save_fig = False
 
     'Path to save figures'
     default_fig_path = os.path.join(ROOT_DIR, "figures")
 
     'Figure dimensions'
     fig_size = (60, 60)
-
-    NumSteps = 2

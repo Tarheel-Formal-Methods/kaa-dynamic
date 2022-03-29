@@ -488,6 +488,20 @@ class CovidDataPlotExperiment(Experiment):
         return init_params_dict
 
 
+class BernCoeffStatsExperiment(Experiment):
+
+    def __init__(self, *inputs):
+        super().__init__(*inputs)
+
+    def execute(self):
+        flowpipes = []
+        for experi_input in self.inputs:
+            self.initialize_strat(experi_input, 10)
+            self.plot.add(self.calc_flowpipe(experi_input))
+
+        plot_dict = {'type': 'BernCoeffStats'}
+        self.plot.plot(plot_dict)
+
 class CompAniExperiment(Experiment):
 
     def __init__(self, *inputs):

@@ -18,6 +18,19 @@ def test_sapo_VDP():
     experi.execute(0, 1)
     Timer.generate_stats()
 
+def test_bern_coeff_stats_VDP():
+    num_steps = 20
+
+    model = VanDerPol(delta=0.08,init_box=((0, 0.05), (1.95, 2)))
+    experi_input = dict(model=model,
+                    strat=None,
+                    label=f"Sapo's Reachable Set",
+                    num_steps=num_steps,
+                    trans_mode=BundleTransMode.AFO)
+
+    experi = BernCoeffStatsExperiment(experi_input)
+    experi.execute()
+
 def test_sapo_vol_VDP():
     use_supp = True
     use_pregen = False

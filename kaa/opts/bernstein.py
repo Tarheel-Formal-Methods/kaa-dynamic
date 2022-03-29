@@ -1,7 +1,8 @@
 import sympy as sp
+import numpy as np
 
 from functools import reduce
-from math import factorial
+from math import comb
 from operator import mul,add
 from itertools import product
 from kaa.opts.optprod import OptimizationProd
@@ -16,26 +17,42 @@ class BernsteinProd(OptimizationProd):
 
         # List of all relevant monomials required to calculate the Bernstein coefficients.
         self.monom_list = self._computeLowerDeg(self.degree)
+        self.bern_coeff = np.empty(len(self.monom_list))
+
+        for idx, monom in enumerate(self.monom_list):
+            self.bern_coeff[idx] = self._computeIthBernCoeff(monom)
 
     """
     Computes and returns the maximum and minimum Bernstein coefficients for self.poly.
     """
     def getBounds(self):
+        return max(self.bern_coeff), min(self.bern_coeff)
 
-        bern_coeff = []
+    def getStats(self):
+        return self.getBoundIndices()
 
-        for monom in self.monom_list:
-            bern_coeff.append(self._computeIthBernCoeff(monom))
+    """
+    Determines indices of monomials where maximum/minimum coefficients are locateed.
+    """
+    def getBoundIndices(self):
+        max_idxs = np.argmax(self.bern_coeff, axis=0)
+        min_idxs = np.argmin(self.bern_coeff, axis=0)
 
-        #print(bern_coeff, self.poly)
-        return max(bern_coeff), min(bern_coeff)
+        if isinstance(max_idxs, np.int64):
+            max_idxs = [max_idxs]
+        if isinstance(min_idxs, np.int64):
+            min_idxs = [min_idxs]
 
+        max_monom_deg = [str(self.monom_list[max_idx]) for max_idx in max_idxs]
+        min_monom_deg = [str(self.monom_list[min_idx]) for min_idx in min_idxs]
+
+        return max_monom_deg, \
+               min_monom_deg
     """
     Computes and returns the ith Bernstein coefficient.
     @params i: the degree of the desired Bernstein polynomial.
     """
     def _computeIthBernCoeff(self, i):
-
         lower_degs = self._computeLowerDeg(i)
 
         bern_sum_list = []
@@ -43,10 +60,10 @@ class BernsteinProd(OptimizationProd):
             coeff_mul_list = []
 
             for ind, _ in enumerate(self.degree):
-                j_coeff = self._choose(i[ind], j[ind]) / self._choose(self.degree[ind], j[ind])
+                j_coeff = comb(i[ind], j[ind]) / comb(self.degree[ind], j[ind])
                 coeff_mul_list.append(j_coeff)
 
-            bern_coef = reduce(mul,coeff_mul_list)
+            bern_coef = reduce(mul, coeff_mul_list)
             poly_coef = self.poly.coeff_monomial(self._getMonom(j))
             bern_sum_list.append(bern_coef * poly_coef)
 
@@ -58,7 +75,6 @@ class BernsteinProd(OptimizationProd):
     @params i: desired degree
     """
     def _computeLowerDeg(self, i):
-
         assert len(i) == len(self.degree)
 
         iterators = [range(idx+1) for idx in i]
@@ -68,7 +84,6 @@ class BernsteinProd(OptimizationProd):
     Returns the total degree of self.poly
     """
     def _getDegree(self):
-
         monom_tups = self.poly.monoms()
         degree = []
 
@@ -83,21 +98,11 @@ class BernsteinProd(OptimizationProd):
     @params j: degree of monomial.
     """
     def _getMonom(self, j):
-
         var_monom = [ self.vars[i]**j[i] for i in range(self.var_num) ]
         expr = reduce(mul, var_monom)
 
         monomial = sp.Poly(expr, self.vars)
         return monomial.as_expr()
-
-    """
-    Calculates n choose r
-    @params n: n
-            r: r
-    """
-    def _choose(self, n, r):
-        return factorial(n) // (factorial(r)*factorial(n-r))
-
 
     def __enter__(self):
         return self

@@ -21,8 +21,6 @@ class ReachError:
 """
 Object handling all reachable flowpipe computations.
 """
-
-
 class ReachSet:
 
     def __init__(self, model, strat=None, label="", trans_mode=BundleTransMode.AFO, restrict_inter=None):

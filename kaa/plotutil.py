@@ -8,6 +8,7 @@ from matplotlib.ticker import MultipleLocator
 from pathlib import Path
 from datetime import date
 from itertools import groupby
+from collections import Counter
 from abc import abstractmethod
 
 from settings import PlotSettings
@@ -65,6 +66,47 @@ class Subplot:
         for flowpipe in self.flowpipes:
             print(f"VOLUME OF FINAL SYSTEM FOR FLOWPIPE {flowpipe.label}: {flowpipe[-1].volume[1]}")
 
+
+class BernCoeffStatsPlot(Subplot):
+
+    def __init__(self, model, flowpipes, num_steps):
+        super().__init__(model,
+                         "BernCoeffStatsPlot",
+                         flowpipes,
+                         2,
+                         num_steps)
+
+    def plot(self, axs):
+        max_subplot, min_subplot = axs[0], axs[1]
+        flowpipe = self.flowpipes[0]
+
+        bern_max_coeff_stats = Counter()
+        bern_min_coeff_stats = Counter()
+
+        for bund in flowpipe:
+            try:
+                bern_max_monom = bund.bund_stats["BernsteinMaxCoeff"]
+                bern_min_monom = bund.bund_stats["BernsteinMinCoeff"]
+
+                bern_max_coeff_stats.update(bern_max_monom)
+                bern_min_coeff_stats.update(bern_min_monom)
+
+            except:
+                print("Could not find Bernstein coefficient index statistics from Bundle Object.")
+
+        max_subplot.bar(bern_max_coeff_stats.keys(),
+                        bern_max_coeff_stats.values())
+
+        min_subplot.bar(bern_min_coeff_stats.keys(),
+                        bern_min_coeff_stats.values())
+
+        max_subplot.set_xlabel("Monomial Degrees", fontsize=PlotSettings.PlotFont)
+        max_subplot.set_ylabel("Frequency", fontsize=PlotSettings.PlotFont)
+        max_subplot.set_title(f"Bernstein Coefficient Max Indices for {self.model} and {self.num_steps - 1} Steps")
+
+        min_subplot.set_xlabel("Monomial Degrees", fontsize=PlotSettings.PlotFont)
+        min_subplot.set_ylabel("Frequency", fontsize=PlotSettings.PlotFont)
+        min_subplot.set_title(f"Bernstein Coefficient Min Indices for {self.model} and {self.num_steps - 1} Steps")
 
 # Some sort of organization through inheritance is warranted.
 class ProjectionSubplot(Subplot):
@@ -160,8 +202,6 @@ class ProjectionSubplot(Subplot):
 """
 Assumes the dynamics shown in https://www.iith.ac.in/~m_vidyasagar/arXiv/Super-Model.pdf
 """
-
-
 class CovidProjectionDateSubplot(Subplot):
 
     def __init__(self, model, flowpipes, num_steps, trajs, data_dict, steps_in_day, total_pop, time_interval_str,
@@ -401,8 +441,6 @@ class PhaseSubplot(Subplot):
 """
 TODO document expected dict setup.
 """
-
-
 class VolumeSubplot(Subplot):
 
     def __init__(self, model, flowpipes, num_steps, accum_flag, plot_all_vol):
@@ -527,8 +565,6 @@ class InitVolReachVolPlot(Subplot):
 """
 Object containing matplotlib figure and relevant settings and data along one axis.
 """
-
-
 class Plot:
 
     def __init__(self, label="Figure"):
@@ -602,6 +638,12 @@ class Plot:
                                                      subplot_dict['total_pop'],
                                                      subplot_dict['time_interval'],
                                                      subplot_dict['category'])
+
+            elif subplot_type == "BernCoeffStats":
+                subplot = BernCoeffStatsPlot(self.model,
+                                             self.flowpipes,
+                                             self.num_steps)
+
             else:
                 raise RuntimeError("Subplot type string not valid.")
 
@@ -627,7 +669,6 @@ class Plot:
     Adds trajectory to be plotted.
     @params traj: Traj object to plot.
     """
-
     def __add_traj(self, traj_col):
         assert isinstance(traj_col,
                           TrajCollection), "Only TrajCollection objects can be added through Plot.__add_flowpipe"
@@ -641,7 +682,6 @@ class Plot:
     @params flowpipe: Flowpipe object to plot.
             label: optional string argument to label the Flowpipe object in the matplotlib figure.
     """
-
     def __add_flowpipe(self, flowpipe):
         assert isinstance(flowpipe, FlowPipe), "Only FlowPipe objects can be added through Plot.__add_flowpipe"
 
@@ -683,7 +723,6 @@ class Plot:
     Generates directory path used to save spreadsheet into disk.
     @returns total path to data directory
     """
-
     def __gen_plot_directory(self):
         data_pwd = os.path.join(PlotSettings.default_fig_path, 'Plots', date.today().isoformat(), str(self.model))
         Path(data_pwd).mkdir(parents=True, exist_ok=True)

@@ -20,6 +20,10 @@ class OptimizationProd(ABC):
         pass
 
     @abstractmethod
+    def getStats(selfs):
+        pass
+
+    @abstractmethod
     def __enter__(self):
         return self
 
