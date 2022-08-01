@@ -1,3 +1,5 @@
+from matplotlib.patches import Circle
+
 from models.lovo import LOVO_UnitBox
 from kaa.log import Output
 from kaa.experi_init import *
@@ -9,15 +11,15 @@ def test_arch_LOVO21():
     use_supp = True
     use_pregen = False
 
-    num_trajs = 5000
+    num_trajs = 40
 
     num_steps = 120
     delta = 0.03
 
     model_one = LOVO_UnitBox(delta=delta)
 
-    pca_window_size = 0
-    lin_window_size = 20
+    pca_window_size = 10
+    lin_window_size = 10
 
     pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size)
     lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size)
@@ -31,7 +33,10 @@ def test_arch_LOVO21():
                             num_trajs=num_trajs,
                             trans_mode=BundleTransMode.AFO)
 
-    experi = PhasePlotExperiment(experi_input_one, label="LOVO21")
+    def draw_circle(ax):
+        ax.add_patch(Circle((1, 1), 0.161, fill=False, color='C0'))
+
+    experi = PhasePlotExperiment(experi_input_one, label="LOVO21", extra_instruct=draw_circle)
     experi_data = experi.execute(0, 1, xlims=(0.6,1.4), ylims=(0.6,1.4))
     Output.prominent(f"Box hull for LOVO21: {experi_data[0][1]}")
     return experi_data

@@ -135,7 +135,7 @@ class Kodiak:
         if not isinstance(bounds, np.ndarray):
             bounds = np.array(bounds, dtype=float)
 
-        assert len(linear_approx) == len(bounds)
+        assert len(linear_approx) == len(bounds), f"Length of LinApp: {len(bounds)}, Length of Bounds: {len(linear_approx)}"
 
         # rv = np.array([0, 0], dtype=float)
 

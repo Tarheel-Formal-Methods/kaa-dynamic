@@ -202,7 +202,7 @@ class FlowPipe:
     an axis is the maximum value of projection of the bundle along that axis minus its 
     corresponding minimum.
     """
-    def calc_final_flowpipe_widths(self):
+    def calc_final_flowpipe_width(self):
         final_widths = []
         for var_idx in range(self.dim):
             var_proj_min, var_proj_max = self.get_proj(var_idx)

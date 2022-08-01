@@ -6,7 +6,7 @@ from kaa.bundle import Bundle
 
 class Chem_UnitBox(Model):
 
-    def __init__(self, beta, gamma, delta=0.2, init_box=((0.99999,1), (-0.0000001, 0.0000001), (-0.0000001, 0.0000001))):
+    def __init__(self, beta, gamma, delta=0.0001, init_box=((0.99,1), (0, 0.01), (0, 0.01))):
 
         x, y, z = sp.Symbol('x'), sp.Symbol('y'), sp.Symbol('z')
         vars = (x, y, z)

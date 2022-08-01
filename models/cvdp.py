@@ -56,22 +56,23 @@ class CoupledVDP(Model):
 
 class CoupledVDP_UnitBox(Model):
 
-    def __init__(self, delta=0.2, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35)), mu=1):
+    def __init__(self, delta=0.2, init_box=((1.25,1.55), (2.25,2.35),(1.25,1.55), (2.25,2.35), (60,80)), mu=1):
 
-        x1, y1, x2, y2  = sp.Symbol('x1'), sp.Symbol('y1'), sp.Symbol('x2'), sp.Symbol('y2')
-        vars = (x1, y1, x2, y2)
+        x1, y1, x2, y2, b = sp.Symbol('x1'), sp.Symbol('y1'), sp.Symbol('x2'), sp.Symbol('y2'), sp.Symbol('b')
+        vars = (x1, y1, x2, y2, b)
 
         dim_sys = len(vars)
 
         dx1 = x1 + y1*delta
-        dy1 = y1 + (mu*(1-x1**2)*y1 - 2*x1 + x2)*delta
+        dy1 = y1 + (mu*(1-x1**2)*y1 - b*(x2 - x1) - x1)*delta
         dx2 = x2 + y2*delta
-        dy2 = y2 + (mu*(1-x2**2)*y2 - 2*x2 + x1)*delta
+        dy2 = y2 + (mu*(1-x2**2)*y2 - b*(x2 - x1) - x2)*delta
+        db = b
 
 
-        dyns = (dx1, dy1, dx2, dy2)
+        dyns = (dx1, dy1, dx2, dy2, db)
 
-        num_direct = 4
+        num_direct = 5
         num_temps = 1
 
         L = np.zeros((num_direct, dim_sys))
@@ -81,8 +82,9 @@ class CoupledVDP_UnitBox(Model):
         L[1][1] = 1
         L[2][2] = 1
         L[3][3] = 1
+        L[4][4] = 1
 
-        T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3;
+        T[0][0] = 0; T[0][1] = 1; T[0][2] = 2; T[0][3] = 3; T[0][4] = 4;
 
         offu = np.zeros(num_direct)
         offl = np.zeros(num_direct)

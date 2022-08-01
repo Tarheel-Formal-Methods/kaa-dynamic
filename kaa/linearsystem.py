@@ -243,7 +243,8 @@ class LinearSystem:
 
             input_params = []
             for dir_vec in dir_vecs:
-                input_params += [(dir_vec, steps, output_queue), (np.negative(dir_vec), steps, output_queue)]
+                input_params += [(dir_vec, steps, output_queue),
+                                 (np.negative(dir_vec), steps, output_queue)]
 
             p = mp.Pool()
             p.starmap(self.generate_supp_worker, input_params)

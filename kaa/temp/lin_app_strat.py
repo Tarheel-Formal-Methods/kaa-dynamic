@@ -45,7 +45,7 @@ class AbstractLinStrat(TempStrategy):
                 cond_num = np.linalg.cond(lin_dir_mat)
 
                 if cond_num > self.cond_threshold:
-                    Output.prominent("Using Normalization method.")
+                    #Output.prominent("Using Normalization method.")
                     norm_lin_dir = normalize_mat(lin_dir_mat)
                     closest_dirs = find_closest_dirs(norm_lin_dir)
                     lin_dir_mat = merge_closest_dirs(norm_lin_dir, closest_dirs, self.dim)
@@ -53,7 +53,7 @@ class AbstractLinStrat(TempStrategy):
             Timer.stop("Linear Direction Generation")
             self.accum_lin_trans = lin_dir_mat  # This makes senese for now as we assume we generate directions once per step.
         else:
-            lin_dir_mat = self.dirs.get_dirs_at_step(step_num)
+            lin_dir_mat = self.dirs.get_dirs_at_step(step_num) # Only for pre-generated directions.
 
         lin_dir_labels = [str((step_num, dir_idx)) for dir_idx, _ in enumerate(lin_dir_mat)]
 

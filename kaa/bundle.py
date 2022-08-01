@@ -46,10 +46,12 @@ class Bundle:
         self.num_strat = 1
         self.strat_temp_id = {}
 
+        """
         self.bund_stats = {}
         if KaaSettings.OptProd == "Bernstein":
             self.bund_stats["BernsteinMaxCoeff"] = Counter()
-            self.bund_stats["BernsteinMinCoeff"] = Counter()
+            self.bund_stats["BernsteinMinCoeff"] = Counter()   
+        """
 
 
     @property
@@ -376,12 +378,7 @@ class BundleTransformer:
             curr_L = L[l_row]
 
             Timer.start("Find Bounds Function Call")
-            # print(f"Direction Vector: {curr_L}")
-            # print(f"L {L}")
-            # print(f"T Mat: {bund.T}")
-            # print(f"Row Ind: {row_ind}")
             ub, lb = self.__find_bounds(curr_L, ptope, bund)
-            # print(f"UB: {ub}, LB: {lb}")
             Timer.stop("Find Bounds Function Call")
 
             if output_queue:
@@ -465,13 +462,15 @@ class BundleTransformer:
                      bound_polyu, bund) \
                 as opt_prod:
             ub, lb = opt_prod.getBounds()
-            opt_stats = opt_prod.getStats()
-
-            if opt_stats: #Generalize this beyond switch statements.
+            """
+              if opt_stats: #Generalize this beyond switch statements.
                 if KaaSettings.OptProd == "Bernstein":
                     max_monom_deg, min_monom_deg = opt_stats
+                    print("Chosen Max Monom Deg: {0},  Chosen Min Monom Deg: {1}".format(max_monom_deg, min_monom_deg))
                     bund.bund_stats["BernsteinMaxCoeff"].update(max_monom_deg)
                     bund.bund_stats["BernsteinMinCoeff"].update(min_monom_deg)
+          
+            """
         Timer.stop('Bound Computation')
 
         return ub, -1 * lb

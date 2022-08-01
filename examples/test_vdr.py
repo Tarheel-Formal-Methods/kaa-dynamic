@@ -2,7 +2,22 @@ from models.vanderpol import VanDerPol, VanDerPol_UnitBox
 from kaa.experi_init import *
 from kaa.timer import Timer
 from kaa.modes import BundleTransMode
+from settings import KaaSettings
 
+def test_bern_unitbox_VDP():
+    num_steps = 50
+
+    model = VanDerPol_UnitBox(delta=0.08,init_box=((0, 0.05),(1.95, 2)))
+    experi_input = dict(model=model,
+                        strat=None,
+                        label=f"Sapo's Reachable Set",
+                        num_steps=num_steps,
+                        trans_mode=BundleTransMode.AFO)
+
+    KaaSettings.OptProd = "Bernstein"
+    experi = PhasePlotExperiment(experi_input)
+    experi.execute(0, 1)
+    Timer.generate_stats()
 
 def test_sapo_VDP():
     num_steps = 70
@@ -61,7 +76,7 @@ def test_sliding_phase_plot_VDP():
     model = VanDerPol_UnitBox(delta=0.08, init_box=((0, 0.05),(1.95, 2)))
 
     pca_window_size = 5
-    lin_window_size = 0
+    lin_window_size = 3
 
     pca_strat = SlidingPCAStrat(model, lifespan=pca_window_size)
     lin_strat = SlidingLinStrat(model, lifespan=lin_window_size)
@@ -70,6 +85,7 @@ def test_sliding_phase_plot_VDP():
                         strat=MultiStrategy(pca_strat, lin_strat),
                         label=f"VDP SlidingPCA Step {pca_window_size} and SlidingLin Step {lin_window_size}",
                         supp_mode=use_supp,
+                        trans_mode=BundleTransMode.AFO,
                         pregen_mode=use_pregen,
                         num_trajs=num_trajs,
                         num_steps=num_steps)
@@ -81,7 +97,7 @@ def test_sliding_phase_plot_VDP():
     else:
         file_identifier = "(RAND)"
 
-    experi = PhasePlotExperiment(experi_input, separate=True)
+    experi = PhasePlotExperiment(experi_input, separate=False)
     experi.execute(0,1)
     Timer.generate_stats()
 

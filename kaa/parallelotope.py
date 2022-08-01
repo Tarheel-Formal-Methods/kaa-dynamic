@@ -109,10 +109,7 @@ class Parallelotope(LinearSystem):
     @returns base-vertex in list
     """
     def __computeBaseVertex(self):
-        #print(f"u_A: {self.u_A}, u_B: {self.u_b}")
         sol_set = np.linalg.solve(self.u_A, self.u_b)
-        #print(f"Cond Num: {np.linalg.cond(self.u_A)}")
-        #sol_set = np.linalg.lstsq(self.u_A, self.u_b, rcond=None)[0]
         return list(sol_set)
 
     """

@@ -300,13 +300,14 @@ class CovidProjectionDateSubplot(Subplot):
 
 class PhaseSubplot(Subplot):
 
-    def __init__(self, model, vars, flowpipes, num_steps, separate_flag, trajs, x_lims, y_lims):
+    def __init__(self, model, vars, flowpipes, num_steps, separate_flag, trajs, x_lims, y_lims, extra_instruct):
         assert len(vars) == 2, "Phase is 2D, so vars can only be a 2-element tuple."
         self.x = vars[0]
         self.y = vars[1]
         self.separate_flag = separate_flag
         self.trajs = trajs
         self.x_lims = x_lims
+        self.extra_instruct = extra_instruct
         self.y_lims = y_lims
         super().__init__(model, "Phase", flowpipes, 1, num_steps)
 
@@ -337,6 +338,10 @@ class PhaseSubplot(Subplot):
 
         phase_time = Timer.stop('Phase')
         x_var, y_var = self.model.vars[self.x], self.model.vars[self.y]
+
+        if self.extra_instruct:
+            self.extra_instruct(ax)
+
         print("Plotting phase for dimensions {}, {} done -- Time Spent: {}".format(x_var, y_var, phase_time))
 
     """
@@ -602,7 +607,7 @@ class Plot:
                                             subplot_dict['plot_width_flag'],
                                             subplot_dict['xlims'],
                                             subplot_dict['ylims'],
-                                            None if 'scale_factor' not in subplot_dict else subplot_dict['scale_factor'])
+                                            subplot_dict.get('scale_factor'))
 
             elif subplot_type == "Phase":
                 subplot = PhaseSubplot(self.model,
@@ -612,7 +617,8 @@ class Plot:
                                        subplot_dict['separate_flag'],
                                        self.trajs,
                                        subplot_dict['xlims'],
-                                       subplot_dict['ylims'])
+                                       subplot_dict['ylims'],
+                                       subplot_dict.get('extra_instruct'))
 
             elif subplot_type == "Volume":
                 subplot = VolumeSubplot(self.model,

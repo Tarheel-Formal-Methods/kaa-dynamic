@@ -91,10 +91,11 @@ Invest in thinking about dictionaries to encap all outputted data.
 
 class PhasePlotExperiment(Experiment):
 
-    def __init__(self, *inputs, separate=False, plot_border_traj=False, label=""):
+    def __init__(self, *inputs, separate=False, plot_border_traj=False, extra_instruct=None, label=""):
         super().__init__(*inputs, label=label)
         self.separate = separate
         self.plot_border_traj = plot_border_traj
+        self.extra_instruct = extra_instruct
 
     def populate_plot(self):
         num_steps = self.max_num_steps
@@ -114,11 +115,16 @@ class PhasePlotExperiment(Experiment):
         return flowpipe_data
 
     def plot_flowpipes(self, *var_tup, xlims, ylims):
-        self.plot.plot({'type': 'Phase',
+        plot_arg_dict = {'type': 'Phase',
                         'vars': var_tup,
                         'separate_flag': self.separate,
                         'xlims': xlims,
-                        'ylims': ylims})
+                        'ylims': ylims}
+
+        if self.extra_instruct:
+            plot_arg_dict['extra_instruct'] = self.extra_instruct
+
+        self.plot.plot(plot_arg_dict)
 
     def execute(self, *var_tup, xlims=None, ylims=None):
         flowpipe_data = self.populate_plot()
@@ -318,7 +324,7 @@ class ProjectionPlotExperiment(Experiment):
             self.plot.add(flowpipe)
 
             flowpipe_data.append((flowpipe.total_comp_time,
-                                  flowpipe.calc_final_flowpipe_width(flowpipe)))
+                                  flowpipe.calc_final_flowpipe_width()))
 
         return flowpipe_data
 

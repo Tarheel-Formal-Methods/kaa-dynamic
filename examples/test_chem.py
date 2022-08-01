@@ -9,22 +9,22 @@ def test_arch_Chem():
     use_supp = True
     use_pregen = False
 
-    num_trajs = 5000
+    num_trajs = 20
 
-    delta_one = 0.5
-    delta_two = 0.5
-    delta_three = 0.5
+    delta_one = 0.05
+    delta_two = 0.05
+    delta_three = 0.05
 
-    num_steps_one = int(20 / delta_one)
-    num_steps_two = int(20 / delta_two)
-    num_steps_three = int(20 / delta_three)
+    num_steps_one = 29
+    num_steps_two = 29
+    num_steps_three = 29
 
     model_one = Chem_UnitBox(100, 1000, delta=delta_one)
     model_two = Chem_UnitBox(1000, 100000, delta=delta_two)
     model_three = Chem_UnitBox(1000, 10000000, delta=delta_three)
 
-    pca_window_size_one = 10
-    lin_window_size_one = 0
+    pca_window_size_one = 0
+    lin_window_size_one = 3
 
     pca_strat_one = SlidingPCAStrat(model_one, lifespan=pca_window_size_one)
     lin_strat_one = SlidingLinStrat(model_one, lifespan=lin_window_size_one)
@@ -32,7 +32,7 @@ def test_arch_Chem():
     ran_static_strat_one = RandomDiagStaticStrat(model_one, 30)
 
     experi_input_one = dict(model=model_one,
-                            strat=pca_strat_one,
+                            strat=lin_strat_one,
                             label=f"ROBE21 Case 1",
                             num_steps=num_steps_one,
                             supp_mode = use_supp,
@@ -59,16 +59,16 @@ def test_arch_Chem():
                             trans_mode=BundleTransMode.AFO,
                             restrict_inter=(-5,5))
 
-    pca_window_size_three = 10
-    lin_window_size_three = 0
+    pca_window_size_three = 5
+    lin_window_size_three = 5
 
     pca_strat_three = SlidingPCAStrat(model_three, lifespan=pca_window_size_three)
     lin_strat_three = SlidingLinStrat(model_three, lifespan=lin_window_size_three)
 
-    ran_static_strat_three = RandomDiagStaticStrat(model_three, 30)
+    #ran_static_strat_three = RandomDiagStaticStrat(model_three, 30)
 
     experi_input_three = dict(model=model_three,
-                              strat=pca_strat_three,
+                              strat=MultiStrategy(pca_strat_three, lin_strat_three),
                               label=f"ROBE21 Case 3",
                               num_steps=num_steps_three,
                               supp_mode = use_supp,
@@ -77,10 +77,11 @@ def test_arch_Chem():
                               trans_mode=BundleTransMode.AFO,
                               restrict_inter=(-5,5))
 
-    experi = ProjectionPlotExperiment(experi_input_one, experi_input_two, experi_input_three, plot_total_width=True)
-    experi.execute(ylims=(0.999,1.001))
+    experi = ProjectionPlotExperiment(experi_input_one,  plot_total_width=True)
+    data = experi.execute(ylims=(0.999,1.001))
 
     Timer.generate_stats()
+    print(data)
 
 
 def plot_arch_robe21():
@@ -130,3 +131,6 @@ def plot_arch_robe21():
     ax.set_ylim(0.999,1.001)
 
     plot.show()
+
+if __name__  ==  "__main__":
+    test_arch_Chem()

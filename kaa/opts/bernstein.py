@@ -19,8 +19,8 @@ class BernsteinProd(OptimizationProd):
         self.monom_list = self._computeLowerDeg(self.degree)
         self.bern_coeff = np.empty(len(self.monom_list))
 
-        for idx, monom in enumerate(self.monom_list):
-            self.bern_coeff[idx] = self._computeIthBernCoeff(monom)
+        for idx, monom_deg in enumerate(self.monom_list):
+            self.bern_coeff[idx] = self._computeIthBernCoeff(monom_deg)
 
     """
     Computes and returns the maximum and minimum Bernstein coefficients for self.poly.

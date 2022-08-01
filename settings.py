@@ -12,7 +12,7 @@ class KaaSettings:
     The optimiation procedure to use in the bundle transformation. Optimization procedures are located in kaa.opts
     Takes the strings "Kodiak" or "Bernstein"
     '''
-    OptProd = "Bernstein"
+    OptProd = "Kodiak"
 
     'Suppress Output?'
     SuppressOutput = False
@@ -46,7 +46,7 @@ class PlotSettings:
     PlotFont = 13
 
     'Toggle to save the figures to disk'
-    save_fig = False
+    save_fig = True
 
     'Path to save figures'
     default_fig_path = os.path.join(ROOT_DIR, "figures")
