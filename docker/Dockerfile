@@ -14,6 +14,6 @@ RUN sed -i '30s/.*/add_definitions(-Wall -frounding-math -pedantic -Wextra -Wno-
 RUN mkdir build && cd build && cmake .. && make KodiakStatic
 
 WORKDIR /kaa-dynamic
-RUN git pull origin arch21 && git checkout -b arch21
+RUN git pull origin arch22 && git checkout -b arch22
 RUN cd kaa/pykodiak && sed -i '11s|.*|KODIAK_LIB=/Kodiak/build/libkodiak.a|' Makefile && sed -i '14s|.*|KODIAK_INCLUDE=/Kodiak/src|' Makefile && make all
 RUN pip3 install -r requirements.txt

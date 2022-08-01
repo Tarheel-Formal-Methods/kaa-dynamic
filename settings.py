@@ -52,4 +52,4 @@ class PlotSettings:
     default_fig_path = os.path.join(ROOT_DIR, "figures")
 
     'Figure dimensions'
-    fig_size = (60, 60)
+    fig_size = (30, 30)

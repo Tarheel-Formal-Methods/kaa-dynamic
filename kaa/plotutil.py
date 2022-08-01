@@ -721,7 +721,7 @@ class Plot:
     def __plot_figure(self, figure):
         fig_path = self.__gen_plot_directory()
         if PlotSettings.save_fig:
-            figure.savefig(os.path.join(fig_path, self.label), format='png')
+            figure.savefig(os.path.join(fig_path, self.label + ".png"), format='png')
         else:
             plt.show()
 

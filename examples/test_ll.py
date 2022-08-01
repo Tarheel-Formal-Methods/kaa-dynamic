@@ -23,7 +23,7 @@ def test_arch_LL():
     use_supp = True
     use_pregen = False
 
-    num_trajs = 5000
+    num_trajs = 1000
 
     delta = 0.2
     num_steps_one = int(20 / delta)
